@@ -16,7 +16,7 @@ public:
 	float ki = 0;
 	float kd = 0;
 	int errorArray[50];
-	int errorIndex = 0;
+	int errorIndex = 1;
 	int errorSum = 0;
 	float Ierr;
 	float last_error = 0;

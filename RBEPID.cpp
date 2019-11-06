@@ -17,6 +17,7 @@ void RBEPID::setpid(float P, float I, float D) {
 	kp = P;
 	ki = I;
 	kd = D;
+	errorSum = 0;
 }
 
 /**
@@ -33,6 +34,8 @@ float RBEPID::calc(double setPoint, double curPosition) {
 	// calculate derivative of error
 	//TODO
 	// calculate integral error. Running average is best but hard to implement
+
+	/*
 	this ->errorArray[this->errorIndex] = err;
 
 	this->errorSum = 0;
@@ -47,15 +50,14 @@ float RBEPID::calc(double setPoint, double curPosition) {
 	}
 
 	float Ierr = (this->errorSum/50);
-	/*
-	this ->errorSum += err;
-	errorIndex++;
-	Ierr =(this->errorSum/errorIndex) * sampleRateMs;
 	*/
+	errorSum += err;
+	errorIndex++;
+	Ierr += (this->errorSum/ errorIndex);
 	// sum up the error value to send to the motor based off gain values.
 	//TODO
 
-	float out = err * kp + Ierr *ki;
+	float out = err * kp + errorSum *ki;
 	// simple P controller
 	//return the control signal from -1 to 1
 	if (out > 1)
