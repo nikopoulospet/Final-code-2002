@@ -15,6 +15,10 @@ public:
 	float kp = 0.00015;
 	float ki = 0;
 	float kd = 0;
+	int errorArray[50];
+	int errorIndex = 0;
+	int errorSum = 0;
+	float Ierr;
 	float last_error = 0;
 	float sum_error = 0;
 	int sampleRateMs = 5;
