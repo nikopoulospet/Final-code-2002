@@ -3,6 +3,7 @@
  *
  *  Created on: 10/1/16
  *      Author: joest
+ *      Author:	Phnikopoulos
  */
 #include "Arduino.h"
 #include "RBEPID.h"
@@ -17,7 +18,11 @@ void RBEPID::setpid(float P, float I, float D) {
 	kp = P;
 	ki = I;
 	kd = D;
+
 	errorSum = 0;
+	Ierr = 0;
+	errorIndex = 0;
+	//clearIntegralBuffer();
 }
 
 /**
@@ -35,29 +40,22 @@ float RBEPID::calc(double setPoint, double curPosition) {
 	//TODO
 	// calculate integral error. Running average is best but hard to implement
 
-	/*
+
 	this ->errorArray[this->errorIndex] = err;
 
-	this->errorSum = 0;
-	for(int i = 0; i <= 50; i++){
+	for(int i = 0; i < 200; i++){
 		this->errorSum += errorArray[i];
 	}
 
 	this->errorIndex++;
 
-	if(this->errorIndex > 50){
+	if(this->errorIndex > 200){
 		this->errorIndex = 0;
 	}
 
-	float Ierr = (this->errorSum/50);
-	*/
-	errorSum += err;
-	errorIndex++;
-	Ierr += (this->errorSum/ errorIndex);
-	// sum up the error value to send to the motor based off gain values.
-	//TODO
+	float Ierr = (this->errorSum/200);
 
-	float out = err * kp + errorSum *ki;
+	float out = err * kp + Ierr *ki;
 	// simple P controller
 	//return the control signal from -1 to 1
 	if (out > 1)
@@ -75,4 +73,6 @@ void RBEPID::clearIntegralBuffer() {
 	for(int j = 0; j < 50; j++){
 		this->errorArray[j] = 0;
 	}
+	errorSum = 0;
+	Ierr = 0;
 }

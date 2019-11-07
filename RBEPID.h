@@ -13,14 +13,14 @@ class RBEPID {
 public:
 	RBEPID();
 	float kp = 0.00015;
-	float ki = 0;
-	float kd = 0;
-	int errorArray[50];
+	float ki = 0.0;
+	float kd = 0.0;
+	int errorArray[200];
 	int errorIndex = 1;
-	int errorSum = 0;
+	float errorSum = 0.0;
 	float Ierr;
-	float last_error = 0;
-	float sum_error = 0;
+	float last_error = 0.0;
+	float sum_error = 0.0;
 	int sampleRateMs = 5;
 	/**
 	 * setpid set PID constants

@@ -32,8 +32,8 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	motor2->myPID.setpid(0.00015, 0, 0);
 	motor3->myPID.setpid(0.00015, 0, 0);
 
-	motor1->velocityPID.setpid(0.1, 0, 0);
-	motor2->velocityPID.setpid(0.1, 0, 0);
+	motor1->velocityPID.setpid(0.004, 0.00002, 0);
+	motor2->velocityPID.setpid(0.004, 0.00001, 0);
 	motor3->velocityPID.setpid(0.1, 0, 0);
 	// compute ratios and bounding
 	double motorToWheel = 3;
@@ -135,6 +135,12 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
+			motor1->setVelocityDegreesPerSecond(-200);
+			motor2->setVelocityDegreesPerSecond(200);
+			targetDist = -1375.2;
+
+			status = WAIT_FOR_DISTANCE;
+			nextStatus = Halting;
 		}
 		break;
 	case WAIT_FOR_TIME:
@@ -160,6 +166,16 @@ void StudentsRobot::updateStateMachine() {
 
 		status = Halt;
 		break;
+	case WAIT_FOR_DISTANCE:
+
+		Serial.println(motor1->getVelocityDegreesPerSecond());
+
+		if(motor1->getAngleDegrees() >= targetDist){
+			status = nextStatus;
+		}
+
+		break;
+
 	case Halt:
 		// in safe mode
 		break;
