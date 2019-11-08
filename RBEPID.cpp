@@ -10,7 +10,6 @@
 
 //Class constructor
 RBEPID::RBEPID() {
-
 }
 
 //Function to set PID gain values
@@ -22,7 +21,7 @@ void RBEPID::setpid(float P, float I, float D) {
 	errorSum = 0;
 	Ierr = 0;
 	errorIndex = 0;
-	//clearIntegralBuffer();
+	this->clearIntegralBuffer();
 }
 
 /**
@@ -70,9 +69,9 @@ float RBEPID::calc(double setPoint, double curPosition) {
  *
  */
 void RBEPID::clearIntegralBuffer() {
-	for(int j = 0; j < 50; j++){
+	for(int j = 0; j < 200; j++){
 		this->errorArray[j] = 0;
 	}
-	errorSum = 0;
-	Ierr = 0;
+	this->errorSum = 0;
+	this->Ierr = 0;
 }

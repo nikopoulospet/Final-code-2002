@@ -15,7 +15,7 @@ public:
 	float kp = 0.00015;
 	float ki = 0.0;
 	float kd = 0.0;
-	int errorArray[200];
+	int errorArray[200] = {0};
 	int errorIndex = 1;
 	float errorSum = 0.0;
 	float Ierr;
