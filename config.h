@@ -11,7 +11,7 @@
 #define TEAM_NAME "IMU-Team12"
 
 #define USE_WIFI
-#define USE_IR_CAM
+//#define USE_IR_CAM
 //#define USE_IMU
 
 #define WHEEL_TRACK 175.0
