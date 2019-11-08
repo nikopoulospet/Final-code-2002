@@ -21,7 +21,7 @@ void RBEPID::setpid(float P, float I, float D) {
 	errorSum = 0;
 	Ierr = 0;
 	errorIndex = 0;
-	this->clearIntegralBuffer();
+	this->clearIntegralBuffer(); //check with SA/Lewin if this is the reason why our motors wont spin when pressing the boot button
 }
 
 /**
