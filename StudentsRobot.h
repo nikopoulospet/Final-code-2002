@@ -61,7 +61,8 @@ private:
 	float rsensorVal=0;
 	long nextTime =0;
     long startTime =0;
-    float targetDist = 1375.2;
+    float targetDist = -1461.6;
+
 
 
 	RobotStateMachine nextStatus = StartupRobot;

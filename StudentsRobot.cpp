@@ -134,8 +134,10 @@ void StudentsRobot::updateStateMachine() {
 #if defined(USE_IR_CAM)
 			IRCamera->print();
 #endif
-			this->motor1->setVelocityDegreesPerSecond(-200);
-			this->motor2->setVelocityDegreesPerSecond(200);
+
+
+			this->motor1->setVelocityDegreesPerSecond(136.36);
+			this->motor2->setVelocityDegreesPerSecond(-300);
 
 			status = WAIT_FOR_DISTANCE;
 			nextStatus = Halting;
@@ -169,7 +171,7 @@ void StudentsRobot::updateStateMachine() {
 		//Serial.println(motor1->getVelocityDegreesPerSecond());
 		//Serial.println(targetDist);
 
-		if(motor2->getAngleDegrees() >= targetDist){
+		if(motor2->getAngleDegrees() <= targetDist){
 			status = nextStatus;
 		}
 
@@ -194,4 +196,6 @@ void StudentsRobot::pidLoop() {
 	motor2->loop();
 	motor3->loop();
 }
+
+
 
