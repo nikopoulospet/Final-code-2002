@@ -90,6 +90,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	pinMode(BOOT_FLAG_PIN, INPUT_PULLUP);
 	//Test IO
 	pinMode(WII_CONTROLLER_DETECT, OUTPUT);
+
 }
 /**
  * Seperate from running the motor control,
@@ -98,6 +99,8 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 void StudentsRobot::updateStateMachine() {
 	digitalWrite(WII_CONTROLLER_DETECT, 1);
 	long now = millis();
+	acePose->loop();
+	Serial.println("SM");
 	switch (status) {
 	case StartupRobot:
 		//Do this once at startup
@@ -170,7 +173,6 @@ void StudentsRobot::updateStateMachine() {
 
 		//Serial.println(motor1->getVelocityDegreesPerSecond());
 		//Serial.println(targetDist);
-
 		if(motor2->getAngleDegrees() <= targetDist){
 			status = nextStatus;
 		}

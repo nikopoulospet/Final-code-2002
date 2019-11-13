@@ -30,6 +30,7 @@ private:
 	GetIMU * IMU;
 	float mywheelTrackMM;
 	float mywheelRadiusMM;
+
 	/**
 	 * Compute a delta in wheel angle to traverse a specific distance
 	 *
@@ -117,6 +118,36 @@ public:
 	 */
 	bool loop();
 
+
+	/**
+	 * this function updates the pose of our robot as it drives
+	 */
+
 };
+
+class Pose {
+private:
+	PIDMotor * leftMotor;
+	PIDMotor * rightMotor;
+	//GetIMU * IMU;
+	float wheelTrackMM = 225;
+	float wheelRadiusMM = 20.56;
+	bool loopFlag = false;
+	double now = 0;
+
+public:
+	Pose(PIDMotor* left, PIDMotor* right);
+
+	double x = 0;
+	double y = 0;
+	double theta = 0;
+	double lastAngleLeftMotor = 0;
+	double lastAngleRightMotor = 0;
+
+	void loop();
+	void updatePose();
+};
+
+
 
 #endif /* DRIVINGCHASSIS_H_ */

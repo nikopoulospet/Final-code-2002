@@ -106,6 +106,9 @@ public:
 	 * the students state machine can be updated with this function
 	 */
 	void updateStateMachine();
+
+	Pose *acePose = new Pose(motor1, motor2);
+
 };
 
 #endif /* STUDENTSROBOT_H_ */

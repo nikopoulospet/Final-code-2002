@@ -108,5 +108,55 @@ bool DrivingChassis::isChassisDoneDriving() {
  * imu.
  */
 bool DrivingChassis::loop(){
-return false;
+	return false;
 }
+
+
+Pose::Pose(PIDMotor* left, PIDMotor* right) {
+	this->leftMotor = left;
+	this->rightMotor = right;
+	this->wheelTrackMM = wheelTrackMM;
+	this->wheelRadiusMM = wheelRadiusMM;
+
+
+}
+
+void Pose::updatePose(){
+	double angleRightMotor = rightMotor->getAngleDegrees();
+	double angleLeftMotor = leftMotor->getAngleDegrees();
+
+	double deltaPositionRightMotor = angleRightMotor - lastAngleRightMotor;
+	double deltaPositionLeftMotor = angleLeftMotor - lastAngleLeftMotor;
+
+	double nextAngularPosition = (deltaPositionRightMotor - deltaPositionLeftMotor)/wheelTrackMM + theta;
+
+
+	double changeX = ((deltaPositionRightMotor) + (deltaPositionLeftMotor))/2 * wheelRadiusMM * cos((theta + nextAngularPosition)/2);
+	x = x + changeX;
+	double changeY = ((deltaPositionRightMotor) + (deltaPositionLeftMotor))/2 * wheelRadiusMM * sin((theta + nextAngularPosition)/2);
+	y = y + changeY;
+
+	theta = nextAngularPosition;
+
+
+
+	lastAngleRightMotor = angleRightMotor;
+	lastAngleLeftMotor = angleLeftMotor;
+}
+
+void Pose::loop(){
+	Serial.println("loop");
+	if (!loopFlag) {
+		Serial.println(loopFlag);
+		now = millis();
+		loopFlag = true;
+	}
+	else {
+		if(now >= millis() - 20) {
+				updatePose();
+				loopFlag = false;
+		}
+	}
+
+}
+
