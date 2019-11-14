@@ -56,7 +56,7 @@ DrivingChassis::~DrivingChassis() {
  *
  */
 DrivingChassis::DrivingChassis(PIDMotor * left, PIDMotor * right,
-		float wheelTrackMM, float wheelRadiusMM ,GetIMU * imu) : robotPose(0,0,0)
+		float wheelTrackMM, float wheelRadiusMM ,GetIMU * imu) : robotPose(0,0,0)  //starts with pose of 0,0,0
 
 {
 	myleft = left;
@@ -115,7 +115,7 @@ bool DrivingChassis::isChassisDoneDriving() {
  * a fast loop function that will update states of the motors based on the information from the
  * imu.
  */
-bool DrivingChassis::loop(){
+bool DrivingChassis::loop(){  //polls for data every 20ms
 		if (!loopFlag) {
 			now = millis();
 			loopFlag = true;
@@ -131,13 +131,25 @@ bool DrivingChassis::loop(){
 
 
 void DrivingChassis::updatePose(){
-	double angleRightMotor = myright->getAngleDegrees();
+	double angleRightMotor = myright->getAngleDegrees();  //gets angle from right and left motor
 	double angleLeftMotor = myleft->getAngleDegrees();
 	double IMUheading = IMU->getEULER_azimuth();
-	double timestamp = micros();
+	double timestamp = micros();  //set in micros, if set in millis, timestamp will be 0
 
-	robotPose.updateEncoderPositions(timestamp, angleRightMotor, angleLeftMotor, IMUheading);
+	robotPose.updateEncoderPositions(timestamp, angleRightMotor, angleLeftMotor, IMUheading);  //updates encoder position -> see Pose.cpp
 
+	this->driveStraight(200);
+
+
+
+}
+
+ void DrivingChassis::driveStraight(double speed){
+	double headingError = -1 * this->robotPose.theta - targetHeading;  //robotPose heading - target Heading
+	double effort = Kp * headingError;
+	this->myleft->setVelocityDegreesPerSecond(speed - effort);
+	this->myright->setVelocityDegreesPerSecond(-speed + effort);
+	Serial.println("MyLeft: " + String(myleft->getVelocityDegreesPerSecond()) + " MyRight: " + String(myright->getVelocityDegreesPerSecond()));
 
 
 }

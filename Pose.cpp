@@ -12,7 +12,7 @@ Pose::Pose(double x, double y, double theta) {
 	this->theta = theta;
 }
 
-void Pose:: updateEncoderPositions(double timestamp, double encoder0, double encoder1, double IMUheading){
+void Pose:: updateEncoderPositions(double timestamp, double encoder0, double encoder1, double IMUheading){  //same code from java, transposed into eclipse second order forward kinematic model
 	if (lastTimestamp > 0) {
 		double deltaTime = timestamp - lastTimestamp;
 		double deltaEncoder0 = encoder0 - lastEncoder0;
@@ -39,9 +39,9 @@ void Pose:: updateEncoderPositions(double timestamp, double encoder0, double enc
 
 		theta = nextAngularPosition;
 
-	Serial.println("Final pose x= " + String(x) + " y= " + String(y) + " theta= " + String(theta));
+	Serial.println("Final pose x= " + String(x) + " y= " + String(y) + " theta= " + String(theta)); //print of pose
 	}
-	lastEncoder0 = encoder0;
+	lastEncoder0 = encoder0;  //reset values for next loop through
 	lastEncoder1 = encoder1;
 	lastTimestamp = timestamp;
 	lastIMUHeading = IMUheading;

@@ -18,9 +18,7 @@ private:
 	 */
 	bool loopFlag = false;
 	double now = 0;
-	double x = 0;
-	double y = 0;
-	double theta = 0;
+
 
 
 
@@ -34,6 +32,9 @@ public:
 	double lastIMUHeading = 0;
 	float wheelTrackMM = 225;
 	float wheelRadiusMM = 25.6;
+	double x = 0;
+	double y = 0;
+	double theta = 0;
 
 	void updateEncoderPositions(double timestamp, double encoder0, double encoder1, double IMUheading);
 };

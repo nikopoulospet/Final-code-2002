@@ -6,12 +6,12 @@
  */
 
 #include "StudentsRobot.h"
-#define wheelTrackMM  225
+#define wheelTrackMM  225   //pass in wheeltrack and wheel radius into mm
 #define	wheelRadiusMM 25.6
 
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 		PIDMotor * motor3, Servo * servo, IRCamSimplePacketComsServer * IRCam,
-		GetIMU * imu) : ace(motor1,motor2, wheelTrackMM, wheelRadiusMM, imu)
+		GetIMU * imu) : ace(motor1,motor2, wheelTrackMM, wheelRadiusMM, imu)  //instantiating ace as a driving chassis
 
 
 {
@@ -37,7 +37,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	motor2->myPID.setpid(0.00015, 0, 0);
 	motor3->myPID.setpid(0.00015, 0, 0);
 
-	motor1->velocityPID.setpid(0.004, 0.00002, 0);
+	motor1->velocityPID.setpid(0.004, 0.00001, 0);
 	motor2->velocityPID.setpid(0.004, 0.00001, 0);
 	motor3->velocityPID.setpid(0.1, 0, 0);
 	// compute ratios and bounding
@@ -48,39 +48,39 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 			125, //a positive value subtracted from stop value to creep backward
 			125, //a positive value added to the stop value to creep forwards
 			16.0 * // Encoder CPR
-					50.0 * // Motor Gear box ratio
-					motorToWheel * // motor to wheel stage ratio
-					(1.0 / 360.0) * // degrees per revolution
-					2, // Number of edges that are used to increment the value
+			50.0 * // Motor Gear box ratio
+			motorToWheel * // motor to wheel stage ratio
+			(1.0 / 360.0) * // degrees per revolution
+			2, // Number of edges that are used to increment the value
 			480, // measured max degrees per second
 			150 // the speed in degrees per second that the motor spins when the hardware output is at creep forwards
-			);
+	);
 	motor2->setOutputBoundingValues(-255, //the minimum value that the output takes (Full reverse)
 			255, //the maximum value the output takes (Full forward)
 			0, //the value of the output to stop moving
 			125, //a positive value subtracted from stop value to creep backward
 			125, //a positive value added to the stop value to creep forwards
 			16.0 * // Encoder CPR
-					50.0 * // Motor Gear box ratio
-					motorToWheel * // motor to wheel stage ratio
-					(1.0 / 360.0) * // degrees per revolution
-					2, // Number of edges that are used to increment the value
+			50.0 * // Motor Gear box ratio
+			motorToWheel * // motor to wheel stage ratio
+			(1.0 / 360.0) * // degrees per revolution
+			2, // Number of edges that are used to increment the value
 			480, // measured max degrees per second
 			150	// the speed in degrees per second that the motor spins when the hardware output is at creep forwards
-			);
+	);
 	motor3->setOutputBoundingValues(-255, //the minimum value that the output takes (Full reverse)
 			255, //the maximum value the output takes (Full forward)
 			0, //the value of the output to stop moving
 			125, //a positive value subtracted from stop value to creep backward
 			125, //a positive value added to the stop value to creep forwards
 			16.0 * // Encoder CPR
-					50.0 * // Motor Gear box ratio
-					1.0 * // motor to arm stage ratio
-					(1.0 / 360.0) * // degrees per revolution
-					2, // Number of edges that are used to increment the value
+			50.0 * // Motor Gear box ratio
+			1.0 * // motor to arm stage ratio
+			(1.0 / 360.0) * // degrees per revolution
+			2, // Number of edges that are used to increment the value
 			1400, // measured max degrees per second
 			50 // the speed in degrees per second that the motor spins when the hardware output is at creep forwards
-			);
+	);
 	// Set up the Analog sensors
 	pinMode(ANALOG_SENSE_ONE, ANALOG);
 	pinMode(ANALOG_SENSE_TWO, ANALOG);
@@ -104,7 +104,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 void StudentsRobot::updateStateMachine() {
 	digitalWrite(WII_CONTROLLER_DETECT, 1);
 	long now = millis();
-	ace.loop();
+	ace.loop();  //polling for pose every 20ms, see DrivingChassis.cpp
 	switch (status) {
 	case StartupRobot:
 		//Do this once at startup
@@ -142,9 +142,15 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-
-			this->motor1->setVelocityDegreesPerSecond(136.36);
+			//ARC DRIVE
+		/*	this->motor1->setVelocityDegreesPerSecond(136.36);
 			this->motor2->setVelocityDegreesPerSecond(-300);
+
+			//STRAIGHT LINE DRIVE
+			this->motor1->setVelocityDegreesPerSecond(200);
+			this->motor2->setVelocityDegreesPerSecond(-200); */
+
+
 
 			status = WAIT_FOR_DISTANCE;
 			nextStatus = Halting;

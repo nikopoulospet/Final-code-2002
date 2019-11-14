@@ -61,8 +61,9 @@ private:
 	float rsensorVal=0;
 	long nextTime =0;
     long startTime =0;
-    float targetDist = -1461.6;
-    DrivingChassis ace;
+    float targetDist = -1461.6;  //target distance for arc
+  //  float targetDist = -1352;  //target distance for driving straight
+    DrivingChassis ace;  //added driving chassis object for our robot
 	RobotStateMachine nextStatus = StartupRobot;
 	IRCamSimplePacketComsServer * IRCamera;
 	GetIMU * IMU;

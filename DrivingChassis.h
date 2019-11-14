@@ -31,9 +31,12 @@ private:
 	GetIMU * IMU;
 
 public:
-	Pose robotPose;
+	Pose robotPose;  //instantiating a pose object
 	boolean loopFlag = false;
 	long now = 0;
+	double targetHeading = 0;  //hard coded heading
+	double Kp = .004;
+
 
 	/**
 	 * Compute a delta in wheel angle to traverse a specific distance
@@ -128,6 +131,8 @@ public:
 	 */
 
 	void updatePose();
+
+	void driveStraight(double speed);
 };
 
 
