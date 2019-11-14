@@ -6,10 +6,15 @@
  */
 
 #include "StudentsRobot.h"
+#define wheelTrackMM  225
+#define	wheelRadiusMM 25.6
 
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 		PIDMotor * motor3, Servo * servo, IRCamSimplePacketComsServer * IRCam,
-		GetIMU * imu) {
+		GetIMU * imu) : ace(motor1,motor2, wheelTrackMM, wheelRadiusMM, imu)
+
+
+{
 	Serial.println("StudentsRobot::StudentsRobot constructor called here ");
 	this->servo = servo;
 	this->motor1 = motor1;
@@ -99,8 +104,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 void StudentsRobot::updateStateMachine() {
 	digitalWrite(WII_CONTROLLER_DETECT, 1);
 	long now = millis();
-	acePose->loop();
-	Serial.println("SM");
+	ace.loop();
 	switch (status) {
 	case StartupRobot:
 		//Do this once at startup

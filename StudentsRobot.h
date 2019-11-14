@@ -62,13 +62,12 @@ private:
 	long nextTime =0;
     long startTime =0;
     float targetDist = -1461.6;
-
-
-
+    DrivingChassis ace;
 	RobotStateMachine nextStatus = StartupRobot;
 	IRCamSimplePacketComsServer * IRCamera;
 	GetIMU * IMU;
 public:
+
 	/**
 	 * Constructor for StudentsRobot
 	 *
@@ -107,7 +106,7 @@ public:
 	 */
 	void updateStateMachine();
 
-	Pose *acePose = new Pose(motor1, motor2);
+
 
 };
 

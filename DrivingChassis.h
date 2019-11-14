@@ -10,6 +10,7 @@
 #include "src/pid/PIDMotor.h"
 #include "src/commands/GetIMU.h"
 #include "config.h"
+#include "Pose.h"
 /**
  * DrivingChassis encapsulates a 2 wheel differential steered chassis that drives around
  *
@@ -28,8 +29,11 @@ private:
 	PIDMotor * myleft;
 	PIDMotor * myright;
 	GetIMU * IMU;
-	float mywheelTrackMM;
-	float mywheelRadiusMM;
+
+public:
+	Pose robotPose;
+	boolean loopFlag = false;
+	long now = 0;
 
 	/**
 	 * Compute a delta in wheel angle to traverse a specific distance
@@ -123,30 +127,10 @@ public:
 	 * this function updates the pose of our robot as it drives
 	 */
 
-};
-
-class Pose {
-private:
-	PIDMotor * leftMotor;
-	PIDMotor * rightMotor;
-	//GetIMU * IMU;
-	float wheelTrackMM = 225;
-	float wheelRadiusMM = 20.56;
-	bool loopFlag = false;
-	double now = 0;
-
-public:
-	Pose(PIDMotor* left, PIDMotor* right);
-
-	double x = 0;
-	double y = 0;
-	double theta = 0;
-	double lastAngleLeftMotor = 0;
-	double lastAngleRightMotor = 0;
-
-	void loop();
 	void updatePose();
 };
+
+
 
 
 

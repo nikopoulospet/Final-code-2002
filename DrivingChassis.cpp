@@ -6,6 +6,7 @@
  */
 
 #include "DrivingChassis.h"
+#include "Pose.h"
 
 /**
  * Compute a delta in wheel angle to traverse a specific distance
@@ -55,7 +56,14 @@ DrivingChassis::~DrivingChassis() {
  *
  */
 DrivingChassis::DrivingChassis(PIDMotor * left, PIDMotor * right,
-		float wheelTrackMM, float wheelRadiusMM,GetIMU * imu) {
+		float wheelTrackMM, float wheelRadiusMM ,GetIMU * imu) : robotPose(0,0,0)
+
+{
+	myleft = left;
+	myright = right;
+	robotPose.wheelTrackMM = wheelTrackMM;
+	robotPose.wheelRadiusMM = wheelRadiusMM;
+	IMU = imu;
 
 }
 
@@ -108,55 +116,30 @@ bool DrivingChassis::isChassisDoneDriving() {
  * imu.
  */
 bool DrivingChassis::loop(){
+		if (!loopFlag) {
+			now = millis();
+			loopFlag = true;
+		}
+		else {
+			if(now >= millis() - 20) {
+					updatePose();
+					loopFlag = false;
+			}
+		}
 	return false;
 }
 
 
-Pose::Pose(PIDMotor* left, PIDMotor* right) {
-	this->leftMotor = left;
-	this->rightMotor = right;
-	this->wheelTrackMM = wheelTrackMM;
-	this->wheelRadiusMM = wheelRadiusMM;
+void DrivingChassis::updatePose(){
+	double angleRightMotor = myright->getAngleDegrees();
+	double angleLeftMotor = myleft->getAngleDegrees();
+	double IMUheading = IMU->getEULER_azimuth();
+	double timestamp = micros();
+
+	robotPose.updateEncoderPositions(timestamp, angleRightMotor, angleLeftMotor, IMUheading);
+
 
 
 }
 
-void Pose::updatePose(){
-	double angleRightMotor = rightMotor->getAngleDegrees();
-	double angleLeftMotor = leftMotor->getAngleDegrees();
-
-	double deltaPositionRightMotor = angleRightMotor - lastAngleRightMotor;
-	double deltaPositionLeftMotor = angleLeftMotor - lastAngleLeftMotor;
-
-	double nextAngularPosition = (deltaPositionRightMotor - deltaPositionLeftMotor)/wheelTrackMM + theta;
-
-
-	double changeX = ((deltaPositionRightMotor) + (deltaPositionLeftMotor))/2 * wheelRadiusMM * cos((theta + nextAngularPosition)/2);
-	x = x + changeX;
-	double changeY = ((deltaPositionRightMotor) + (deltaPositionLeftMotor))/2 * wheelRadiusMM * sin((theta + nextAngularPosition)/2);
-	y = y + changeY;
-
-	theta = nextAngularPosition;
-
-
-
-	lastAngleRightMotor = angleRightMotor;
-	lastAngleLeftMotor = angleLeftMotor;
-}
-
-void Pose::loop(){
-	Serial.println("loop");
-	if (!loopFlag) {
-		Serial.println(loopFlag);
-		now = millis();
-		loopFlag = true;
-	}
-	else {
-		if(now >= millis() - 20) {
-				updatePose();
-				loopFlag = false;
-		}
-	}
-
-}
 
