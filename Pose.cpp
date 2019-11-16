@@ -18,14 +18,13 @@ void Pose:: updateEncoderPositions(double timestamp, double encoder0, double enc
 		double deltaEncoder0 = encoder0 - lastEncoder0;
 		double deltaEncoder1 = encoder1 - lastEncoder1;
 		double deltaIMU = IMUheading - lastIMUHeading;
-		if (abs(deltaEncoder1) > 0 && abs(deltaEncoder0) > 0)
-			Serial.println("Delta Time=" + String(deltaTime) + " enc0=" + String(deltaEncoder0) + " enc1=" + String(deltaEncoder1)
-					+ " heading=" + String(deltaIMU));
-
+		if (abs(deltaEncoder1) > 0 && abs(deltaEncoder0) > 0) {
+			//Serial.println("Delta Time=" + String(deltaTime) + " enc0=" + String(deltaEncoder0) + " enc1=" + String(deltaEncoder1)+ " heading=" + String(deltaIMU));
+		}
 
 		// do the Forward Kinematic update
 
-		double speedofLeftWheel = (-deltaEncoder1 / deltaTime) * (PI / 180) * wheelRadiusMM; //   m/s
+		double speedofLeftWheel = (-deltaEncoder1 / deltaTime) * (PI / 180) * wheelRadiusMM; //   m/s  -1 on deltaEncoder 1 may be changed after negative issue is resolved
 		double speedofRightWheel = (deltaEncoder0 / deltaTime) * (PI / 180) * wheelRadiusMM;
 		double initialVelocity = (speedofLeftWheel + speedofRightWheel)/2;
 		double angularVelocity = (speedofRightWheel - speedofLeftWheel) / wheelTrackMM;
@@ -39,7 +38,8 @@ void Pose:: updateEncoderPositions(double timestamp, double encoder0, double enc
 
 		theta = nextAngularPosition;
 
-	Serial.println("Final pose x= " + String(x) + " y= " + String(y) + " theta= " + String(theta)); //print of pose
+	Serial.println("Final pose x= " + String(x) + " y= " + String(y) + " theta= " + String(theta) + " IMU Heading: " + String(((IMUheading) * (PI/180)))); //print of pose
+
 	}
 	lastEncoder0 = encoder0;  //reset values for next loop through
 	lastEncoder1 = encoder1;

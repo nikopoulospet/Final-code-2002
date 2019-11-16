@@ -34,8 +34,8 @@ public:
 	Pose robotPose;  //instantiating a pose object
 	boolean loopFlag = false;
 	long now = 0;
-	double targetHeading = 0;  //hard coded heading
-	double Kp = .004;
+	double targetHeading = 45 * (PI/180);  //hard coded heading in radians
+	double Kp = 100;
 
 
 	/**
