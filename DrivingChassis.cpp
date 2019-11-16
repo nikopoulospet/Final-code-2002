@@ -115,7 +115,12 @@ bool DrivingChassis::isChassisDoneDriving() {
  * a fast loop function that will update states of the motors based on the information from the
  * imu.
  */
-bool DrivingChassis::loop(){  //polls for data every 20ms
+void DrivingChassis::loop(){//polls for data every 20ms
+
+	if(IMU->getEULER_azimuth() != 0 && trigger){
+		offset = -1 * IMU->getEULER_azimuth();
+		trigger = false;
+	}
 		if (!loopFlag) {
 			now = millis();
 			loopFlag = true;
@@ -126,30 +131,32 @@ bool DrivingChassis::loop(){  //polls for data every 20ms
 					loopFlag = false;
 			}
 		}
-	return false;
+
 }
 
 
 void DrivingChassis::updatePose(){
 	double angleRightMotor = myright->getAngleDegrees();  //gets angle from right and left motor
 	double angleLeftMotor = myleft->getAngleDegrees();
-	double IMUheading = 180 + IMU->getEULER_azimuth();  //IMU mounted in reverse, going straight will give us heading of -180 unless we add 180 to offset system by PI
+	double IMUheading = offset +  IMU->getEULER_azimuth();  //IMU mounted in reverse, going straight will give us heading of -180 unless we add 180 to offset system by PI
+
 	double timestamp = micros();  //set in micros, if set in millis, timestamp will be 0
 
 	robotPose.updateEncoderPositions(timestamp, angleRightMotor, angleLeftMotor, IMUheading);  //updates encoder position -> see Pose.cpp
 
-	this->driveStraight(200);
+	//this->driveStraight(speed, targetHeading);
 
 
 
 }
 
- void DrivingChassis::driveStraight(double speed){
+ void DrivingChassis::driveStraight(double speed, double targetHeading){
+	 targetHeading = targetHeading * (PI/180);
 	 //WITHOUT COMPLEMENTARY FILTER
 	//double headingError = this->robotPose.theta - targetHeading;  //robotPose heading - target Heading  -1 because counterclockwise is negative in our coordinate system
 
 	 //WITH COMPLEMENTARY FILTER
-	 double headingError = (((180 + this->IMU->getEULER_azimuth()) * (PI/180)) * .95 + this->robotPose.theta * .05) - targetHeading;
+	 double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .95 + this->robotPose.theta * .05) - targetHeading;
 
 	double effort = Kp * headingError;
 	Serial.println(String(headingError));

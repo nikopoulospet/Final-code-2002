@@ -150,7 +150,8 @@ void StudentsRobot::updateStateMachine() {
 			this->motor1->setVelocityDegreesPerSecond(200);
 			this->motor2->setVelocityDegreesPerSecond(-200); */
 
-
+			Serial.println("test");
+			ace.driveStraight(200, 0);
 
 			status = WAIT_FOR_DISTANCE;
 			nextStatus = Halting;
@@ -181,9 +182,8 @@ void StudentsRobot::updateStateMachine() {
 		break;
 	case WAIT_FOR_DISTANCE:
 
-		//Serial.println(motor1->getVelocityDegreesPerSecond());
-		//Serial.println(targetDist);
 		if(motor2->getAngleDegrees() <= targetDist){
+			ace.driveStraight(0, 0);
 			status = nextStatus;
 		}
 

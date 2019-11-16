@@ -34,7 +34,9 @@ public:
 	Pose robotPose;  //instantiating a pose object
 	boolean loopFlag = false;
 	long now = 0;
-	double targetHeading = 45 * (PI/180);  //hard coded heading in radians
+	double offset;
+	bool trigger = true;
+	//double targetHeading = 0; //45 * (PI/180);  //hard coded heading in radians
 	double Kp = 100;
 
 
@@ -123,7 +125,7 @@ public:
 	 *
 	 * @note this function is fast-return and should not block
 	 */
-	bool loop();
+	void loop();
 
 
 	/**
@@ -132,7 +134,7 @@ public:
 
 	void updatePose();
 
-	void driveStraight(double speed);
+	void driveStraight(double speed, double targetHeading);
 };
 
 
