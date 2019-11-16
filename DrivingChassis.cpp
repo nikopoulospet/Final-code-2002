@@ -153,10 +153,10 @@ void DrivingChassis::updatePose(){
  void DrivingChassis::driveStraight(double speed, double targetHeading){
 	 targetHeading = targetHeading * (PI/180);
 	 //WITHOUT COMPLEMENTARY FILTER
-	//double headingError = this->robotPose.theta - targetHeading;  //robotPose heading - target Heading  -1 because counterclockwise is negative in our coordinate system
+	double headingError = this->robotPose.theta - targetHeading;  //robotPose heading - target Heading  -1 because counterclockwise is negative in our coordinate system
 
 	 //WITH COMPLEMENTARY FILTER
-	 double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .95 + this->robotPose.theta * .05) - targetHeading;
+	 //double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .95 + this->robotPose.theta * .05) - targetHeading;
 
 	double effort = Kp * headingError;
 	Serial.println(String(headingError));

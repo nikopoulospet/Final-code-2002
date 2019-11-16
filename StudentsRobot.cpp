@@ -182,10 +182,12 @@ void StudentsRobot::updateStateMachine() {
 		break;
 	case WAIT_FOR_DISTANCE:
 
+		/**
 		if(motor2->getAngleDegrees() <= targetDist){
 			ace.driveStraight(0, 0);
 			status = nextStatus;
 		}
+		**/
 
 		break;
 

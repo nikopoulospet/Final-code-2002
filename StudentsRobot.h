@@ -61,7 +61,7 @@ private:
 	float rsensorVal=0;
 	long nextTime =0;
     long startTime =0;
-    float targetDist = -(60/15.96) * 360; //60 cm
+    float targetDist = -(55/15.96) * 360; //60 cm
     //float targetDist = -1461.6;  //target distance for arc
     //float targetDist = -1352;  //target distance for driving straight
     DrivingChassis ace;  //added driving chassis object for our robot
