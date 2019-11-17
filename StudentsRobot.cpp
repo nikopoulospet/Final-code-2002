@@ -104,7 +104,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 void StudentsRobot::updateStateMachine() {
 	digitalWrite(WII_CONTROLLER_DETECT, 1);
 	long now = millis();
-	ace.loop();  //polling for pose every 20ms, see DrivingChassis.cpp
+	//ace.loop();  //polling for pose every 20ms, see DrivingChassis.cpp
 	switch (status) {
 	case StartupRobot:
 		//Do this once at startup
@@ -150,14 +150,15 @@ void StudentsRobot::updateStateMachine() {
 			this->motor1->setVelocityDegreesPerSecond(200);
 			this->motor2->setVelocityDegreesPerSecond(-200); */
 
-			//Serial.println("test");
-			//ace.driveStraight(200, 45);
+
+			Serial.println("test");
 
 			status = WAIT_FOR_DISTANCE;
 			nextStatus = Halting;
 		}
 		break;
 	case WAIT_FOR_TIME:
+
 		// Check to see if enough time has elapsed
 		if (nextTime <= millis()) {
 			// if the time is up, move on to the next state
@@ -181,18 +182,26 @@ void StudentsRobot::updateStateMachine() {
 		status = Halt;
 		break;
 	case WAIT_FOR_DISTANCE:
-		ace.driveStraight(200, 0);
+		ace.driveStraight(0, 0);
+		status = spagettiFix;
+		break;
+	case spagettiFix:
+		ace.loop();
+		status = WAIT_FOR_DISTANCE;
 
-		if(motor2->getAngleDegrees() <= targetDistPosition1To2){  //if our motor 2 encoder degree is less than the number of degrees that we set
-			if(goingForwards == true) {  //if we travelled from position 1 to 2, go to state that handles 2 to 3
-				status = WAIT_FOR_DISTANCE_2to3;
-			}
-			else if (goingForwards == false) {  //otherwise, we are travelling backwards going from position 2 to 1, and then halt
-				status = Halting;
-			}
-		}
+// 		ace.driveStraight(200, 0);
+
+// 		if(motor2->getAngleDegrees() <= targetDistPosition1To2){  //if our motor 2 encoder degree is less than the number of degrees that we set
+// 			if(goingForwards == true) {  //if we travelled from position 1 to 2, go to state that handles 2 to 3
+// 				status = WAIT_FOR_DISTANCE_2to3;
+// 			}
+// 			else if (goingForwards == false) {  //otherwise, we are travelling backwards going from position 2 to 1, and then halt
+// 				status = Halting;
+// 			}
+// 		}
 
 
+// >>>>>>> master
 		break;
 
 	case WAIT_FOR_DISTANCE_2to3:
