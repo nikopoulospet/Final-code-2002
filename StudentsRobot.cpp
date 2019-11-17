@@ -104,7 +104,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 void StudentsRobot::updateStateMachine() {
 	digitalWrite(WII_CONTROLLER_DETECT, 1);
 	long now = millis();
-	ace.loop();  //polling for pose every 20ms, see DrivingChassis.cpp
+	//ace.loop();  //polling for pose every 20ms, see DrivingChassis.cpp
 	switch (status) {
 	case StartupRobot:
 		//Do this once at startup
@@ -151,13 +151,13 @@ void StudentsRobot::updateStateMachine() {
 			this->motor2->setVelocityDegreesPerSecond(-200); */
 
 			Serial.println("test");
-			ace.driveStraight(200, 0);
 
 			status = WAIT_FOR_DISTANCE;
 			nextStatus = Halting;
 		}
 		break;
 	case WAIT_FOR_TIME:
+
 		// Check to see if enough time has elapsed
 		if (nextTime <= millis()) {
 			// if the time is up, move on to the next state
@@ -181,14 +181,12 @@ void StudentsRobot::updateStateMachine() {
 		status = Halt;
 		break;
 	case WAIT_FOR_DISTANCE:
-
-		/**
-		if(motor2->getAngleDegrees() <= targetDist){
-			ace.driveStraight(0, 0);
-			status = nextStatus;
-		}
-		**/
-
+		ace.driveStraight(0, 0);
+		status = spagettiFix;
+		break;
+	case spagettiFix:
+		ace.loop();
+		status = WAIT_FOR_DISTANCE;
 		break;
 
 	case Halt:
