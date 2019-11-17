@@ -37,7 +37,8 @@ public:
 	double offset;
 	bool trigger = true;
 	//double targetHeading = 0; //45 * (PI/180);  //hard coded heading in radians
-	double Kp = 100;
+	double Kp = 50;
+	double KpTurn = 50;
 
 
 	/**
@@ -135,6 +136,10 @@ public:
 	void updatePose();
 
 	void driveStraight(double speed, double targetHeading);
+
+	void pointTurn(double speed, double targetHeading);
+
+	void turnAround(double speed);
 };
 
 
