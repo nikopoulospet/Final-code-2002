@@ -36,9 +36,10 @@ public:
 	long now = 0;
 	double offset;
 	bool trigger = true;
+	double wheelRadius = 25.6; // mm
+	double distanceError;
+	double kpDistance = 1;
 	//double targetHeading = 0; //45 * (PI/180);  //hard coded heading in radians
-	double Kp = 50;
-	double KpTurn = 50;
 
 
 	/**
@@ -135,11 +136,9 @@ public:
 
 	void updatePose();
 
-	void driveStraight(double speed, double targetHeading);
+	void driveStraight(double speed, double targetHeading, int Kp);
 
-	void pointTurn(double speed, double targetHeading);
-
-	void turnAround(double speed);
+	bool distanceDrive(double mm);
 };
 
 

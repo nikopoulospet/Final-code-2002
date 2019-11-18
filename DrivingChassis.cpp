@@ -152,7 +152,7 @@ void DrivingChassis::updatePose(){
 }
 
 
- void DrivingChassis::driveStraight(double speed, double targetHeading){
+ void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ // usually 25 for point turn, usually 50 for driving
 	 targetHeading = targetHeading * (PI/180);
 	 //WITHOUT COMPLEMENTARY FILTER
 	 //double headingError = this->robotPose.theta - targetHeading;  //robotPose heading - target Heading  -1 because counterclockwise is negative in our coordinate system
@@ -162,7 +162,7 @@ void DrivingChassis::updatePose(){
 	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .95 + this->robotPose.theta * .05) - targetHeading;
 
 	 //JUST IMU
-	 double headingError = ((offset + this->IMU->getEULER_azimuth()) * (PI/180)) - targetHeading ;
+	// double headingError = ((offset + this->IMU->getEULER_azimuth()) * (PI/180)) - targetHeading ;
 
 
 	double effort = Kp * headingError;
@@ -172,45 +172,19 @@ void DrivingChassis::updatePose(){
 	Serial.println(String(effort) + "," +  String(headingError));
 //	Serial.println("MyLeft: " + String(myleft->getVelocityDegreesPerSecond()) + " MyRight: " + String(myright->getVelocityDegreesPerSecond()) + "effort: " + String(effort) + " theta: " + String(robotPose.theta));
 
-	
-
 }
 
-void DrivingChassis::pointTurn(double speed, double targetHeading){
-	/*	targetHeading = targetHeading * (PI/180);
-	//WITHOUT COMPLEMENTARY FILTER
-	//double headingError = this->robotPose.theta - targetHeading;  //robotPose heading - target Heading  -1 because counterclockwise is negative in our coordinate system
-	double headingError = ((offset + this->IMU->getEULER_azimuth()) * (PI/180)) - targetHeading;
-
-	//WITH COMPLEMENTARY FILTER
-if(headingError >= .005 && headingError <= -.005) {
-
-
-	double effort = KpTurn * headingError;
-
-	this->myleft->setVelocityDegreesPerSecond(speed - effort);
-	this->myright->setVelocityDegreesPerSecond(speed - effort);
-
-	Serial.println("Velocity Left: " + String(myleft->getVelocityDegreesPerSecond()) + " Velocity Right: " + String(myright->getVelocityDegreesPerSecond()) + " Error: " + String(headingError));
-}
-
-else{
-	this->myleft->setVelocityDegreesPerSecond(0);
-	this->myright->setVelocityDegreesPerSecond(0);
-	Serial.println("Hello ksaddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
-} */
-	targetHeading = targetHeading * (PI/180);
-	this->myleft->setVelocityDegreesPerSecond(speed);
-	this->myright->setVelocityDegreesPerSecond(speed);
-}
-
-void DrivingChassis::turnAround(double speed) {
-	double targetHeading = 180 * (PI/180);
-	this->myleft->setVelocityDegreesPerSecond(speed);
-	this->myright->setVelocityDegreesPerSecond(speed);
-}
-
-
+ bool DrivingChassis::distanceDrive (double mm){
+	double target = (mm/(wheelRadius * (2*PI))) * 360;
+	distanceError =  abs(this->myright->getAngleDegrees()) - target;
+	double effort = kpDistance * distanceError;
+ 	this->driveStraight(150 - effort, 0, 100);
+ 	if(abs(this->myright->getAngleDegrees()) >= target){
+ 		return true;
+ 	}else{
+ 		return false;
+ 	}
+ }
 
 
 

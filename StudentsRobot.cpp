@@ -104,7 +104,8 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 void StudentsRobot::updateStateMachine() {
 	digitalWrite(WII_CONTROLLER_DETECT, 1);
 	long now = millis();
-	//ace.loop();  //polling for pose every 20ms, see DrivingChassis.cpp
+	ace.loop();
+	//polling for pose every 20ms, see DrivingChassis.cpp
 	switch (status) {
 	case StartupRobot:
 		//Do this once at startup
@@ -142,17 +143,6 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			//ARC DRIVE
-			/*	this->motor1->setVelocityDegreesPerSecond(136.36);
-			this->motor2->setVelocityDegreesPerSecond(-300);
-
-			//STRAIGHT LINE DRIVE
-			this->motor1->setVelocityDegreesPerSecond(200);
-			this->motor2->setVelocityDegreesPerSecond(-200); */
-
-
-			Serial.println("test");
-
 			status = WAIT_FOR_DISTANCE;
 			nextStatus = Halting;
 		}
@@ -173,6 +163,7 @@ void StudentsRobot::updateStateMachine() {
 		break;
 	case Halting:
 		// save state and enter safe mode
+		ace.driveStraight(0, 0, 100);
 		Serial.println("Halting State machine");
 		digitalWrite(H_BRIDGE_ENABLE, 0);
 		motor3->stop();
@@ -182,57 +173,13 @@ void StudentsRobot::updateStateMachine() {
 		status = Halt;
 		break;
 	case WAIT_FOR_DISTANCE:
-		ace.driveStraight(0, 0);
-		status = spagettiFix;
+		Serial.println("test");
+		if(ace.distanceDrive(550)){
+			status = nextStatus;
+		}
 		break;
 	case spagettiFix:
-		ace.loop();
-		status = WAIT_FOR_DISTANCE;
-
-// 		ace.driveStraight(200, 0);
-
-// 		if(motor2->getAngleDegrees() <= targetDistPosition1To2){  //if our motor 2 encoder degree is less than the number of degrees that we set
-// 			if(goingForwards == true) {  //if we travelled from position 1 to 2, go to state that handles 2 to 3
-// 				status = WAIT_FOR_DISTANCE_2to3;
-// 			}
-// 			else if (goingForwards == false) {  //otherwise, we are travelling backwards going from position 2 to 1, and then halt
-// 				status = Halting;
-// 			}
-// 		}
-
-
-// >>>>>>> master
 		break;
-
-	case WAIT_FOR_DISTANCE_2to3:
-			ace.pointTurn(200, 90);
-
-			if(motor2->getAngleDegrees() <= targetDistPosition2To3){
-				if(goingForwards == true) {
-					status = WAIT_FOR_DISTANCE_3to4;
-				}
-				else if (goingForwards == false) {
-					status = WAIT_FOR_DISTANCE_2to3;
-				}
-			}
-
-
-			break;
-
-	case WAIT_FOR_DISTANCE_3to4:
-			ace.driveStraight(200, 0);
-
-			if(motor2->getAngleDegrees() <= targetDistPosition3To4){
-				if(goingForwards == true) {
-					status = WAIT_FOR_DISTANCE_2to3;
-				}
-				else if (goingForwards == false) {
-					status = Halting;
-				}
-			}
-
-
-			break;
 
 	case Halt:
 		// in safe mode
