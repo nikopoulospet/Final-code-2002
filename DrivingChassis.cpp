@@ -56,14 +56,16 @@ DrivingChassis::~DrivingChassis() {
  *
  */
 DrivingChassis::DrivingChassis(PIDMotor * left, PIDMotor * right,
-		float wheelTrackMM, float wheelRadiusMM , GetIMU * imu) : robotPose(0,0,0)  //starts with pose of 0,0,0
+	float wheelTrackMM, float wheelRadiusMM , GetIMU * imu) : robotPose(0,0,0)  //starts with pose of 0,0,0
 
 {
 	myleft = left;
 	myright = right;
 	robotPose.wheelTrackMM = wheelTrackMM;
 	robotPose.wheelRadiusMM = wheelRadiusMM;
+	imu = new GetIMU();
 	IMU = imu;
+
 
 }
 
