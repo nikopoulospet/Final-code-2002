@@ -180,19 +180,32 @@ void StudentsRobot::updateStateMachine() {
 		break;
 	case Pos1_2:
 		if(ace.distanceDrive(550)){
-			Serial.print("======================");
 			status = Pos2_3;
 				}
 		break;
 	case Pos2_3:
 		if(ace.turnDrive(90)){
-			Serial.print("======================");
 			status = Pos3_4;
 		}
 		break;
 	case Pos3_4:
 		if(ace.distanceDrive(150)){
-			Serial.print("======================");
+			status = nextStatus;
+			//status = Pos4_3;
+		}
+		break;
+	case Pos4_3:
+		if(ace.distanceDrive(-150)){
+			status = Pos3_2;
+		}
+		break;
+	case Pos3_2:
+		if(ace.turnDrive(-90)){
+			status = Pos2_1;
+		}
+		break;
+	case Pos2_1:
+		if(ace.distanceDrive(-550)){
 			status = nextStatus;
 		}
 		break;

@@ -146,16 +146,8 @@ void DrivingChassis::updatePose(){
 	double angleRightMotor = myright->getAngleDegrees();  //gets angle from right and left motor
 	double angleLeftMotor = myleft->getAngleDegrees();
 	double IMUheading =  IMU->getEULER_azimuth() + offset;  //IMU mounted in reverse, going straight will give us heading of -180 unless we add 180 to offset system by PI
-
 	double timestamp = micros();  //set in micros, if set in millis, timestamp will be 0
-
 	robotPose.updateEncoderPositions(timestamp, angleRightMotor, angleLeftMotor, IMUheading);  //updates encoder position -> see Pose.cpp
-
-	//this->driveStraight(200, 45);
-
-
-
-
 }
 
 
@@ -163,22 +155,16 @@ void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ 
 	targetHeading = targetHeading * (PI/180);
 	//WITHOUT COMPLEMENTARY FILTER
 	//double headingError = this->robotPose.theta - targetHeading;  //robotPose heading - target Heading  -1 because counterclockwise is negative in our coordinate system
-
-
-	//WITH COMPLEMENTARY FILTER
-	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .95 + this->robotPose.theta * .05) - targetHeading;
-
 	//JUST IMU
 	// double headingError = ((offset + this->IMU->getEULER_azimuth()) * (PI/180)) - targetHeading ;
-
+	//WITH COMPLEMENTARY FILTER
+	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .95 + this->robotPose.theta * .05) - targetHeading;
 
 	double effort = Kp * headingError;
 	this->myleft->setVelocityDegreesPerSecond(speed - effort);
 	this->myright->setVelocityDegreesPerSecond(-speed - effort);
 
-	//Serial.println(String(effort) + "," +  String(headingError));
 	Serial.println("MyLeft: " + String(myleft->getVelocityDegreesPerSecond()) + " MyRight: " + String(myright->getVelocityDegreesPerSecond()) + "effort: " + String(effort) + " theta: " + String(robotPose.theta));
-
 }
 
 bool DrivingChassis::turnDrive(double deg){
@@ -192,11 +178,15 @@ bool DrivingChassis::turnDrive(double deg){
 }
 
 bool DrivingChassis::distanceDrive (double mm){
-	static double startingPosition = -1 * robotPose.x;
-	double target = (startingPosition + (mm/(wheelRadius * (2*PI))) * 360);
+	static bool trigger = true;
+	if(trigger){
+		myleft->overrideCurrentPosition(0);
+		myright->overrideCurrentPosition(0);
+	}// only resets motor encoders on first run of function, so each time this is called the encoder values are zero
+	 // hacky way of getting around other problem but should work, we can keep track of position in the map
+
+	double target = mmTOdeg(mm);
 	distanceError =  abs(this->myright->getAngleDegrees()) - target;
-
-
 	double effort = kpDistance * distanceError;
 	if(effort > 50) {
 		effort = 50;
@@ -204,12 +194,19 @@ bool DrivingChassis::distanceDrive (double mm){
 	else if (effort < -50) {
 		effort = -50;
 	}
+
+
 	this->driveStraight(-effort, 0, 100);
 	if((abs(this->myright->getAngleDegrees()) >= target)) {
+		trigger = true; // resets trigger just in case static doesn't reset every time a new instance of the function is called
 		return true;
 	}else{
 		return false;
 	}
+}
+
+double DrivingChassis::mmTOdeg(double mm){
+	return (mm/(wheelRadius * (2*PI))) * 360;
 }
 
 

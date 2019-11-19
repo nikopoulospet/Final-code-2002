@@ -137,10 +137,39 @@ public:
 	void updatePose();
 
 	void driveStraight(double speed, double targetHeading, int Kp);
+	/**
+	 * drives in the speed and direction specified, for driving straight a Kp of 100 is recommended, for turning a Kp of 25 is recommended
+	 *
+	 * @param speed is the target speed
+	 * @param targetHeading is the desired heading of the robot
+	 * @param Kp is the Kp for the controller used in the function
+	 *
+	 */
 
 	bool distanceDrive(double mm);
+	/**
+	 * drives to a distance in mm, using a p controller to handle speeds
+	 *
+	 * @param takes the desired drive distance in mm
+	 *
+	 * @return true when distance is reached
+	 */
 
 	bool turnDrive(double deg);
+	/**
+	 * turn function, turns to desired heading using driveStraight with zero speed and a modified heading
+	 *
+	 * @param takes the desired heading, positive is clockwise
+	 *
+	 * @return true when done turning, false until heading is reached
+	 */
+
+	double mmTOdeg(double mm);
+	/**
+	 * short conversion function for mm to degrees
+	 *
+	 * @param takes in the desired mm to convert
+	 */
 };
 
 

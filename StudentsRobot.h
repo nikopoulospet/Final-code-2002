@@ -25,7 +25,7 @@
  */
 enum RobotStateMachine {
 
-	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4,WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6,WAIT_FOR_DISTANCE=7,Pos1_2 = 8, Pos2_3 = 9, Pos3_4,
+	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4,WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6,WAIT_FOR_DISTANCE=7,Pos1_2 = 8, Pos2_3 = 9, Pos3_4, Pos4_3, Pos3_2, Pos2_1,
 };
 /**
  * @enum ComStackStatusState
