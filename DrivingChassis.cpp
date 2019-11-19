@@ -208,6 +208,3 @@ bool DrivingChassis::distanceDrive (double mm){
 double DrivingChassis::mmTOdeg(double mm){
 	return (mm/(wheelRadius * (2*PI))) * 360;
 }
-
-
-
