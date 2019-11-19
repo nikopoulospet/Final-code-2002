@@ -178,13 +178,14 @@ bool DrivingChassis::turnDrive(double deg){
 }
 
 bool DrivingChassis::distanceDrive (double mm){
-	static bool trigger = true;
+	/*(static bool trigger = true;
 	if(trigger){
 		myleft->overrideCurrentPosition(0);
 		myright->overrideCurrentPosition(0);
+		//trigger = false;
 	}// only resets motor encoders on first run of function, so each time this is called the encoder values are zero
 	 // hacky way of getting around other problem but should work, we can keep track of position in the map
-
+	*/
 	double target = mmTOdeg(mm);
 	distanceError =  abs(this->myright->getAngleDegrees()) - target;
 	double effort = kpDistance * distanceError;
@@ -196,9 +197,9 @@ bool DrivingChassis::distanceDrive (double mm){
 	}
 
 
-	this->driveStraight(-effort, 0, 100);
+	this->driveStraight(-effort, 0, 300);
 	if((abs(this->myright->getAngleDegrees()) >= target)) {
-		trigger = true; // resets trigger just in case static doesn't reset every time a new instance of the function is called
+		//trigger = true; // resets trigger just in case static doesn't reset every time a new instance of the function is called
 		return true;
 	}else{
 		return false;
