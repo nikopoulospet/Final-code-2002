@@ -143,7 +143,7 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			status = WAIT_FOR_DISTANCE;
+			status = Pos1_2;
 			nextStatus = Halting;
 		}
 		break;
@@ -174,11 +174,27 @@ void StudentsRobot::updateStateMachine() {
 		break;
 	case WAIT_FOR_DISTANCE:
 		Serial.println("test");
-		if(ace.distanceDrive(550)){
+		if(ace.turnDrive(45)){
 			status = nextStatus;
 		}
 		break;
-	case spagettiFix:
+	case Pos1_2:
+		if(ace.distanceDrive(550)){
+			Serial.print("======================");
+			status = Pos2_3;
+				}
+		break;
+	case Pos2_3:
+		if(ace.turnDrive(90)){
+			Serial.print("======================");
+			status = Pos3_4;
+		}
+		break;
+	case Pos3_4:
+		if(ace.distanceDrive(150)){
+			Serial.print("======================");
+			status = nextStatus;
+		}
 		break;
 
 	case Halt:

@@ -139,6 +139,8 @@ public:
 	void driveStraight(double speed, double targetHeading, int Kp);
 
 	bool distanceDrive(double mm);
+
+	bool turnDrive(double deg);
 };
 
 

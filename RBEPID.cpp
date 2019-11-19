@@ -48,7 +48,7 @@ float RBEPID::calc(double setPoint, double curPosition) {
 
 	this->errorIndex++;
 
-	if(this->errorIndex > 200){
+	if(this->errorIndex >= 200){
 		this->errorIndex = 0;
 	}
 

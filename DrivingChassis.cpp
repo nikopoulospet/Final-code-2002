@@ -59,11 +59,14 @@ DrivingChassis::DrivingChassis(PIDMotor * left, PIDMotor * right,
 		float wheelTrackMM, float wheelRadiusMM , GetIMU * imu) : robotPose(0,0,0)  //starts with pose of 0,0,0
 
 {
+	Serial.println("DrivingChassis::DrivingChassis constructor called here ");
+
 	myleft = left;
 	myright = right;
 	robotPose.wheelTrackMM = wheelTrackMM;
 	robotPose.wheelRadiusMM = wheelRadiusMM;
 	//imu = new GetIMU();
+
 	IMU = imu;
 
 
@@ -119,9 +122,11 @@ bool DrivingChassis::isChassisDoneDriving() {
  */
 void DrivingChassis::loop(){//polls for data every 20ms
 
-	if(IMU->getEULER_azimuth() != 0 && trigger){
-		offset = -1 * IMU->getEULER_azimuth();
-		trigger = false;
+	if(trigger){
+		if(IMU->getEULER_azimuth() != 0){
+			offset = IMU->getEULER_azimuth() * (-1);
+			trigger = false;
+		}
 	}
 	if (!loopFlag) {
 		now = millis();
@@ -140,7 +145,7 @@ void DrivingChassis::loop(){//polls for data every 20ms
 void DrivingChassis::updatePose(){
 	double angleRightMotor = myright->getAngleDegrees();  //gets angle from right and left motor
 	double angleLeftMotor = myleft->getAngleDegrees();
-	double IMUheading = offset +  IMU->getEULER_azimuth();  //IMU mounted in reverse, going straight will give us heading of -180 unless we add 180 to offset system by PI
+	double IMUheading =  IMU->getEULER_azimuth() + offset;  //IMU mounted in reverse, going straight will give us heading of -180 unless we add 180 to offset system by PI
 
 	double timestamp = micros();  //set in micros, if set in millis, timestamp will be 0
 
@@ -176,21 +181,31 @@ void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ 
 
 }
 
+bool DrivingChassis::turnDrive(double deg){
+	this->driveStraight(0,deg,25);
+	if(this->myleft->getVelocityDegreesPerSecond() == 0){
+		return true;
+	}else{
+		return false;
+	}
+
+}
+
 bool DrivingChassis::distanceDrive (double mm){
-	double target = (mm/(wheelRadius * (2*PI))) * 360;
+	static double startingPosition = -1 * robotPose.x;
+	double target = (startingPosition + (mm/(wheelRadius * (2*PI))) * 360);
 	distanceError =  abs(this->myright->getAngleDegrees()) - target;
 
 
 	double effort = kpDistance * distanceError;
-	/*if(effort > 50) {
+	if(effort > 50) {
 		effort = 50;
 	}
 	else if (effort < -50) {
 		effort = -50;
-	} */
-	this->driveStraight(200 - effort, 0, 100);
-	Serial.println(String(myright->getAngleDegrees()));
-	if((abs(this->myright->getAngleDegrees()) >= target)  && myright->getVelocityDegreesPerSecond() >= 10  && myright->getVelocityDegreesPerSecond() <= -10) {
+	}
+	this->driveStraight(-effort, 0, 100);
+	if((abs(this->myright->getAngleDegrees()) >= target)) {
 		return true;
 	}else{
 		return false;
