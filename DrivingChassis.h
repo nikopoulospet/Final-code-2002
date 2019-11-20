@@ -36,9 +36,10 @@ public:
 	long now = 0;
 	double offset;
 	bool trigger = true;
+	double wheelRadius = 25.6; // mm
+	double distanceError;
+	double kpDistance = 7;
 	//double targetHeading = 0; //45 * (PI/180);  //hard coded heading in radians
-	double Kp = 50;
-	double KpTurn = 50;
 
 
 	/**
@@ -135,11 +136,42 @@ public:
 
 	void updatePose();
 
-	void driveStraight(double speed, double targetHeading);
+	void driveStraight(double speed, double targetHeading, int Kp);
+	/**
+	 * drives in the speed and direction specified, for driving straight a Kp of 100 is recommended, for turning a Kp of 25 is recommended
+	 *
+	 * @param speed is the target speed
+	 * @param targetHeading is the desired heading of the robot
+	 * @param Kp is the Kp for the controller used in the function
+	 *
+	 */
 
-	void pointTurn(double speed, double targetHeading);
+	void distanceDrive(double mm);
+	/**
+	 * drives to a distance in mm, using a p controller to handle speeds
+	 *
+	 * @param takes the desired drive distance in mm
+	 *
+	 * @return true when distance is reached
+	 */
 
-	void turnAround(double speed);
+	bool turnDrive(double speed,double deg, double Kp);
+	/**
+	 * turn function, turns to desired heading using driveStraight with zero speed and a modified heading
+	 *
+	 * @param takes the desired heading, positive is clockwise
+	 *
+	 * @return true when done turning, false until heading is reached
+	 */
+
+	double mmTOdeg(double mm);
+	/**
+	 * short conversion function for mm to degrees
+	 *
+	 * @param takes in the desired mm to convert
+	 */
+
+	void turn(double deg, double Kp);
 };
 
 

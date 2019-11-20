@@ -25,10 +25,7 @@
  */
 enum RobotStateMachine {
 
-//	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4,WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6,WAIT_FOR_DISTANCE=7,spagettiFix=8,
-
-	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4,WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6,WAIT_FOR_DISTANCE=7, WAIT_FOR_DISTANCE_2to3 = 8, WAIT_FOR_DISTANCE_3to4 = 9,spagettiFix= 10,
-
+	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4,WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6,WAIT_FOR_DISTANCE=7,Pos1_2 = 8,Pos2_3 = 9,Pos3_4 = 10, oneEighty = 11,
 };
 /**
  * @enum ComStackStatusState
@@ -69,11 +66,15 @@ private:
     float targetDistPosition3to4 = -(15/ (2 * PI * 25.6) * 360);
     //float targetDist = -1461.6;  //target distance for arc
     //float targetDist = -1352;  //target distance for driving straight
-    DrivingChassis ace;  //added driving chassis object for our robot
+    DrivingChassis  ace;  //added driving chassis object for our robot
 	RobotStateMachine nextStatus = StartupRobot;
 	IRCamSimplePacketComsServer * IRCamera;
 	GetIMU * IMU;
 public:
+	boolean trigger = true;
+	double target = 1000;
+	double distanceError = 0;
+	double effort = 0;
 	boolean goingForwards = true;  //Lab 4 going forwards from position 1 to 2 is true
 
 	/**

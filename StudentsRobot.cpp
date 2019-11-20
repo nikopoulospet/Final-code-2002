@@ -11,7 +11,8 @@
 
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 		PIDMotor * motor3, Servo * servo, IRCamSimplePacketComsServer * IRCam,
-		GetIMU * imu) : ace(motor1,motor2, wheelTrackMM, wheelRadiusMM, imu)  //instantiating ace as a driving chassis
+		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu)
+
 
 
 {
@@ -22,6 +23,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	this->motor3 = motor3;
 	IRCamera = IRCam;
 	IMU = imu;
+	//ace = new DrivingChassis(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu);
 #if defined(USE_IMU)
 	IMU->setXPosition(200);
 	IMU->setYPosition(0);
@@ -104,7 +106,8 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 void StudentsRobot::updateStateMachine() {
 	digitalWrite(WII_CONTROLLER_DETECT, 1);
 	long now = millis();
-	//ace.loop();  //polling for pose every 20ms, see DrivingChassis.cpp
+
+	//polling for pose every 20ms, see DrivingChassis.cpp
 	switch (status) {
 	case StartupRobot:
 		//Do this once at startup
@@ -125,6 +128,7 @@ void StudentsRobot::updateStateMachine() {
 		nextTime = startTime + 1000; // the next timer loop should be 1000ms after the motors stop
 		break;
 	case Running:
+		ace.loop();
 		// Set up a non-blocking 1000 ms delay
 		status = WAIT_FOR_TIME;
 		nextTime = nextTime + 100; // ensure no timer drift by incremeting the target
@@ -142,19 +146,9 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			//ARC DRIVE
-			/*	this->motor1->setVelocityDegreesPerSecond(136.36);
-			this->motor2->setVelocityDegreesPerSecond(-300);
-
-			//STRAIGHT LINE DRIVE
-			this->motor1->setVelocityDegreesPerSecond(200);
-			this->motor2->setVelocityDegreesPerSecond(-200); */
-
-
-			Serial.println("test");
-
-			status = WAIT_FOR_DISTANCE;
+			status = Pos1_2;
 			nextStatus = Halting;
+
 		}
 		break;
 	case WAIT_FOR_TIME:
@@ -173,6 +167,7 @@ void StudentsRobot::updateStateMachine() {
 		break;
 	case Halting:
 		// save state and enter safe mode
+		ace.driveStraight(0, 0, 50);
 		Serial.println("Halting State machine");
 		digitalWrite(H_BRIDGE_ENABLE, 0);
 		motor3->stop();
@@ -182,57 +177,84 @@ void StudentsRobot::updateStateMachine() {
 		status = Halt;
 		break;
 	case WAIT_FOR_DISTANCE:
-		ace.driveStraight(0, 0);
-		status = spagettiFix;
+		Serial.println("test");
+		if(ace.turnDrive(200,45,25)){
+			status = nextStatus;
+		}
 		break;
-	case spagettiFix:
+	case Pos1_2:
+
+		if(trigger){
+			target = 550;
+			target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
+			trigger = false;
+		}
+
+		distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+		effort = 0.25 * distanceError;
+
+		if(goingForwards){
+			ace.driveStraight(-effort, 0, 200);
+		}else{
+			ace.driveStraight(-effort, -180, 200);
+		}
+		Serial.println(target);
+		if(motor1->getAngleDegrees() >= target){
+			if(goingForwards){
+				status = Pos2_3;
+			}else{
+				status = Halting;
+			}
+			trigger = true;
+		}
+		break;
+	case Pos2_3:
 		ace.loop();
-		status = WAIT_FOR_DISTANCE;
-
-// 		ace.driveStraight(200, 0);
-
-// 		if(motor2->getAngleDegrees() <= targetDistPosition1To2){  //if our motor 2 encoder degree is less than the number of degrees that we set
-// 			if(goingForwards == true) {  //if we travelled from position 1 to 2, go to state that handles 2 to 3
-// 				status = WAIT_FOR_DISTANCE_2to3;
-// 			}
-// 			else if (goingForwards == false) {  //otherwise, we are travelling backwards going from position 2 to 1, and then halt
-// 				status = Halting;
-// 			}
-// 		}
-
-
-// >>>>>>> master
+	//	ace.driveStraight(0, 90, 25);
+		if(goingForwards){
+			if(ace.turnDrive(0,90,10)) {
+				status = Pos3_4;
+			}
+		}else{
+			if(ace.turnDrive(0,-180,10)) {
+				status = Pos1_2;
+			}
+		}
 		break;
+	case Pos3_4:
 
-	case WAIT_FOR_DISTANCE_2to3:
-			ace.pointTurn(200, 90);
+		if(trigger){
+			target = 150;
+			target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
+			trigger = false;
+		}
 
-			if(motor2->getAngleDegrees() <= targetDistPosition2To3){
-				if(goingForwards == true) {
-					status = WAIT_FOR_DISTANCE_3to4;
-				}
-				else if (goingForwards == false) {
-					status = WAIT_FOR_DISTANCE_2to3;
-				}
+			distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+			effort = 0.25 * distanceError;
+			if(goingForwards){
+				ace.driveStraight(-effort, 90, 200);
+			}else{
+				ace.driveStraight(-effort, -90, 200);
 			}
-
-
-			break;
-
-	case WAIT_FOR_DISTANCE_3to4:
-			ace.driveStraight(200, 0);
-
-			if(motor2->getAngleDegrees() <= targetDistPosition3To4){
-				if(goingForwards == true) {
-					status = WAIT_FOR_DISTANCE_2to3;
+			Serial.println(target
+					);
+			if(motor1->getAngleDegrees() >= target){
+				if(goingForwards){
+					status = oneEighty;
+				}else{
+					status = Pos2_3;
 				}
-				else if (goingForwards == false) {
-					status = Halting;
-				}
+				trigger = true;
 			}
+		break;
+	case oneEighty:
 
-
-			break;
+		if(ace.turnDrive(0,-89.99,10)) {
+			status = Pos3_4;
+			goingForwards = false;
+		}
+		trigger = true;
+		break;
 
 	case Halt:
 		// in safe mode
