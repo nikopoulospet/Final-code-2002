@@ -189,7 +189,7 @@ void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ 
 	//JUST IMU
 	// double headingError = ((offset + this->IMU->getEULER_azimuth()) * (PI/180)) - targetHeading ;
 	//WITH COMPLEMENTARY FILTER
-	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .95 + this->robotPose.theta * .05) - targetHeading;
+	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .99 + this->robotPose.theta * .01) - targetHeading;
 
 	double effort = Kp * headingError;
 	/*if(effort > 50) {

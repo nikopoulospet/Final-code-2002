@@ -106,7 +106,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 void StudentsRobot::updateStateMachine() {
 	digitalWrite(WII_CONTROLLER_DETECT, 1);
 	long now = millis();
-	ace.loop();
+
 	//polling for pose every 20ms, see DrivingChassis.cpp
 	switch (status) {
 	case StartupRobot:
@@ -128,6 +128,7 @@ void StudentsRobot::updateStateMachine() {
 		nextTime = startTime + 1000; // the next timer loop should be 1000ms after the motors stop
 		break;
 	case Running:
+		ace.loop();
 		// Set up a non-blocking 1000 ms delay
 		status = WAIT_FOR_TIME;
 		nextTime = nextTime + 100; // ensure no timer drift by incremeting the target
@@ -166,7 +167,7 @@ void StudentsRobot::updateStateMachine() {
 		break;
 	case Halting:
 		// save state and enter safe mode
-		ace.driveStraight(0, 0, 100);
+		ace.driveStraight(0, 0, 50);
 		Serial.println("Halting State machine");
 		digitalWrite(H_BRIDGE_ENABLE, 0);
 		motor3->stop();
@@ -182,23 +183,78 @@ void StudentsRobot::updateStateMachine() {
 		}
 		break;
 	case Pos1_2:
+
 		if(trigger){
 			target = 550;
-			target = ace.mmTOdeg(target) + (motor1->getAngleDegrees() + motor2->getAngleDegrees())/2;
+			target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
 			trigger = false;
 		}
 
 		distanceError =  abs(this->motor1->getAngleDegrees()) - target;
 		effort = 0.25 * distanceError;
 
-		ace.driveStraight(-effort, 0, 500);
+		if(goingForwards){
+			ace.driveStraight(-effort, 0, 200);
+		}else{
+			ace.driveStraight(-effort, -180, 200);
+		}
 		Serial.println(target);
 		if(motor1->getAngleDegrees() >= target){
-			status = nextStatus;
+			if(goingForwards){
+				status = Pos2_3;
+			}else{
+				status = Halting;
+			}
 			trigger = true;
 		}
 		break;
+	case Pos2_3:
+		ace.loop();
+	//	ace.driveStraight(0, 90, 25);
+		if(goingForwards){
+			if(ace.turnDrive(0,90,10)) {
+				status = Pos3_4;
+			}
+		}else{
+			if(ace.turnDrive(0,-180,10)) {
+				status = Pos1_2;
+			}
+		}
+		break;
+	case Pos3_4:
 
+		if(trigger){
+			target = 150;
+			target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
+			trigger = false;
+		}
+
+			distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+			effort = 0.25 * distanceError;
+			if(goingForwards){
+				ace.driveStraight(-effort, 90, 200);
+			}else{
+				ace.driveStraight(-effort, -90, 200);
+			}
+			Serial.println(target
+					);
+			if(motor1->getAngleDegrees() >= target){
+				if(goingForwards){
+					status = oneEighty;
+				}else{
+					status = Pos2_3;
+				}
+				trigger = true;
+			}
+		break;
+	case oneEighty:
+
+		if(ace.turnDrive(0,-89.99,10)) {
+			status = Pos3_4;
+			goingForwards = false;
+		}
+		trigger = true;
+		break;
 
 	case Halt:
 		// in safe mode
