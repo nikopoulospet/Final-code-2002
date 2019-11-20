@@ -42,6 +42,7 @@ float RBEPID::calc(double setPoint, double curPosition) {
 
 	this ->errorArray[this->errorIndex] = err;
 
+	errorSum = 0;
 	for(int i = 0; i < 200; i++){
 		this->errorSum += errorArray[i];
 	}
@@ -52,7 +53,7 @@ float RBEPID::calc(double setPoint, double curPosition) {
 		this->errorIndex = 0;
 	}
 
-	float Ierr = (this->errorSum/200);
+	float Ierr = (this->errorSum/200.0);
 
 	float out = err * kp + Ierr *ki;
 	// simple P controller

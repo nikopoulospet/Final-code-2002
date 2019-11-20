@@ -38,7 +38,7 @@ public:
 	bool trigger = true;
 	double wheelRadius = 25.6; // mm
 	double distanceError;
-	double kpDistance = 1;
+	double kpDistance = 7;
 	//double targetHeading = 0; //45 * (PI/180);  //hard coded heading in radians
 
 
@@ -146,7 +146,7 @@ public:
 	 *
 	 */
 
-	bool distanceDrive(double mm);
+	void distanceDrive(double mm);
 	/**
 	 * drives to a distance in mm, using a p controller to handle speeds
 	 *
@@ -155,7 +155,7 @@ public:
 	 * @return true when distance is reached
 	 */
 
-	bool turnDrive(double deg);
+	bool turnDrive(double speed,double deg, double Kp);
 	/**
 	 * turn function, turns to desired heading using driveStraight with zero speed and a modified heading
 	 *
@@ -170,6 +170,8 @@ public:
 	 *
 	 * @param takes in the desired mm to convert
 	 */
+
+	void turn(double deg, double Kp);
 };
 
 

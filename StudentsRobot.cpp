@@ -11,7 +11,8 @@
 
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 		PIDMotor * motor3, Servo * servo, IRCamSimplePacketComsServer * IRCam,
-		GetIMU * imu) : ace(motor1,motor2, wheelTrackMM, wheelRadiusMM, imu)  //instantiating ace as a driving chassis
+		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu)
+
 
 
 {
@@ -22,6 +23,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	this->motor3 = motor3;
 	IRCamera = IRCam;
 	IMU = imu;
+	//ace = new DrivingChassis(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu);
 #if defined(USE_IMU)
 	IMU->setXPosition(200);
 	IMU->setYPosition(0);
@@ -145,6 +147,7 @@ void StudentsRobot::updateStateMachine() {
 
 			status = Pos1_2;
 			nextStatus = Halting;
+
 		}
 		break;
 	case WAIT_FOR_TIME:
@@ -174,41 +177,28 @@ void StudentsRobot::updateStateMachine() {
 		break;
 	case WAIT_FOR_DISTANCE:
 		Serial.println("test");
-		if(ace.turnDrive(45)){
+		if(ace.turnDrive(200,45,25)){
 			status = nextStatus;
 		}
 		break;
 	case Pos1_2:
-		if(ace.distanceDrive(550)){
-			status = Pos2_3;
-				}
-		break;
-	case Pos2_3:
-		if(ace.turnDrive(90)){
-			status = Pos3_4;
+		if(trigger){
+			target = 550;
+			target = ace.mmTOdeg(target) + (motor1->getAngleDegrees() + motor2->getAngleDegrees())/2;
+			trigger = false;
 		}
-		break;
-	case Pos3_4:
-		if(ace.distanceDrive(150)){
+
+		distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+		effort = 0.25 * distanceError;
+
+		ace.driveStraight(-effort, 0, 500);
+		Serial.println(target);
+		if(motor1->getAngleDegrees() >= target){
 			status = nextStatus;
-			//status = Pos4_3;
+			trigger = true;
 		}
 		break;
-	case Pos4_3:
-		if(ace.distanceDrive(-150)){
-			status = Pos3_2;
-		}
-		break;
-	case Pos3_2:
-		if(ace.turnDrive(-90)){
-			status = Pos2_1;
-		}
-		break;
-	case Pos2_1:
-		if(ace.distanceDrive(-550)){
-			status = nextStatus;
-		}
-		break;
+
 
 	case Halt:
 		// in safe mode
