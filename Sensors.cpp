@@ -23,27 +23,19 @@ int Sensors::attach(int trig, int echo){
 }
 
 double Sensors::PingUltrasonic(){
-	//digitalWrite(triggerPin, LOW);
 	if(!reading){
-		//Serial.print("Hello");
 		if(trigger){
 			dTime = micros();
 			digitalWrite(triggerPin, HIGH);
-			//Serial.print("Hiya");
-			//Serial.print("++++++++++++++++++++++++++++++++");
-			//Serial.println(dTime);
 			trigger = false;
 		}
 		if(!trigger && dTime + 20 < micros()){
 			digitalWrite(triggerPin, LOW);
 			reading = false;
 			trigger = true;
-		//	Serial.println("Please help me");
 			double pulseWidth = pulseIn(echoPin,HIGH);
 			double distance = pulseWidth * (1/58.0) * 10;
 			return distance;  //pulsewidth of echoPin multiplied by conversion factor converted to mm from cm
-
-			//Serial.print("===================================");
 		}
 	}
 	return -1.0;

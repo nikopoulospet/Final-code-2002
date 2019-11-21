@@ -60,13 +60,10 @@ DrivingChassis::DrivingChassis(PIDMotor * left, PIDMotor * right,
 
 {
 	Serial.println("DrivingChassis::DrivingChassis constructor called here ");
-
 	myleft = left;
 	myright = right;
 	robotPose.wheelTrackMM = wheelTrackMM;
 	robotPose.wheelRadiusMM = wheelRadiusMM;
-	//imu = new GetIMU();
-
 	IMU = imu;
 
 

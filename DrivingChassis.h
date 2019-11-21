@@ -34,10 +34,10 @@ public:
 	Pose robotPose;  //instantiating a pose object
 	boolean loopFlag = false;
 	long now = 0;
-	double offset;
+	double offset = 0;
 	bool trigger = true;
 	double wheelRadius = 25.6; // mm
-	double distanceError;
+	double distanceError = 0;
 	double kpDistance = 7;
 	//double targetHeading = 0; //45 * (PI/180);  //hard coded heading in radians
 
