@@ -149,7 +149,7 @@ void DrivingChassis::updatePose(){
 	double timestamp = micros();  //set in micros, if set in millis, timestamp will be 0
 	robotPose.updateEncoderPositions(timestamp, angleRightMotor, angleLeftMotor, IMUheading);  //updates encoder position -> see Pose.cpp
 }
-/**
+
 void DrivingChassis::turn(double deg, double Kp) {
 		deg = deg * (PI/180);
 		//WITHOUT COMPLEMENTARY FILTER
@@ -181,7 +181,7 @@ bool DrivingChassis::turnDrive(double speed, double deg, double Kp){
 	}
 
 }
-**/
+
 void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ // usually 25 for point turn, usually 50 for driving
 	targetHeading = targetHeading * (PI/180);
 	//WITHOUT COMPLEMENTARY FILTER

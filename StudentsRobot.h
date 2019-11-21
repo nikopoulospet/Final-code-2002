@@ -14,6 +14,7 @@
 #include "src/pid/ServoAnalogPIDMotor.h"
 #include <ESP32Servo.h>
 
+#include "Sensors.h"
 #include "DrivingChassis.h"
 #include "src/commands/IRCamSimplePacketComsServer.h"
 #include "src/commands/GetIMU.h"
@@ -26,6 +27,7 @@
 enum RobotStateMachine {
 
 	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4,WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6,WAIT_FOR_DISTANCE=7,Pos1_2 = 8,Pos2_3 = 9,Pos3_4 = 10, oneEighty = 11,
+	UltrasonicTest = 12,
 };
 /**
  * @enum ComStackStatusState
@@ -67,6 +69,7 @@ private:
     //float targetDist = -1461.6;  //target distance for arc
     //float targetDist = -1352;  //target distance for driving straight
     DrivingChassis  ace;  //added driving chassis object for our robot
+    Sensors Ultrasonic1;
 	RobotStateMachine nextStatus = StartupRobot;
 	IRCamSimplePacketComsServer * IRCamera;
 	GetIMU * IMU;

@@ -11,7 +11,7 @@
 
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 		PIDMotor * motor3, Servo * servo, IRCamSimplePacketComsServer * IRCam,
-		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu)
+		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu), Ultrasonic1()
 
 
 
@@ -91,12 +91,15 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	// H-Bridge enable pin
 	pinMode(H_BRIDGE_ENABLE, OUTPUT);
 	// Stepper pins
-	pinMode(STEPPER_DIRECTION, OUTPUT);
-	pinMode(STEPPER_STEP, OUTPUT);
+	//pinMode(STEPPER_DIRECTION, OUTPUT);
+	//pinMode(STEPPER_STEP, OUTPUT);
 	// User button
 	pinMode(BOOT_FLAG_PIN, INPUT_PULLUP);
 	//Test IO
 	pinMode(WII_CONTROLLER_DETECT, OUTPUT);
+
+	//SENSOR
+	Ultrasonic1.attach(TrigPIN, EchoPIN);
 
 }
 /**
@@ -146,11 +149,18 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			status = Pos1_2;
-			nextStatus = Halting;
+			status = UltrasonicTest;
+			nextStatus = UltrasonicTest;
 
 		}
 		break;
+
+	case UltrasonicTest:
+		Serial.println(Ultrasonic1.PingUltrasonic());
+		break;
+
+
+
 	case WAIT_FOR_TIME:
 
 		// Check to see if enough time has elapsed
