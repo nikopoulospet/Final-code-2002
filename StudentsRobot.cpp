@@ -157,6 +157,14 @@ void StudentsRobot::updateStateMachine() {
 
 	case UltrasonicTest:
 		Serial.println(Ultrasonic1.PingUltrasonic());
+
+	/*	PSEUDOCODE FOR PINGING ULTRASONIC AND DETERMINING LOCATION OF A BUILDING
+	 * if(motor1->getAngleDegrees() > 1550 && motor1->getAngleDegrees() < 1050) {
+			if(Ultrasonic1.PingUltrasonic() > 590.0  && Ultrasonic1.PingUltrasonic() < 500) {
+					MapArray[2][4] = 1;
+			}
+		} */
+
 		break;
 
 
@@ -220,7 +228,7 @@ void StudentsRobot::updateStateMachine() {
 		break;
 	case Pos2_3:
 		ace.loop();
-	//	ace.driveStraight(0, 90, 25);
+		//	ace.driveStraight(0, 90, 25);
 		if(goingForwards){
 			if(ace.turnDrive(0,90,10)) {
 				status = Pos3_4;
@@ -239,23 +247,23 @@ void StudentsRobot::updateStateMachine() {
 			trigger = false;
 		}
 
-			distanceError =  abs(this->motor1->getAngleDegrees()) - target;
-			effort = 0.25 * distanceError;
+		distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+		effort = 0.25 * distanceError;
+		if(goingForwards){
+			ace.driveStraight(-effort, 90, 200);
+		}else{
+			ace.driveStraight(-effort, -90, 200);
+		}
+		Serial.println(target
+		);
+		if(motor1->getAngleDegrees() >= target){
 			if(goingForwards){
-				ace.driveStraight(-effort, 90, 200);
+				status = oneEighty;
 			}else{
-				ace.driveStraight(-effort, -90, 200);
+				status = Pos2_3;
 			}
-			Serial.println(target
-					);
-			if(motor1->getAngleDegrees() >= target){
-				if(goingForwards){
-					status = oneEighty;
-				}else{
-					status = Pos2_3;
-				}
-				trigger = true;
-			}
+			trigger = true;
+		}
 		break;
 	case oneEighty:
 

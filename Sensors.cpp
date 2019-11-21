@@ -39,7 +39,9 @@ double Sensors::PingUltrasonic(){
 			reading = false;
 			trigger = true;
 		//	Serial.println("Please help me");
-			return pulseIn(echoPin,HIGH);
+			double pulseWidth = pulseIn(echoPin,HIGH);
+			double distance = pulseWidth * (1/58.0) * 10;
+			return distance;  //pulsewidth of echoPin multiplied by conversion factor converted to mm from cm
 
 			//Serial.print("===================================");
 		}
