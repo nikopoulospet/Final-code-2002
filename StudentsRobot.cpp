@@ -11,7 +11,7 @@
 
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 		PIDMotor * motor3, Servo * servo, IRCamSimplePacketComsServer * IRCam,
-		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu)
+		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu), Ultrasonic1()
 
 
 
@@ -91,12 +91,15 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	// H-Bridge enable pin
 	pinMode(H_BRIDGE_ENABLE, OUTPUT);
 	// Stepper pins
-	pinMode(STEPPER_DIRECTION, OUTPUT);
-	pinMode(STEPPER_STEP, OUTPUT);
+	//pinMode(STEPPER_DIRECTION, OUTPUT);
+	//pinMode(STEPPER_STEP, OUTPUT);
 	// User button
 	pinMode(BOOT_FLAG_PIN, INPUT_PULLUP);
 	//Test IO
 	pinMode(WII_CONTROLLER_DETECT, OUTPUT);
+
+	//SENSOR
+	Ultrasonic1.attach(TrigPIN, EchoPIN);
 
 }
 /**
@@ -146,11 +149,26 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			status = Pos1_2;
-			nextStatus = Halting;
+			status = UltrasonicTest;
+			nextStatus = UltrasonicTest;
 
 		}
 		break;
+
+	case UltrasonicTest:
+		Serial.println(Ultrasonic1.PingUltrasonic());
+
+	/*	PSEUDOCODE FOR PINGING ULTRASONIC AND DETERMINING LOCATION OF A BUILDING
+	 * if(motor1->getAngleDegrees() > 1550 && motor1->getAngleDegrees() < 1050) {
+			if(Ultrasonic1.PingUltrasonic() > 590.0  && Ultrasonic1.PingUltrasonic() < 500) {
+					MapArray[2][4] = 1;
+			}
+		} */
+
+		break;
+
+
+
 	case WAIT_FOR_TIME:
 
 		// Check to see if enough time has elapsed
@@ -210,7 +228,7 @@ void StudentsRobot::updateStateMachine() {
 		break;
 	case Pos2_3:
 		ace.loop();
-	//	ace.driveStraight(0, 90, 25);
+		//	ace.driveStraight(0, 90, 25);
 		if(goingForwards){
 			if(ace.turnDrive(0,90,10)) {
 				status = Pos3_4;
@@ -229,23 +247,23 @@ void StudentsRobot::updateStateMachine() {
 			trigger = false;
 		}
 
-			distanceError =  abs(this->motor1->getAngleDegrees()) - target;
-			effort = 0.25 * distanceError;
+		distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+		effort = 0.25 * distanceError;
+		if(goingForwards){
+			ace.driveStraight(-effort, 90, 200);
+		}else{
+			ace.driveStraight(-effort, -90, 200);
+		}
+		Serial.println(target
+		);
+		if(motor1->getAngleDegrees() >= target){
 			if(goingForwards){
-				ace.driveStraight(-effort, 90, 200);
+				status = oneEighty;
 			}else{
-				ace.driveStraight(-effort, -90, 200);
+				status = Pos2_3;
 			}
-			Serial.println(target
-					);
-			if(motor1->getAngleDegrees() >= target){
-				if(goingForwards){
-					status = oneEighty;
-				}else{
-					status = Pos2_3;
-				}
-				trigger = true;
-			}
+			trigger = true;
+		}
 		break;
 	case oneEighty:
 

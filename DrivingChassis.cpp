@@ -60,13 +60,10 @@ DrivingChassis::DrivingChassis(PIDMotor * left, PIDMotor * right,
 
 {
 	Serial.println("DrivingChassis::DrivingChassis constructor called here ");
-
 	myleft = left;
 	myright = right;
 	robotPose.wheelTrackMM = wheelTrackMM;
 	robotPose.wheelRadiusMM = wheelRadiusMM;
-	//imu = new GetIMU();
-
 	IMU = imu;
 
 
@@ -160,12 +157,12 @@ void DrivingChassis::turn(double deg, double Kp) {
 		double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .98 + this->robotPose.theta * .02) - deg;
 
 		double effort = Kp * headingError;
-	/*	if(effort > 50) {
+		if(effort > 50) {
 				effort = 50;
 			}
 			else if (effort < -50) {
 				effort = -50;
-			} */
+			}
 		this->myleft->setVelocityDegreesPerSecond(- effort);
 		this->myright->setVelocityDegreesPerSecond(- effort);
 		Serial.println("+++++++++++TURNING++++++++++++");
