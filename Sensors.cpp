@@ -23,28 +23,28 @@ int Sensors::attach(int trig, int echo){
 }
 
 double Sensors::PingUltrasonic(){
+	//digitalWrite(triggerPin, LOW);
 	if(!reading){
+		//Serial.print("Hello");
 		if(trigger){
-			dTime = micros() - dTime;
-			digitalWrite(this->triggerPin, HIGH);
-			Serial.print("++++++++++++++++++++++++++++++++");
-			Serial.println(dTime);
+			dTime = micros();
+			digitalWrite(triggerPin, HIGH);
+			//Serial.print("Hiya");
+			//Serial.print("++++++++++++++++++++++++++++++++");
+			//Serial.println(dTime);
 			trigger = false;
 		}
-		if(!trigger && dTime + 20 <= micros() - dTime){
-			digitalWrite(this->triggerPin, LOW);
-			reading = true;
+		if(!trigger && dTime + 20 < micros()){
+			digitalWrite(triggerPin, LOW);
+			reading = false;
 			trigger = true;
-			Serial.print("===================================");
+		//	Serial.println("Please help me");
+			return pulseIn(echoPin,HIGH);
+
+			//Serial.print("===================================");
 		}
 	}
-	if(digitalRead(this->echoPin) == HIGH){
-		reading = false;
-		Serial.println("In output");
-		//double duration = pulseIn(this->echoPin, HIGH);
-
-	}
-	return 0;
+	return -1.0;
 }
 
 
