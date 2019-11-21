@@ -72,7 +72,7 @@ private:
 	GetIMU * IMU;
 public:
 	boolean trigger = true;
-	double target = 1000;
+	double target = 0;
 	double distanceError = 0;
 	double effort = 0;
 	boolean goingForwards = true;  //Lab 4 going forwards from position 1 to 2 is true

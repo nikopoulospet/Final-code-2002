@@ -149,7 +149,7 @@ void DrivingChassis::updatePose(){
 	double timestamp = micros();  //set in micros, if set in millis, timestamp will be 0
 	robotPose.updateEncoderPositions(timestamp, angleRightMotor, angleLeftMotor, IMUheading);  //updates encoder position -> see Pose.cpp
 }
-
+/**
 void DrivingChassis::turn(double deg, double Kp) {
 		deg = deg * (PI/180);
 		//WITHOUT COMPLEMENTARY FILTER
@@ -160,12 +160,12 @@ void DrivingChassis::turn(double deg, double Kp) {
 		double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .98 + this->robotPose.theta * .02) - deg;
 
 		double effort = Kp * headingError;
-	/*	if(effort > 50) {
+		if(effort > 50) {
 				effort = 50;
 			}
 			else if (effort < -50) {
 				effort = -50;
-			} */
+			}
 		this->myleft->setVelocityDegreesPerSecond(- effort);
 		this->myright->setVelocityDegreesPerSecond(- effort);
 		Serial.println("+++++++++++TURNING++++++++++++");
@@ -181,7 +181,7 @@ bool DrivingChassis::turnDrive(double speed, double deg, double Kp){
 	}
 
 }
-
+**/
 void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ // usually 25 for point turn, usually 50 for driving
 	targetHeading = targetHeading * (PI/180);
 	//WITHOUT COMPLEMENTARY FILTER
