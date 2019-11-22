@@ -159,11 +159,11 @@ void StudentsRobot::updateStateMachine() {
 		Serial.println(Ultrasonic1.PingUltrasonic());
 
 	/*	PSEUDOCODE FOR PINGING ULTRASONIC AND DETERMINING LOCATION OF A BUILDING
-	 * if(motor1->getAngleDegrees() > 1550 && motor1->getAngleDegrees() < 1050) {
-			if(Ultrasonic1.PingUltrasonic() > 590.0  && Ultrasonic1.PingUltrasonic() < 500) {
-					MapArray[2][4] = 1;
-			}
-		} */
+	 * bool areWeOnBlock1 = motor1->getAngleDegrees() > ace.mmTOdeg(380)  && motor1 ->getAngleDegrees() <  ace.mmTOdeg(430); //has motor 1 travelled at least 38cm and not passed the block at 43 cm
+		bool areWeDrivingStraight = IMU->getEULER_azimuth() + ace.offset == 0;
+		if(areWeOnBlock1 && areWeDrivingStraight && Ultrasonic1.PingUltrasonic() > 300 && Ultrasonic1.PingUltrasonic() < 400) {
+			MapArray[2][6] = 1;
+		}
 
 		break;
 
