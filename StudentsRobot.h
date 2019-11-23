@@ -16,8 +16,10 @@
 
 #include "Sensors.h"
 #include "DrivingChassis.h"
+#include "Map.h"
 #include "src/commands/IRCamSimplePacketComsServer.h"
 #include "src/commands/GetIMU.h"
+
 
 /**
  * @enum RobotStateMachine
@@ -26,8 +28,17 @@
  */
 enum RobotStateMachine {
 
-	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4,WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6,WAIT_FOR_DISTANCE=7,Pos1_2 = 8,Pos2_3 = 9,Pos3_4 = 10, oneEighty = 11,
-	UltrasonicTest = 12,
+	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4, WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6, Searching = 14, Scanning = 15, Communication = 16, UltrasonicTest = 12,
+	//,WAIT_FOR_DISTANCE=7,Pos1_2 = 8,Pos2_3 = 9,Pos3_4 = 10, oneEighty = 11,UltrasonicTest = 12,
+
+};
+
+enum ScanningStateMachine {
+	Driving = 0, ScanningBuilding = 1, foundBuilding = 2,
+};
+
+enum SearchingStateMachine {
+	DriveToBuilding = 0, SearchAroundBuilding = 1
 };
 /**
  * @enum ComStackStatusState
@@ -70,6 +81,7 @@ private:
     //float targetDist = -1352;  //target distance for driving straight
     DrivingChassis  ace;  //added driving chassis object for our robot
     Sensors Ultrasonic1;
+    Map fieldMap;
 	RobotStateMachine nextStatus = StartupRobot;
 	IRCamSimplePacketComsServer * IRCamera;
 	GetIMU * IMU;
@@ -103,6 +115,8 @@ public:
 	 * This is internal data representing the runtime status of the robot for use in its state machine
 	 */
 	RobotStateMachine status = StartupRobot;
+	ScanningStateMachine scanningStatus = Driving;
+	SearchingStateMachine searchingStatus = DriveToBuilding;
 
 
 	/**

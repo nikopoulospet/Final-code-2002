@@ -11,7 +11,7 @@
 
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 		PIDMotor * motor3, Servo * servo, IRCamSimplePacketComsServer * IRCam,
-		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu), Ultrasonic1()
+		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu), Ultrasonic1(), fieldMap()
 
 
 
@@ -149,22 +149,27 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			status = UltrasonicTest;
+		status = UltrasonicTest;
 			nextStatus = UltrasonicTest;
 
 		}
 		break;
 
-	case UltrasonicTest:
+		/*	 case UltrasonicTest:
 		Serial.println(Ultrasonic1.PingUltrasonic());
 
-	/*	PSEUDOCODE FOR PINGING ULTRASONIC AND DETERMINING LOCATION OF A BUILDING
-	 * bool areWeOnBlock1 = motor1->getAngleDegrees() > ace.mmTOdeg(380)  && motor1 ->getAngleDegrees() <  ace.mmTOdeg(430); //has motor 1 travelled at least 38cm and not passed the block at 43 cm
+		PSEUDOCODE FOR PINGING ULTRASONIC AND DETERMINING LOCATION OF A BUILDING
+	  bool areWeOnBlock1 = motor1->getAngleDegrees() > ace.mmTOdeg(380)  && motor1 ->getAngleDegrees() <  ace.mmTOdeg(430); //has motor 1 travelled at least 38cm and not passed the block at 43 cm
 		bool areWeDrivingStraight = IMU->getEULER_azimuth() + ace.offset == 0;
 		if(areWeOnBlock1 && areWeDrivingStraight && Ultrasonic1.PingUltrasonic() > 300 && Ultrasonic1.PingUltrasonic() < 400) {
 			MapArray[2][6] = 1;
 		}
 
+		break;  */
+
+	case UltrasonicTest:
+		fieldMap.printMap();
+		status = Halting;
 		break;
 
 
@@ -194,7 +199,66 @@ void StudentsRobot::updateStateMachine() {
 
 		status = Halt;
 		break;
-	case WAIT_FOR_DISTANCE:
+
+
+
+	case Scanning:
+
+		switch(scanningStatus){
+		case Driving:
+
+			break;
+
+		case ScanningBuilding:
+
+			break;
+
+		case foundBuilding:
+
+			break;
+
+
+
+		}
+		break;
+
+		case Searching:
+			switch(searchingStatus) {
+
+			case DriveToBuilding:
+				break;
+
+			case SearchAroundBuilding:
+				break;
+
+			}
+			break;
+
+			case Communication:
+
+				break;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				/*	case WAIT_FOR_DISTANCE:
 		Serial.println("test");
 		if(ace.turnDrive(200,45,25)){
 			status = nextStatus;
@@ -272,11 +336,11 @@ void StudentsRobot::updateStateMachine() {
 			goingForwards = false;
 		}
 		trigger = true;
-		break;
+		break; */
 
-	case Halt:
-		// in safe mode
-		break;
+			case Halt:
+				// in safe mode
+				break;
 
 	}
 	digitalWrite(WII_CONTROLLER_DETECT, 0);
