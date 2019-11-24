@@ -149,8 +149,9 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-		status = UltrasonicTest;
-			nextStatus = UltrasonicTest;
+			status = Scanning;
+			//nextStatus = Scanning;
+			scanningStatus = Driving;
 
 		}
 		break;
@@ -206,10 +207,104 @@ void StudentsRobot::updateStateMachine() {
 
 		switch(scanningStatus){
 		case Driving:
+			if (!travelledXDistance) {  //have we completed driving 5 blocks for the x distance?
+				Serial.println(String(blocksTravelledX));
+				if(blocksTravelledX < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment one each time
+					Serial.println(blocksTravelledX);
+					//ace.loop();
+					if(trigger){
+						target = blockDistance;
+						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
+						trigger = false;
+					}
+					distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+					effort = 0.25 * distanceError;
+					ace.driveStraight(-effort, 0, 200);
+					if(motor1->getAngleDegrees() >= target){
+						trigger = true;
+						blocksTravelledX++;
+						scanningStatus = ScanningBuilding; //wait 5 seconds in the ScanninG Building state where ultrasonic will ping continously
+						nextTime = millis() + 5000;
+
+					}
+				}
+				else if (blocksTravelledX == 5) {  //if we have travelled 5 blocks in the x direction, set x to true and y to false
+					travelledXDistance = true;
+					travelledYDistance = false;
+				}
+			}
+			if(travelledXDistance == true && travelledYDistance == false && ace.turnDrive(0,90,10) && completedTurn == true) {  //turn 90 degrees **HAS PROBLEMS GETS STUCK IN TURNDRIVE
+				completedTurn = false;
+				scanningStatus = ScanningBuilding;
+				nextTime = millis() + 2000;
+
+			}
+			if (!travelledYDistance && completedTurn == true) {  //Repeat using Y direction
+				Serial.println(String(blocksTravelledY));
+				if(blocksTravelledY < 5) {
+					Serial.println(blocksTravelledY);
+					//ace.loop();
+					if(trigger){
+						target = blockDistance;
+						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
+						trigger = false;
+					}
+					distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+					effort = 0.25 * distanceError;
+					ace.driveStraight(-effort, 90, 200);
+					if(motor1->getAngleDegrees() >= target){
+						trigger = true;
+						blocksTravelledY++;
+						scanningStatus = ScanningBuilding;
+						nextTime = millis() + 2000;
+
+					}
+				}
+				else if (blocksTravelledY == 5) {
+					status = Halting;
+				}
+			}
+
+			/*		if(needToTurn90) {
+				if(ace.turnDrive(0,90,10)) {
+					status = Pos3_4;
+				}
+			}
+			else if (!finishedYCoordinate) {
+				if(trigger){
+					target = 1 * blockDistance;
+					target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
+					trigger = false;
+				}
+				distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+				effort = 0.25 * distanceError;
+				ace.driveStraight(-effort, 0, 200);
+				if(motor1->getAngleDegrees() >= target){
+					status = ScanningBuilding;
+					trigger = true;
+					finishedYCoordinate = true;
+				}
+			} */
+
+
+
 
 			break;
 
 		case ScanningBuilding:
+			motor1->setVelocityDegreesPerSecond(0);
+			motor2->setVelocityDegreesPerSecond(0);
+
+
+			if(Ultrasonic1.PingUltrasonic() > 300 && Ultrasonic1.PingUltrasonic() < 400 && millis() <= nextTime) {
+				Serial.println("HEADED HOME MOTHERFUCKERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+			}
+			else if (millis() >= nextTime) {
+				scanningStatus = Driving;
+			}
+
+
 
 			break;
 

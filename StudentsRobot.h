@@ -91,6 +91,13 @@ public:
 	double distanceError = 0;
 	double effort = 0;
 	boolean goingForwards = true;  //Lab 4 going forwards from position 1 to 2 is true
+	double blockDistance = 405;  //mm distance of one block on the field
+	int blocksTravelledX = 0;
+	boolean needToTurn90 = false;
+	boolean travelledXDistance = false;
+	boolean travelledYDistance = true;
+	int blocksTravelledY = 0;
+	boolean completedTurn = false;
 
 	/**
 	 * Constructor for StudentsRobot
