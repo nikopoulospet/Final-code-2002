@@ -39,6 +39,7 @@ public:
 	double wheelRadius = 25.6; // mm
 	double distanceError = 0;
 	double kpDistance = 7;
+
 	//double targetHeading = 0; //45 * (PI/180);  //hard coded heading in radians
 
 
@@ -172,6 +173,11 @@ public:
 	 */
 
 	void turn(double deg, double Kp);
+
+	//void DrivingChassis::driveToCoordinate (int coord);
+	/**
+	 * Drives to some coordinate where each coord corresponds to a multiple of 40.5 cm distance
+	 */
 };
 
 
