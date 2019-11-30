@@ -207,36 +207,51 @@ void StudentsRobot::updateStateMachine() {
 
 		switch(scanningStatus){
 		case Driving:
-			if (!travelledXDistance) {  //have we completed driving 5 blocks for the x distance?
+			if(blocksTravelledX == 0 && checkForBuilding == false) {
+				scanningStatus = ScanningBuilding;
+				nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
+			}
+			if (!travelledXDistance && checkForBuilding == false) {  //have we completed driving 5 blocks for the x distance?
 				Serial.println(String(blocksTravelledX));
 				if(blocksTravelledX < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment one each time
 					Serial.println(blocksTravelledX);
 					//ace.loop();
+
 					if(trigger){
 						target = blockDistance;
 						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
 						trigger = false;
 					}
+
 					distanceError =  abs(this->motor1->getAngleDegrees()) - target;
 					effort = 0.25 * distanceError;
 					ace.driveStraight(-effort, 0, 200);
+
 					if(motor1->getAngleDegrees() >= target){
 						trigger = true;
 						blocksTravelledX++;
-						scanningStatus = ScanningBuilding; //wait 5 seconds in the ScanninG Building state where ultrasonic will ping continously
-						nextTime = millis() + 5000;
+						if(blocksTravelledX % 2 == 0) {
+							scanningStatus = ScanningBuilding;
+							nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
+
+						}
 
 					}
+
+
 				}
 				else if (blocksTravelledX == 5) {  //if we have travelled 5 blocks in the x direction, set x to true and y to false
 					travelledXDistance = true;
 					travelledYDistance = false;
 				}
 			}
-			if(travelledXDistance == true && travelledYDistance == false && ace.turnDrive(0,90,10) && completedTurn == true) {  //turn 90 degrees **HAS PROBLEMS GETS STUCK IN TURNDRIVE
-				completedTurn = false;
-				scanningStatus = ScanningBuilding;
-				nextTime = millis() + 2000;
+			if(travelledXDistance == true && travelledYDistance == false && completedTurn == false ) {  //turn 90 degrees **HAS PROBLEMS GETS STUCK IN TURNDRIVE
+				if(ace.turnDrive(0,90,10)) { //turnDrive has to be handled in its own separate "loop" or if statement
+					scanningStatus = ScanningBuilding;
+					nextTime = millis() + 2000;
+					completedTurn = true;
+				}
+
 
 			}
 			if (!travelledYDistance && completedTurn == true) {  //Repeat using Y direction
@@ -255,8 +270,10 @@ void StudentsRobot::updateStateMachine() {
 					if(motor1->getAngleDegrees() >= target){
 						trigger = true;
 						blocksTravelledY++;
-						scanningStatus = ScanningBuilding;
-						nextTime = millis() + 2000;
+						if(!(blocksTravelledY % 2 == 0)) {
+							scanningStatus = ScanningBuilding;
+							nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
+						}
 
 					}
 				}
@@ -295,11 +312,26 @@ void StudentsRobot::updateStateMachine() {
 			motor1->setVelocityDegreesPerSecond(0);
 			motor2->setVelocityDegreesPerSecond(0);
 
+//had problems with going straight into the foundBuilding state and always reading building distance of 1
+			if(Ultrasonic1.PingUltrasonic() > 300.0 && Ultrasonic1.PingUltrasonic() < 400.0  && millis() <= nextTime) {
+				buildingDistanceFromRobot = 1;
+				scanningStatus = foundBuilding;
 
-			if(Ultrasonic1.PingUltrasonic() > 300 && Ultrasonic1.PingUltrasonic() < 400 && millis() <= nextTime) {
-				Serial.println("HEADED HOME MOTHERFUCKERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 
 			}
+
+			if(Ultrasonic1.PingUltrasonic() > 1100.0 && Ultrasonic1.PingUltrasonic() < 1250.0  && millis() <= nextTime) {
+				buildingDistanceFromRobot = 3;
+				scanningStatus = foundBuilding;
+
+			}
+
+			if(Ultrasonic1.PingUltrasonic() > 1900.0 && Ultrasonic1.PingUltrasonic() < 2100.0  && millis() <= nextTime) {
+				buildingDistanceFromRobot = 5;
+				scanningStatus = foundBuilding;
+
+			}
+
 			else if (millis() >= nextTime) {
 				scanningStatus = Driving;
 			}
@@ -309,7 +341,9 @@ void StudentsRobot::updateStateMachine() {
 			break;
 
 		case foundBuilding:
-
+			Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+			Serial.println(String(Ultrasonic1.PingUltrasonic()));
+		//	status = Driving;
 			break;
 
 

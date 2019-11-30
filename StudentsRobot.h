@@ -96,8 +96,10 @@ public:
 	boolean needToTurn90 = false;
 	boolean travelledXDistance = false;
 	boolean travelledYDistance = true;
-	int blocksTravelledY = 0;
-	boolean completedTurn = false;
+	boolean checkForBuilding = false;
+	int blocksTravelledY = 0; //current position of robot in y coordinate
+	boolean completedTurn = false; //have we completed the turn
+	int buildingDistanceFromRobot = 0; //distance of building from Robot in blocks
 
 	/**
 	 * Constructor for StudentsRobot
