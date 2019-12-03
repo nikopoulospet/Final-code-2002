@@ -27,7 +27,8 @@ enum RobotStateMachine {
 
 //	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4,WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6,WAIT_FOR_DISTANCE=7,spagettiFix=8,
 
-	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4,WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6,WAIT_FOR_DISTANCE=7, WAIT_FOR_DISTANCE_2to3 = 8, WAIT_FOR_DISTANCE_3to4 = 9,spagettiFix= 10,
+	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4,WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6,WAIT_FOR_DISTANCE=7,
+	WAIT_FOR_DISTANCE_2to3 = 8, WAIT_FOR_DISTANCE_3to4 = 9, spagettiFix= 10, ADDRESS_PRINT= 11
 
 };
 /**
@@ -66,7 +67,7 @@ private:
     long startTime = 0;
     float targetDistPosition1To2 = -(55/ (2 * PI * 25.6)  * 360); //55cm divided by circumference of wheel times 360 degrees
     float targetDistPosition2To3 = -(15/15.96) * 360;
-    float targetDistPosition3to4 = -(15/ (2 * PI * 25.6) * 360);
+    float targetDistPosition3To4 = -(15/ (2 * PI * 25.6) * 360);
     //float targetDist = -1461.6;  //target distance for arc
     //float targetDist = -1352;  //target distance for driving straight
     DrivingChassis ace;  //added driving chassis object for our robot

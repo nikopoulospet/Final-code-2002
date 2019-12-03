@@ -27,7 +27,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 #if defined(USE_IMU)
 	IMU->setXPosition(200);
 	IMU->setYPosition(0);
-	IMU->setZPosition(0);
+	IMU->setZPosition(20);
 #endif
 	// Set the PID Clock gating rate. The PID must be 10 times slower than the motors update rate
 	motor1->myPID.sampleRateMs = 5; //
@@ -133,6 +133,11 @@ void StudentsRobot::updateStateMachine() {
 		// After 1000 ms, come back to this state
 		nextStatus = Running;
 
+		//Changes values sent to field controller. Can be any float, placed in top 3 fields (X,Y,Z pos)
+		IMU->setXPosition(582);
+		IMU->setYPosition(928);
+		IMU->setZPosition(888);
+
 		// Do something
 		if (!digitalRead(BOOT_FLAG_PIN)) {
 			Serial.println(
@@ -235,6 +240,11 @@ void StudentsRobot::updateStateMachine() {
 
 
 			break;
+	case ADDRESS_PRINT:
+
+
+
+		break;
 
 	case Halt:
 		// in safe mode
