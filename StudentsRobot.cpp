@@ -13,7 +13,8 @@
 
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 		PIDMotor * motor3, Servo * servo, IRCamSimplePacketComsServer * IRCam,
-		GetIMU * imu) : ace(motor1,motor2, wheelTrackMM, wheelRadiusMM, imu)  //instantiating ace as a driving chassis
+		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu), Ultrasonic1(), fieldMap()
+
 
 
 {
@@ -24,6 +25,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	this->motor3 = motor3;
 	IRCamera = IRCam;
 	IMU = imu;
+	//ace = new DrivingChassis(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu);
 #if defined(USE_IMU)
 	IMU->setXPosition(200);
 	IMU->setYPosition(0);
@@ -91,12 +93,15 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	// H-Bridge enable pin
 	pinMode(H_BRIDGE_ENABLE, OUTPUT);
 	// Stepper pins
-	pinMode(STEPPER_DIRECTION, OUTPUT);
-	pinMode(STEPPER_STEP, OUTPUT);
+	//pinMode(STEPPER_DIRECTION, OUTPUT);
+	//pinMode(STEPPER_STEP, OUTPUT);
 	// User button
 	pinMode(BOOT_FLAG_PIN, INPUT_PULLUP);
 	//Test IO
 	pinMode(WII_CONTROLLER_DETECT, OUTPUT);
+
+	//SENSOR
+	Ultrasonic1.attach(TrigPIN, EchoPIN);
 
 }
 /**
@@ -106,7 +111,8 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 void StudentsRobot::updateStateMachine() {
 	digitalWrite(WII_CONTROLLER_DETECT, 1);
 	long now = millis();
-	//ace.loop();  //polling for pose every 20ms, see DrivingChassis.cpp
+
+	//polling for pose every 20ms, see DrivingChassis.cpp
 	switch (status) {
 	case StartupRobot:
 		//Do this once at startup
@@ -127,6 +133,7 @@ void StudentsRobot::updateStateMachine() {
 		nextTime = startTime + 1000; // the next timer loop should be 1000ms after the motors stop
 		break;
 	case Running:
+		ace.loop();
 		// Set up a non-blocking 1000 ms delay
 		status = WAIT_FOR_TIME;
 		nextTime = nextTime + 100; // ensure no timer drift by incremeting the target
@@ -149,21 +156,32 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			//ARC DRIVE
-			/*	this->motor1->setVelocityDegreesPerSecond(136.36);
-			this->motor2->setVelocityDegreesPerSecond(-300);
+			status = Scanning;
+			//nextStatus = Scanning;
+			scanningStatus = Driving;
 
-			//STRAIGHT LINE DRIVE
-			this->motor1->setVelocityDegreesPerSecond(200);
-			this->motor2->setVelocityDegreesPerSecond(-200); */
-
-
-			Serial.println("test");
-
-			status = WAIT_FOR_DISTANCE;
-			nextStatus = Halting;
 		}
 		break;
+
+		/*	 case UltrasonicTest:
+		Serial.println(Ultrasonic1.PingUltrasonic());
+
+		PSEUDOCODE FOR PINGING ULTRASONIC AND DETERMINING LOCATION OF A BUILDING
+	  bool areWeOnBlock1 = motor1->getAngleDegrees() > ace.mmTOdeg(380)  && motor1 ->getAngleDegrees() <  ace.mmTOdeg(430); //has motor 1 travelled at least 38cm and not passed the block at 43 cm
+		bool areWeDrivingStraight = IMU->getEULER_azimuth() + ace.offset == 0;
+		if(areWeOnBlock1 && areWeDrivingStraight && Ultrasonic1.PingUltrasonic() > 300 && Ultrasonic1.PingUltrasonic() < 400) {
+			MapArray[2][6] = 1;
+		}
+
+		break;  */
+
+	case UltrasonicTest:
+		fieldMap.printMap();
+		status = Halting;
+		break;
+
+
+
 	case WAIT_FOR_TIME:
 
 		// Check to see if enough time has elapsed
@@ -180,6 +198,7 @@ void StudentsRobot::updateStateMachine() {
 		break;
 	case Halting:
 		// save state and enter safe mode
+		ace.driveStraight(0, 0, 50);
 		Serial.println("Halting State machine");
 		digitalWrite(H_BRIDGE_ENABLE, 0);
 		motor3->stop();
@@ -188,55 +207,93 @@ void StudentsRobot::updateStateMachine() {
 
 		status = Halt;
 		break;
-	case WAIT_FOR_DISTANCE:
-		ace.driveStraight(0, 0);
-		status = spagettiFix;
-		break;
-	case spagettiFix:
-		ace.loop();
-		status = WAIT_FOR_DISTANCE;
-
-// 		ace.driveStraight(200, 0);
-
-// 		if(motor2->getAngleDegrees() <= targetDistPosition1To2){  //if our motor 2 encoder degree is less than the number of degrees that we set
-// 			if(goingForwards == true) {  //if we travelled from position 1 to 2, go to state that handles 2 to 3
-// 				status = WAIT_FOR_DISTANCE_2to3;
-// 			}
-// 			else if (goingForwards == false) {  //otherwise, we are travelling backwards going from position 2 to 1, and then halt
-// 				status = Halting;
-// 			}
-// 		}
 
 
-// >>>>>>> master
-		break;
 
-	case WAIT_FOR_DISTANCE_2to3:
-			ace.pointTurn(200, 90);
+	case Scanning:
 
-			if(motor2->getAngleDegrees() <= targetDistPosition2To3){
-				if(goingForwards == true) {
-					status = WAIT_FOR_DISTANCE_3to4;
+		switch(scanningStatus){
+		case Driving:
+			if (!travelledXDistance) {  //have we completed driving 5 blocks for the x distance?
+				Serial.println(String(blocksTravelledX));
+				if(blocksTravelledX < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment one each time
+					Serial.println(blocksTravelledX);
+					//ace.loop();
+					if(trigger){
+						target = blockDistance;
+						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
+						trigger = false;
+					}
+					distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+					effort = 0.25 * distanceError;
+					ace.driveStraight(-effort, 0, 200);
+					if(motor1->getAngleDegrees() >= target){
+						trigger = true;
+						blocksTravelledX++;
+						scanningStatus = ScanningBuilding; //wait 5 seconds in the ScanninG Building state where ultrasonic will ping continously
+						nextTime = millis() + 5000;
+
+					}
 				}
-				else if (goingForwards == false) {
-					status = WAIT_FOR_DISTANCE_2to3;
+				else if (blocksTravelledX == 5) {  //if we have travelled 5 blocks in the x direction, set x to true and y to false
+					travelledXDistance = true;
+					travelledYDistance = false;
 				}
 			}
+			if(travelledXDistance == true && travelledYDistance == false && ace.turnDrive(0,90,10) && completedTurn == true) {  //turn 90 degrees **HAS PROBLEMS GETS STUCK IN TURNDRIVE
+				completedTurn = false;
+				scanningStatus = ScanningBuilding;
+				nextTime = millis() + 2000;
 
+			}
+			if (!travelledYDistance && completedTurn == true) {  //Repeat using Y direction
+				Serial.println(String(blocksTravelledY));
+				if(blocksTravelledY < 5) {
+					Serial.println(blocksTravelledY);
+					//ace.loop();
+					if(trigger){
+						target = blockDistance;
+						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
+						trigger = false;
+					}
+					distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+					effort = 0.25 * distanceError;
+					ace.driveStraight(-effort, 90, 200);
+					if(motor1->getAngleDegrees() >= target){
+						trigger = true;
+						blocksTravelledY++;
+						scanningStatus = ScanningBuilding;
+						nextTime = millis() + 2000;
 
-			break;
-
-	case WAIT_FOR_DISTANCE_3to4:
-			ace.driveStraight(200, 0);
-
-			if(motor2->getAngleDegrees() <= targetDistPosition3To4){
-				if(goingForwards == true) {
-					status = WAIT_FOR_DISTANCE_2to3;
+					}
 				}
-				else if (goingForwards == false) {
+				else if (blocksTravelledY == 5) {
 					status = Halting;
 				}
 			}
+
+			/*		if(needToTurn90) {
+				if(ace.turnDrive(0,90,10)) {
+					status = Pos3_4;
+				}
+			}
+			else if (!finishedYCoordinate) {
+				if(trigger){
+					target = 1 * blockDistance;
+					target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
+					trigger = false;
+				}
+				distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+				effort = 0.25 * distanceError;
+				ace.driveStraight(-effort, 0, 200);
+				if(motor1->getAngleDegrees() >= target){
+					status = ScanningBuilding;
+					trigger = true;
+					finishedYCoordinate = true;
+				}
+			} */
+
+
 
 
 			break;
@@ -246,9 +303,151 @@ void StudentsRobot::updateStateMachine() {
 
 		break;
 
-	case Halt:
-		// in safe mode
+		case ScanningBuilding:
+			motor1->setVelocityDegreesPerSecond(0);
+			motor2->setVelocityDegreesPerSecond(0);
+
+
+			if(Ultrasonic1.PingUltrasonic() > 300 && Ultrasonic1.PingUltrasonic() < 400 && millis() <= nextTime) {
+				Serial.println("HEADED HOME MOTHERFUCKERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+			}
+			else if (millis() >= nextTime) {
+				scanningStatus = Driving;
+			}
+
+
+
+			break;
+
+		case foundBuilding:
+
+			break;
+
+
+
+		}
 		break;
+
+		case Searching:
+			switch(searchingStatus) {
+
+			case DriveToBuilding:
+				break;
+
+			case SearchAroundBuilding:
+				break;
+
+			}
+			break;
+
+			case Communication:
+
+				break;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				/*	case WAIT_FOR_DISTANCE:
+		Serial.println("test");
+		if(ace.turnDrive(200,45,25)){
+			status = nextStatus;
+		}
+		break;
+	case Pos1_2:
+
+		if(trigger){
+			target = 550;
+			target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
+			trigger = false;
+		}
+
+		distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+		effort = 0.25 * distanceError;
+
+		if(goingForwards){
+			ace.driveStraight(-effort, 0, 200);
+		}else{
+			ace.driveStraight(-effort, -180, 200);
+		}
+		Serial.println(target);
+		if(motor1->getAngleDegrees() >= target){
+			if(goingForwards){
+				status = Pos2_3;
+			}else{
+				status = Halting;
+			}
+			trigger = true;
+		}
+		break;
+	case Pos2_3:
+		ace.loop();
+		//	ace.driveStraight(0, 90, 25);
+		if(goingForwards){
+			if(ace.turnDrive(0,90,10)) {
+				status = Pos3_4;
+			}
+		}else{
+			if(ace.turnDrive(0,-180,10)) {
+				status = Pos1_2;
+			}
+		}
+		break;
+	case Pos3_4:
+
+		if(trigger){
+			target = 150;
+			target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
+			trigger = false;
+		}
+
+		distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+		effort = 0.25 * distanceError;
+		if(goingForwards){
+			ace.driveStraight(-effort, 90, 200);
+		}else{
+			ace.driveStraight(-effort, -90, 200);
+		}
+		Serial.println(target
+		);
+		if(motor1->getAngleDegrees() >= target){
+			if(goingForwards){
+				status = oneEighty;
+			}else{
+				status = Pos2_3;
+			}
+			trigger = true;
+		}
+		break;
+	case oneEighty:
+
+		if(ace.turnDrive(0,-89.99,10)) {
+			status = Pos3_4;
+			goingForwards = false;
+		}
+		trigger = true;
+		break; */
+
+			case Halt:
+				// in safe mode
+				break;
 
 	}
 	digitalWrite(WII_CONTROLLER_DETECT, 0);
