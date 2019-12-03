@@ -59,11 +59,13 @@ DrivingChassis::DrivingChassis(PIDMotor * left, PIDMotor * right,
 		float wheelTrackMM, float wheelRadiusMM , GetIMU * imu) : robotPose(0,0,0)  //starts with pose of 0,0,0
 
 {
+	Serial.println("DrivingChassis::DrivingChassis constructor called here ");
 	myleft = left;
 	myright = right;
 	robotPose.wheelTrackMM = wheelTrackMM;
 	robotPose.wheelRadiusMM = wheelRadiusMM;
 	IMU = imu;
+
 
 }
 
@@ -117,9 +119,11 @@ bool DrivingChassis::isChassisDoneDriving() {
  */
 void DrivingChassis::loop(){//polls for data every 20ms
 
-	if(IMU->getEULER_azimuth() != 0 && trigger){
-		offset = -1 * IMU->getEULER_azimuth();
-		trigger = false;
+	if(trigger){
+		if(IMU->getEULER_azimuth() != 0){
+			offset = IMU->getEULER_azimuth() * (-1);
+			trigger = false;
+		}
 	}
 	if (!loopFlag) {
 		now = millis();
@@ -138,79 +142,85 @@ void DrivingChassis::loop(){//polls for data every 20ms
 void DrivingChassis::updatePose(){
 	double angleRightMotor = myright->getAngleDegrees();  //gets angle from right and left motor
 	double angleLeftMotor = myleft->getAngleDegrees();
-	double IMUheading = offset +  IMU->getEULER_azimuth();  //IMU mounted in reverse, going straight will give us heading of -180 unless we add 180 to offset system by PI
-
+	double IMUheading =  IMU->getEULER_azimuth() + offset;  //IMU mounted in reverse, going straight will give us heading of -180 unless we add 180 to offset system by PI
 	double timestamp = micros();  //set in micros, if set in millis, timestamp will be 0
-
 	robotPose.updateEncoderPositions(timestamp, angleRightMotor, angleLeftMotor, IMUheading);  //updates encoder position -> see Pose.cpp
-
-	//this->driveStraight(200, 45);
-
-
-
-
 }
 
-
- void DrivingChassis::driveStraight(double speed, double targetHeading){
-	 targetHeading = targetHeading * (PI/180);
-	 //WITHOUT COMPLEMENTARY FILTER
-	 //double headingError = this->robotPose.theta - targetHeading;  //robotPose heading - target Heading  -1 because counterclockwise is negative in our coordinate system
-
-
+void DrivingChassis::turn(double deg, double Kp) {
+	deg = deg * (PI/180);
+	//WITHOUT COMPLEMENTARY FILTER
+	//double headingError = this->robotPose.theta - targetHeading;  //robotPose heading - target Heading  -1 because counterclockwise is negative in our coordinate system
+	//JUST IMU
+	// double headingError = ((offset + this->IMU->getEULER_azimuth()) * (PI/180)) - targetHeading ;
 	//WITH COMPLEMENTARY FILTER
 //	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .95 + this->robotPose.theta * .05) - targetHeading;
 
 	 //JUST IMU
-	 double headingError = ((offset + this->IMU->getEULER_azimuth()) * (PI/180)) - targetHeading ;
-
+	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .98 + this->robotPose.theta * .02) - deg;
 
 	double effort = Kp * headingError;
-	this->myleft->setVelocityDegreesPerSecond(speed - effort);
-	this->myright->setVelocityDegreesPerSecond(-speed - effort);
+	if(effort > 50) {
+		effort = 50;
+	}
+	else if (effort < -50) {
+		effort = -50;
+	}
+	this->myleft->setVelocityDegreesPerSecond(- effort);
+	this->myright->setVelocityDegreesPerSecond(- effort);
+	Serial.println("+++++++++++TURNING++++++++++++");
+	Serial.println("MyLeft: " + String(myleft->getVelocityDegreesPerSecond()) + " MyRight: " + String(myright->getVelocityDegreesPerSecond()) + "effort: " + String(effort) + " theta: " + String(robotPose.theta));
+}
 
-	Serial.println(String(effort) + "," +  String(headingError));
-//	Serial.println("MyLeft: " + String(myleft->getVelocityDegreesPerSecond()) + " MyRight: " + String(myright->getVelocityDegreesPerSecond()) + "effort: " + String(effort) + " theta: " + String(robotPose.theta));
-
-	
+bool DrivingChassis::turnDrive(double speed, double deg, double Kp){
+	this->turn(deg,25);
+	if(this->myleft->getVelocityDegreesPerSecond() == 0){ //Possibly make this a range so robot gets out of turn drive function faster
+		return true;
+	}else{
+		return false;
+	}
 
 }
 
-void DrivingChassis::pointTurn(double speed, double targetHeading){
-	/*	targetHeading = targetHeading * (PI/180);
+void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ // usually 25 for point turn, usually 50 for driving
+	targetHeading = targetHeading * (PI/180);
 	//WITHOUT COMPLEMENTARY FILTER
 	//double headingError = this->robotPose.theta - targetHeading;  //robotPose heading - target Heading  -1 because counterclockwise is negative in our coordinate system
-	double headingError = ((offset + this->IMU->getEULER_azimuth()) * (PI/180)) - targetHeading;
-
+	//JUST IMU
+	// double headingError = ((offset + this->IMU->getEULER_azimuth()) * (PI/180)) - targetHeading ;
 	//WITH COMPLEMENTARY FILTER
-if(headingError >= .005 && headingError <= -.005) {
+	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .99 + this->robotPose.theta * .01) - targetHeading;
 
-
-	double effort = KpTurn * headingError;
+	double effort = Kp * headingError;
+	/*if(effort > 50) {
+					effort = 50;
+				}
+				else if (effort < -50) {
+					effort = -50;
+				} */
 
 	this->myleft->setVelocityDegreesPerSecond(speed - effort);
-	this->myright->setVelocityDegreesPerSecond(speed - effort);
-
-	Serial.println("Velocity Left: " + String(myleft->getVelocityDegreesPerSecond()) + " Velocity Right: " + String(myright->getVelocityDegreesPerSecond()) + " Error: " + String(headingError));
+	this->myright->setVelocityDegreesPerSecond(-speed - effort);
+	Serial.println("================STRAIGHT==============");
+	Serial.println("MyLeft: " + String(myleft->getVelocityDegreesPerSecond()) + " MyRight: " + String(myright->getVelocityDegreesPerSecond()) + "effort: " + String(effort) + " theta: " + String(robotPose.theta));
 }
 
-else{
-	this->myleft->setVelocityDegreesPerSecond(0);
-	this->myright->setVelocityDegreesPerSecond(0);
-	Serial.println("Hello ksaddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd");
+
+void DrivingChassis::distanceDrive (double mm){
+	double target = mmTOdeg(mm);
+	distanceError =  abs(this->myright->getAngleDegrees()) - target;
+	double effort = kpDistance * distanceError;
+
+	this->driveStraight(-effort, 0, 1000);
+}
+
+double DrivingChassis::mmTOdeg(double mm){
+	return (mm/(wheelRadius * (2*PI))) * 360;
+}
+
+/*void DrivingChassis::driveToCoordinate (int coord) {
+	double target = coord * blockDistance;
+	distanceError =  abs(this->myright->getAngleDegrees()) - target;
+	double effort = kpDistance * distanceError;
+	this->driveStraight(-effort, 0, 1000);
 } */
-	targetHeading = targetHeading * (PI/180);
-	this->myleft->setVelocityDegreesPerSecond(speed);
-	this->myright->setVelocityDegreesPerSecond(speed);
-}
-
-void DrivingChassis::turnAround(double speed) {
-	double targetHeading = 180 * (PI/180);
-	this->myleft->setVelocityDegreesPerSecond(speed);
-	this->myright->setVelocityDegreesPerSecond(speed);
-}
-
-
-
-
-

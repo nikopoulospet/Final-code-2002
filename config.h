@@ -61,8 +61,8 @@
 #define MOTOR3_ENCA 14
 
 //Stepper
-#define STEPPER_DIRECTION 33
-#define STEPPER_STEP      32
+//#define STEPPER_DIRECTION 33
+//#define STEPPER_STEP      32
 
 // Sensor Pins
 #define ANALOG_SENSE_ONE		36
@@ -77,6 +77,10 @@
 #define SERIAL_PROGRAMMING_TX 	1
 #define SERIAL_PROGRAMMING_RX 	3
 #define WII_CONTROLLER_DETECT 	27
+
+//Ultrasonic Pins
+#define TrigPIN					33
+#define EchoPIN					32
 
 
 #endif /* SRC_CONFIG_H_ */
