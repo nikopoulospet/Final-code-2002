@@ -54,13 +54,14 @@ double Sensors::PingUltrasonic4Pin(){
 		if(trigger4Pin){
 			dTime4Pin = micros();
 			pinMode(this->sigPin, OUTPUT);
-			digitalWrite(sigPin, HIGH);
+			digitalWrite(sigPin, HIGH);           //Need to figure out how to generate a pulse without blocking
 			trigger4Pin = false;
 		}
 		if(!trigger4Pin && dTime4Pin + 20 < micros()){
-			digitalWrite(triggerPin, LOW);
-			reading3Pin = false;
-			trigger3Pin = true;
+			digitalWrite(sigPin, LOW);
+			pinMode(this->sigPin, INPUT);
+			reading4Pin = false;
+			trigger4Pin = true;
 			double pulseWidth = pulseIn(echoPin,HIGH);
 			double distance = pulseWidth * (1/58.0) * 10;
 			return distance;  //pulsewidth of echoPin multiplied by conversion factor converted to mm from cm
