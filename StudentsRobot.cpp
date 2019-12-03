@@ -121,7 +121,7 @@ void StudentsRobot::updateStateMachine() {
 		motor2->startInterpolationDegrees(motor2->getAngleDegrees(), 1000, SIN);
 		motor3->startInterpolationDegrees(motor3->getAngleDegrees(), 1000, SIN);
 		status = WAIT_FOR_MOTORS_TO_FINNISH; // set the state machine to wait for the motors to finish
-		nextStatus = Running; // the next status to move to when the motors finish
+		nextStatus = circuit_test; // the next status to move to when the motors finish
 		startTime = now + 1000; // the motors should be done in 1000 ms
 		nextTime = startTime + 1000; // the next timer loop should be 1000ms after the motors stop
 		break;
@@ -234,6 +234,16 @@ void StudentsRobot::updateStateMachine() {
 
 
 			break;
+	case circuit_test:
+		//read ADC, find amplitude
+		adc_val = analogRead(34);
+		Serial.println(adc_val);
+
+		//if amp greater than cutoff
+			//detecting beacon
+//		if(adc_val >=)
+
+		break;
 
 	case Halt:
 		// in safe mode

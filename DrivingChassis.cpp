@@ -159,7 +159,7 @@ void DrivingChassis::updatePose(){
 
 
 	//WITH COMPLEMENTARY FILTER
-	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .95 + this->robotPose.theta * .05) - targetHeading;
+//	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .95 + this->robotPose.theta * .05) - targetHeading;
 
 	 //JUST IMU
 	 double headingError = ((offset + this->IMU->getEULER_azimuth()) * (PI/180)) - targetHeading ;
