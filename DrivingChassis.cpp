@@ -224,3 +224,12 @@ double DrivingChassis::mmTOdeg(double mm){
 	double effort = kpDistance * distanceError;
 	this->driveStraight(-effort, 0, 1000);
 } */
+
+void DrivingChassis::printTemporaryBuildingArray(){
+	for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < 6; j++) {
+			Serial.print(String(buildingArray[i][j]));
+		}
+		printf("\n");
+	}
+}

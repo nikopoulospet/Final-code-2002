@@ -104,12 +104,7 @@ public:
 //	static double sumUltrasonicReadings = 0;  //used for averaging ultrasonic readings b/c they are inconsistant
 //	static int countUltrasonicReadings = 0;
 //	double averageUltrasonicReadings = 0;
-	int buildingArray[6][6] = {{0,0,0,0,0,0},
-			{0,0,0,0,0,0},
-			{0,0,0,0,0,0},
-			{0,0,0,0,0,0},
-			{0,0,0,0,0,0},
-			{0,0,0,0,0,0}};
+
 
 
 	/**
