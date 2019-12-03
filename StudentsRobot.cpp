@@ -118,6 +118,10 @@ void StudentsRobot::updateStateMachine() {
 		//Do this once at startup
 		status = StartRunning;
 		Serial.println("StudentsRobot::updateStateMachine StartupRobot here ");
+		lcd(12, 14, 27, 26, 25, 35);
+//		lcd.begin(cols, lines, dotsize);
+		lcd.noBlink();
+		lcd.noCursor();
 		break;
 	case StartRunning:
 		Serial.println("Start Running");
@@ -208,6 +212,9 @@ void StudentsRobot::updateStateMachine() {
 		status = Halt;
 		break;
 
+	case Halt:
+					// in safe mode
+			break;
 
 
 	case Scanning:
@@ -297,11 +304,6 @@ void StudentsRobot::updateStateMachine() {
 
 
 			break;
-	case ADDRESS_PRINT:
-
-
-
-		break;
 
 		case ScanningBuilding:
 			motor1->setVelocityDegreesPerSecond(0);
@@ -341,26 +343,16 @@ void StudentsRobot::updateStateMachine() {
 			}
 			break;
 
-			case Communication:
+		case Communication:
+			//lcd screen printing
+			lcd.display();
 
-				break;
+			String address = fieldMap.getAddress();
+			lcd.clear(); //TODO: need to make sure robot is not moving while calling this, takes a long time and includes a 2 second delay
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+			//TODO: need to feed address one char at a time into LCD without using a for loop
+//			lcd.write4bits();
+			break;
 
 
 
@@ -444,10 +436,6 @@ void StudentsRobot::updateStateMachine() {
 		}
 		trigger = true;
 		break; */
-
-			case Halt:
-				// in safe mode
-				break;
 
 	}
 	digitalWrite(WII_CONTROLLER_DETECT, 0);

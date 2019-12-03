@@ -82,5 +82,13 @@
 #define TrigPIN					33
 #define EchoPIN					32
 
+//LCD Pins
+#define RS						12
+#define LCD_enable				14
+#define LCD_D4					27
+#define LCD_D5					26
+#define LCD_D6					25
+#define LCD_D7					35
+
 
 #endif /* SRC_CONFIG_H_ */

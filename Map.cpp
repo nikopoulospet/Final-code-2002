@@ -24,11 +24,20 @@ fivethree(false, false, false, false, "400 Maple Street", "100 3rd Avenue", "No 
 
 void Map::printMap() {
 	for (int i = 0; i < 6; i++) {
-	        for (int j = 0; j < 6; j++) {
-	            Serial.print(String(map[i][j].road));
-	        }
-	        printf("\n");
-	    }
+		for (int j = 0; j < 6; j++) {
+			Serial.print(String(map[i][j].road));
+		}
+		printf("\n");
+	}
+}
+
+String Map::getAddress() {
+	for (int i = 0; i < 6; i++) {
+			for (int j = 0; j < 6; j++) {
+				return(String(map[i][j].road));
+			}
+	}
+	return " ";
 }
 
 
