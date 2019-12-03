@@ -169,8 +169,31 @@ void StudentsRobot::updateStateMachine() {
 		break;  */
 
 	case UltrasonicTest:
-		fieldMap.printMap();
-		status = Halting;
+		ping123 = Ultrasonic1.PingUltrasonic();
+		if(ping123 > 300.0 && ping123 < 400.0) {
+			buildingDistanceFromRobot = 1;
+			Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+			Serial.println(String(ping123));
+
+
+
+		}
+
+		if(ping123 > 1100.0 && ping123 < 1250.0 ) {
+			buildingDistanceFromRobot = 3;
+			Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: 3");
+			Serial.println(String(ping123));
+
+		}
+
+		if(ping123 > 1900.0 && ping123 < 2100.0) {
+			buildingDistanceFromRobot = 5;
+			Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: 5");
+			Serial.println(String(ping123));
+
+		}
+		Serial.println(String(ping123));
+		status = UltrasonicTest;
 		break;
 
 
@@ -207,11 +230,11 @@ void StudentsRobot::updateStateMachine() {
 
 		switch(scanningStatus){
 		case Driving:
-			if(blocksTravelledX == 0 && checkForBuilding == false) {
+			if(blocksTravelledX == 0 && !previousFoundBuilding) { //&& checkForBuilding == false
 				scanningStatus = ScanningBuilding;
-				nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
+				nextTime = millis() + 3500; //wait 3.5 seconds in the ScanninG Building state where ultrasonic will ping continously
 			}
-			if (!travelledXDistance && checkForBuilding == false) {  //have we completed driving 5 blocks for the x distance?
+			if (!travelledXDistance) {  //have we completed driving 5 blocks for the x distance? && checkForBuilding == false
 				Serial.println(String(blocksTravelledX));
 				if(blocksTravelledX < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment one each time
 					Serial.println(blocksTravelledX);
@@ -230,7 +253,8 @@ void StudentsRobot::updateStateMachine() {
 					if(motor1->getAngleDegrees() >= target){
 						trigger = true;
 						blocksTravelledX++;
-						if(blocksTravelledX % 2 == 0) {
+						previousFoundBuilding = false;
+						if(blocksTravelledX % 2 == 0 && !previousFoundBuilding) {
 							scanningStatus = ScanningBuilding;
 							nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
 
@@ -270,7 +294,8 @@ void StudentsRobot::updateStateMachine() {
 					if(motor1->getAngleDegrees() >= target){
 						trigger = true;
 						blocksTravelledY++;
-						if(!(blocksTravelledY % 2 == 0)) {
+						previousFoundBuilding = false;
+						if(!(blocksTravelledY % 2 == 0) && !previousFoundBuilding) {
 							scanningStatus = ScanningBuilding;
 							nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
 						}
@@ -311,43 +336,46 @@ void StudentsRobot::updateStateMachine() {
 		case ScanningBuilding:
 			motor1->setVelocityDegreesPerSecond(0);
 			motor2->setVelocityDegreesPerSecond(0);
-
-//had problems with going straight into the foundBuilding state and always reading building distance of 1
-			if(Ultrasonic1.PingUltrasonic() > 300.0 && Ultrasonic1.PingUltrasonic() < 400.0  && millis() <= nextTime) {
+			ping123 = Ultrasonic1.PingUltrasonic();
+			//had problems with going straight into the foundBuilding state and always reading building distance of 1
+			if(ping123 > 300.0 && ping123 < 400.0  && millis() <= nextTime) {
 				buildingDistanceFromRobot = 1;
 				scanningStatus = foundBuilding;
-
-
 			}
 
-			if(Ultrasonic1.PingUltrasonic() > 1100.0 && Ultrasonic1.PingUltrasonic() < 1250.0  && millis() <= nextTime) {
+			if(ping123 > 1100.0 && ping123 < 1250.0  && millis() <= nextTime) {
 				buildingDistanceFromRobot = 3;
 				scanningStatus = foundBuilding;
-
 			}
 
-			if(Ultrasonic1.PingUltrasonic() > 1900.0 && Ultrasonic1.PingUltrasonic() < 2100.0  && millis() <= nextTime) {
+			if(ping123 > 1900.0 && ping123 < 2100.0  && millis() <= nextTime) {
 				buildingDistanceFromRobot = 5;
 				scanningStatus = foundBuilding;
-
 			}
 
 			else if (millis() >= nextTime) {
 				scanningStatus = Driving;
 			}
-
-
-
 			break;
 
 		case foundBuilding:
-			Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-			Serial.println(String(Ultrasonic1.PingUltrasonic()));
-		//	status = Driving;
+			if(!previousFoundBuilding && millis() <= nextTime) { //event checking making sure building only gets checked one time
+				if (blocksTravelledX < 5) {
+					Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+					buildingArray[blocksTravelledX][buildingDistanceFromRobot] = 1;
+				}
+				else if (blocksTravelledY < 5) {
+					Serial.println("X Coordinate: " + String(buildingDistanceFromRobot) + " Y Coordinate: " + String(blocksTravelledY));
+					buildingArray[buildingDistanceFromRobot][blocksTravelledY] = 1;
+				}
+				Serial.println(String(Ultrasonic1.PingUltrasonic()));
+				previousFoundBuilding = true; //sets back to true to ensure this if statement only happens once per foundBuilding loop
+			}
+			if (millis() >= nextTime){
+				Serial.println("Missed building");
+				scanningStatus = Driving;
+			}
 			break;
-
-
-
 		}
 		break;
 

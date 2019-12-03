@@ -93,13 +93,24 @@ public:
 	boolean goingForwards = true;  //Lab 4 going forwards from position 1 to 2 is true
 	double blockDistance = 405;  //mm distance of one block on the field
 	int blocksTravelledX = 0;
-	boolean needToTurn90 = false;
 	boolean travelledXDistance = false;
 	boolean travelledYDistance = true;
-	boolean checkForBuilding = false;
+//	boolean checkForBuilding = false;
 	int blocksTravelledY = 0; //current position of robot in y coordinate
 	boolean completedTurn = false; //have we completed the turn
 	int buildingDistanceFromRobot = 0; //distance of building from Robot in blocks
+	boolean previousFoundBuilding = false;
+	double ping123 = 0;
+//	static double sumUltrasonicReadings = 0;  //used for averaging ultrasonic readings b/c they are inconsistant
+//	static int countUltrasonicReadings = 0;
+//	double averageUltrasonicReadings = 0;
+	int buildingArray[6][6] = {{0,0,0,0,0,0},
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0}};
+
 
 	/**
 	 * Constructor for StudentsRobot
