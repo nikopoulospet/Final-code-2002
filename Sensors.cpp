@@ -10,6 +10,7 @@
 Sensors::Sensors() {
 	this->triggerPin = -1;
 	this->echoPin = -1;
+	this->sigPin = -1;
 
 }
 
@@ -22,23 +23,51 @@ int Sensors::attach(int trig, int echo){
 	return 0;
 }
 
-double Sensors::PingUltrasonic(){
-	if(!reading){
-		if(trigger){
-			dTime = micros();
+int Sensors::attach(int sig){
+	this->sigPin = sig;
+	pinMode(this->sigPin, OUTPUT);
+	digitalWrite(this->sigPin, LOW);
+	return 0;
+}
+
+double Sensors::PingUltrasonic3Pin(){
+	if(!reading3Pin){
+		if(trigger3Pin){
+			dTime3Pin = micros();
 			digitalWrite(triggerPin, HIGH);
-			trigger = false;
+			trigger3Pin = false;
 		}
-		if(!trigger && dTime + 20 < micros()){
+		if(!trigger3Pin && dTime3Pin + 20 < micros()){
 			digitalWrite(triggerPin, LOW);
-			reading = false;
-			trigger = true;
+			reading3Pin = false;
+			trigger3Pin = true;
 			double pulseWidth = pulseIn(echoPin,HIGH);
 			double distance = pulseWidth * (1/58.0) * 10;
 			return distance;  //pulsewidth of echoPin multiplied by conversion factor converted to mm from cm
 		}
 	}
 	return -1.0;
+}
+
+double Sensors::PingUltrasonic4Pin(){
+	if(!reading4Pin){
+		if(trigger4Pin){
+			dTime4Pin = micros();
+			pinMode(this->sigPin, OUTPUT);
+			digitalWrite(sigPin, HIGH);
+			trigger4Pin = false;
+		}
+		if(!trigger4Pin && dTime4Pin + 20 < micros()){
+			digitalWrite(triggerPin, LOW);
+			reading3Pin = false;
+			trigger3Pin = true;
+			double pulseWidth = pulseIn(echoPin,HIGH);
+			double distance = pulseWidth * (1/58.0) * 10;
+			return distance;  //pulsewidth of echoPin multiplied by conversion factor converted to mm from cm
+		}
+
+	}
+
 }
 
 
