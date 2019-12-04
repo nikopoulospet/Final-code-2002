@@ -31,6 +31,46 @@ void Map::printMap() {
 	    }
 }
 
+bool Map::inRow(int row){
+	if(map[1][row].filledPlot){
+		return true;
+	}
+	if(map[3][row].filledPlot){
+		return true;
+	}
+	if(map[5][row].filledPlot){
+		return true;
+	}else{return false;}
+}
+
+int Map::buildingsPer(int row){
+	for(int i = 1; i < 5; i+=2){
+		if(map[i][row].filledPlot){
+			buildingCounter++;
+		}
+	}
+	return buildingCounter;
+}
+
+int Map::buildingToSearch(int row){
+	if(map[1][row].filledPlot && !map[1][row].searched){
+		map[1][row].searched = true;
+		return 1;
+	}
+	if(map[3][row].filledPlot && !map[3][row].searched){
+		map[3][row].searched = true;
+		return 3;
+	}
+	if(map[5][row].filledPlot && !map[5][row].searched){
+		map[5][row].searched = true;
+		return 5;
+	}
+	else{return 0;}
+}
+
+int Map::windowsToSearch(int x, int y){
+	return 4; // do this later lmao
+}
 
 
 

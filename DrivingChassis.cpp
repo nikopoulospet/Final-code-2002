@@ -165,11 +165,9 @@ void DrivingChassis::turn(double deg, double Kp) {
 	}
 	this->myleft->setVelocityDegreesPerSecond(- effort);
 	this->myright->setVelocityDegreesPerSecond(- effort);
-	Serial.println("+++++++++++TURNING++++++++++++");
-	Serial.println("MyLeft: " + String(myleft->getVelocityDegreesPerSecond()) + " MyRight: " + String(myright->getVelocityDegreesPerSecond()) + "effort: " + String(effort) + " theta: " + String(robotPose.theta));
 }
 
-bool DrivingChassis::turnDrive(double speed, double deg, double Kp){
+bool DrivingChassis::turnDrive(double deg){
 	this->turn(deg,25);
 	if(this->myleft->getVelocityDegreesPerSecond() == 0){ //Possibly make this a range so robot gets out of turn drive function faster
 		return true;
@@ -189,35 +187,126 @@ void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ 
 	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .99 + this->robotPose.theta * .01) - targetHeading;
 
 	double effort = Kp * headingError;
-	/*if(effort > 50) {
-					effort = 50;
-				}
-				else if (effort < -50) {
-					effort = -50;
-				} */
 
 	this->myleft->setVelocityDegreesPerSecond(speed - effort);
 	this->myright->setVelocityDegreesPerSecond(-speed - effort);
-	Serial.println("================STRAIGHT==============");
-	Serial.println("MyLeft: " + String(myleft->getVelocityDegreesPerSecond()) + " MyRight: " + String(myright->getVelocityDegreesPerSecond()) + "effort: " + String(effort) + " theta: " + String(robotPose.theta));
 }
 
 
-void DrivingChassis::distanceDrive (double mm){
+bool DrivingChassis::distanceDrive (double mm){
 	double target = mmTOdeg(mm);
 	distanceError =  abs(this->myright->getAngleDegrees()) - target;
 	double effort = kpDistance * distanceError;
-
+	Serial.println(effort);
 	this->driveStraight(-effort, 0, 1000);
+	if(effort < 10 && effort > -10){ // might need some tweaking
+		return true;
+	}else{
+		return false;
+	}
 }
+
 
 double DrivingChassis::mmTOdeg(double mm){
 	return (mm/(wheelRadius * (2*PI))) * 360;
 }
 
-/*void DrivingChassis::driveToCoordinate (int coord) {
-	double target = coord * blockDistance;
-	distanceError =  abs(this->myright->getAngleDegrees()) - target;
-	double effort = kpDistance * distanceError;
-	this->driveStraight(-effort, 0, 1000);
-} */
+
+bool DrivingChassis::turn90CCW(){
+	return turnDrive(this->IMU->getEULER_azimuth() - (PI / 2));
+}
+
+bool DrivingChassis::turn90CW(){
+	return turnDrive(this->IMU->getEULER_azimuth() + (PI / 2));
+}
+
+bool DrivingChassis::driveTo(int Xcord, int Ycord){
+	static bool trigger = true;
+	if(trigger){
+		trigger = false;
+		//Generating a path
+		Xdist = this->robotPose.posX - Xcord;
+		if(Xdist != 0){
+			if(Xcord < this->robotPose.posX){
+				heading1 = 270;
+			}
+			if(Xcord > this->robotPose.posX){
+				heading1 = 90;
+			}
+		}else{heading1 = this->IMU->getEULER_azimuth();}
+		Ydist = Ycord - this->robotPose.posY;
+		if(Ydist != 0){
+			if(Ycord > this->robotPose.posY){
+				heading2 = 0;
+			}
+			if(Ycord < this->robotPose.posY){
+				heading2 = 90;
+			}
+		}else{heading2 = this->IMU->getEULER_azimuth();}
+
+	}
+
+	if(this->robotPose.posX != Xcord && this->robotPose.posY != Ycord){
+		switch(Step){
+		case toHeading1:
+			if(turnDrive(heading1)){
+				Step = driveX;
+			}
+			break;
+		case driveX:
+			if(distanceDrive(abs(Xdist) * 405)){
+				Step = toHeading2;
+			}
+			break;
+		case toHeading2:
+			if(turnDrive(heading2)){
+				Step = driveY;
+			}
+			break;
+		case driveY:
+			if(distanceDrive(abs(Ydist) * 405)){
+				Step = done;
+			}
+			break;
+		case done:
+			break;
+		}
+
+	}
+	if(this->robotPose.posX == Xcord && this->robotPose.posY == Ycord){ //might not need because static will reset upon next call, and wont be expeced to do 2 full loops on one call
+		trigger = true;
+		return true;
+	}
+	return false;
+}
+
+int DrivingChassis::getOrientation(int building, int row){
+	if(this->robotPose.posY == building){
+		if(this->robotPose.posY == row - 1){
+			return 1;
+		}else{
+			return 3;
+		}
+	}
+	if(this->robotPose.posX == row){
+		if(this->robotPose.posX == building - 1){
+			return 4;
+		}else{
+			return 2;
+		}
+	}
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

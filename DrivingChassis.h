@@ -24,11 +24,23 @@
  *
  * This object should manage the setting of motor setpoints to enable driving
  */
+
+
+enum DriveToSteps {
+	driveX = 0, toHeading1 = 1, driveY = 2, toHeading2 = 3, done =4,
+};
+
+
 class DrivingChassis {
 private:
 	PIDMotor * myleft;
 	PIDMotor * myright;
 	GetIMU * IMU;
+	int Xdist = 0;
+	int Ydist = 0;
+	int heading1 = 0;
+	int heading2 = 0;
+	DriveToSteps Step = toHeading1;
 
 public:
 	Pose robotPose;  //instantiating a pose object
@@ -147,7 +159,7 @@ public:
 	 *
 	 */
 
-	void distanceDrive(double mm);
+	bool distanceDrive(double mm);
 	/**
 	 * drives to a distance in mm, using a p controller to handle speeds
 	 *
@@ -156,7 +168,7 @@ public:
 	 * @return true when distance is reached
 	 */
 
-	bool turnDrive(double speed,double deg, double Kp);
+	bool turnDrive(double deg);
 	/**
 	 * turn function, turns to desired heading using driveStraight with zero speed and a modified heading
 	 *
@@ -178,6 +190,15 @@ public:
 	/**
 	 * Drives to some coordinate where each coord corresponds to a multiple of 40.5 cm distance
 	 */
+
+	bool turn90CCW();
+
+	bool turn90CW();
+
+	bool driveTo(int Xcord, int Ycord);
+
+	int getOrientation(int building, int row);
+
 };
 
 

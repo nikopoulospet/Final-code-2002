@@ -38,6 +38,64 @@ void Pose:: updateEncoderPositions(double timestamp, double encoder0, double enc
 
 		theta = nextAngularPosition;
 
+		// adding block counting / robot position update. checks heading and distance traveled to figure out robot X and Y pos
+		if((deltaEncoder0 > 0 && deltaEncoder1 < 0)||(deltaEncoder0 < 0 && deltaEncoder1 > 0)){ // if robot is traveling straight(ish)
+			avgTraveled += (abs(deltaEncoder0) + abs(deltaEncoder1)) * 0.5;
+			if (avgTraveled >= blockLeninDeg){
+				avgTraveled = 0;
+				IMUheadingModulo = int(IMUheading) % 360;
+				if((abs(IMUheadingModulo) <= 360 && abs(IMUheadingModulo) >= 340) || (abs(IMUheadingModulo) >= 0 && abs(IMUheadingModulo) <= 20)){//IMU is in degrees
+					prevIMUheading = 1;
+					setRobotPosition(posX, posY - 1);
+				}
+
+				if((abs(IMUheadingModulo) <= 110 && abs(IMUheadingModulo) >= 70)){//IMU is in degrees
+					if(IMUheadingModulo > 0){
+						prevIMUheading = 2;
+						setRobotPosition(posX + 1, posY);
+					}else{
+						prevIMUheading = 4;
+						setRobotPosition(posX - 1, posY);
+					}
+				}
+
+				if((abs(IMUheadingModulo) <= 200 && abs(IMUheadingModulo) >= 160)){
+					prevIMUheading = 3;
+					setRobotPosition(posX, posY + 1);
+				}
+
+				if((abs(IMUheadingModulo) >= 250 && abs(IMUheadingModulo) <= 290)){//IMU is in degrees
+					if(IMUheadingModulo > 0){
+						prevIMUheading = 4;
+						setRobotPosition(posX - 1, posY);
+					}else{
+						prevIMUheading = 2;
+						setRobotPosition(posX + 1, posY);
+					}
+				}
+			}
+		}else{ //robot is turning
+			avgTraveled = 0;
+		}
+//			else{
+//				if(prevIMUheading == 1){
+//					setRobotPosition(posX, posY - 1);
+//				}
+//				if(prevIMUheading == 2){
+//					setRobotPosition(posX + 1, posY);
+//				}
+//
+//				if(prevIMUheading == 3){
+//					setRobotPosition(posX, posY + 1);
+//				}
+//
+//				if(prevIMUheading == 4){
+//					setRobotPosition(posX - 1, posY);
+//				}
+//
+//			}
+
+	Serial.println("PosX " + String(posX) + " PosY " + String(posY));
 	Serial.println("Final pose x= " + String(x) + " y= " + String(y) + " theta= " + String(theta) + " IMU Heading: " + String(((IMUheading) * (PI/180)))); //print of pose
 
 	}
@@ -47,6 +105,11 @@ void Pose:: updateEncoderPositions(double timestamp, double encoder0, double enc
 	lastIMUHeading = IMUheading;
 
 
+}
+
+void Pose::setRobotPosition(int posX, int posY){
+	this->posX = posX;
+	this->posY = posY;
 }
 
 

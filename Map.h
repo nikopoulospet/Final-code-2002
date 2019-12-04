@@ -12,6 +12,9 @@
 #include "Plot.h"
 
 class Map {
+private:
+	int buildingCounter = 0;
+	int toSearch = 0;
 public:
 	Map();
 	Plot zerozero;
@@ -57,6 +60,11 @@ public:
 			{fourzero,fourone,fourtwo,fourthree,fourfour,fourfive},
 			{fivezero,fiveone,fivetwo,fivethree,fivefour,fivefive}};
 	void printMap();
+	bool inRow(int row);
+	int buildingsPer(int row);
+	int buildingToSearch(int row);
+	int windowsToSearch(int x, int y);
+
 };
 
 

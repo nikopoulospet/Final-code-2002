@@ -29,6 +29,7 @@
 enum RobotStateMachine {
 
 	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4, WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6, Searching = 14, Scanning = 15, Communication = 16, UltrasonicTest = 12,
+	Testing = 13,
 	//,WAIT_FOR_DISTANCE=7,Pos1_2 = 8,Pos2_3 = 9,Pos3_4 = 10, oneEighty = 11,UltrasonicTest = 12,
 
 };
@@ -38,7 +39,15 @@ enum ScanningStateMachine {
 };
 
 enum SearchingStateMachine {
-	DriveToBuilding = 0, SearchAroundBuilding = 1
+	driveToRow = 0, searchRow = 1, orient = 2, lookForRobin = 3, turnCorner = 4, HandleRoadBlock = 5,
+};
+
+enum turningCorner {
+	driveforwards = 0, turn90 = 1,
+};
+
+enum testing{
+	test0 = 0, test1 = 1, test2 = 2,
 };
 /**
  * @enum ComStackStatusState
@@ -85,6 +94,16 @@ private:
 	RobotStateMachine nextStatus = StartupRobot;
 	IRCamSimplePacketComsServer * IRCamera;
 	GetIMU * IMU;
+
+	int row = -1;
+	bool firstRun = true;
+	int buildingsSearched = 0;
+	int buildingsPerRow = 0;
+	int buildingToSearch = 0;
+	int orientation = 0;
+	bool oriented = false;
+	int windowsToSearch = 0;
+	bool firstDrive = true;
 public:
 	boolean trigger = true;
 	double target = 0;
@@ -123,7 +142,9 @@ public:
 	 */
 	RobotStateMachine status = StartupRobot;
 	ScanningStateMachine scanningStatus = Driving;
-	SearchingStateMachine searchingStatus = DriveToBuilding;
+	SearchingStateMachine searchingStatus = driveToRow;
+	turningCorner turningStep = driveforwards;
+	testing testStep = test0;
 
 
 	/**

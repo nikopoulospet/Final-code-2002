@@ -109,7 +109,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 void StudentsRobot::updateStateMachine() {
 	digitalWrite(WII_CONTROLLER_DETECT, 1);
 	long now = millis();
-
+	ace.loop();
 	//polling for pose every 20ms, see DrivingChassis.cpp
 	switch (status) {
 	case StartupRobot:
@@ -149,7 +149,7 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			status = Scanning;
+			status = Testing;
 			//nextStatus = Scanning;
 			scanningStatus = Driving;
 
@@ -171,6 +171,31 @@ void StudentsRobot::updateStateMachine() {
 	case UltrasonicTest:
 		fieldMap.printMap();
 		status = Halting;
+		break;
+
+	case Testing:
+		switch(testStep){
+		case test0:
+			//Serial.println("0");
+			if(ace.distanceDrive(410)){
+				testStep = test1;
+			}
+			break;
+
+		case test1:
+			//Serial.println("1");
+			if(ace.turnDrive(90)){
+				testStep = test2;
+			}
+			break;
+
+		case test2:
+			//Serial.println("2");
+			ace.driveStraight(200, 90, 100);
+			break;
+		}
+		//ace.driveStraight(200, 0, 1000);
+		//ace.turn(360, 25);
 		break;
 
 
@@ -233,7 +258,7 @@ void StudentsRobot::updateStateMachine() {
 					travelledYDistance = false;
 				}
 			}
-			if(travelledXDistance == true && travelledYDistance == false && ace.turnDrive(0,90,10) && completedTurn == true) {  //turn 90 degrees **HAS PROBLEMS GETS STUCK IN TURNDRIVE
+			if(travelledXDistance == true && travelledYDistance == false && ace.turnDrive(90) && completedTurn == true) {  //turn 90 degrees **HAS PROBLEMS GETS STUCK IN TURNDRIVE
 				completedTurn = false;
 				scanningStatus = ScanningBuilding;
 				nextTime = millis() + 2000;
@@ -316,122 +341,134 @@ void StudentsRobot::updateStateMachine() {
 
 		}
 		break;
-
+		//end of scanning SM//
+		//begining of searching SM//
 		case Searching:
 			switch(searchingStatus) {
 
-			case DriveToBuilding:
+			case driveToRow:
+				//if RB go to handleRB
+				//next row reached go to search row (done)
+				if(firstRun){
+					row+=2;
+					firstRun = false;
+				}
+				if (row > 3){
+					//no
+				}
+				if(fieldMap.inRow(row)){
+					if(ace.driveTo(ace.robotPose.posX -1, row - 1)){
+						firstRun = true;
+						searchingStatus = searchRow;
+					}
+
+				}else{row+=2;}
+				//check RB
 				break;
 
-			case SearchAroundBuilding:
+			case searchRow:
+				//if RB go to handleRB
+				//building to search reached go to orient
+				if(firstRun){
+					firstRun = false;
+					buildingsPerRow = fieldMap.buildingsPer(row);
+					buildingToSearch = fieldMap.buildingToSearch(row);
+				}
+				if(buildingsSearched < buildingsPerRow){
+					if(buildingToSearch == 0){
+						firstRun = true;
+						searchingStatus = driveToRow; // no more buildings in row
+					}else{
+						if(ace.driveTo(buildingToSearch, row -1)){ // go to spot above building
+							firstRun = true;
+							searchingStatus = orient;
+						}
+					}
+				}else{firstRun = true;searchingStatus = driveToRow;}
+				//check RB
+				break;
+
+			case orient:
+				//oriented, go to look for robin
+				if(firstRun){
+					firstRun = false;
+					orientation = ace.getOrientation(buildingToSearch, row); // int representing how to orient the robot will go wrong if robot is not directly NSE or W of the building
+				}
+				if(orientation == 1){
+					oriented = ace.turnDrive(270);
+				}
+				if(orientation == 2){
+					oriented = ace.turnDrive(180);
+				}
+				if(orientation == 3){
+					oriented = ace.turnDrive(90);
+				}
+				if(orientation == 4){
+					oriented = ace.turnDrive(0);
+				}
+				if(oriented){
+					firstRun = true;
+					oriented = false;
+					searchingStatus = lookForRobin;
+				}
+				break;
+
+			case lookForRobin:
+				//window empty go to turn corner
+				//all windows checked go to driveToRow
+				if(firstRun){
+					firstRun = false;
+					windowsToSearch = fieldMap.windowsToSearch(buildingToSearch, row);
+				}
+
+				if(false){ // ping window
+					// Announcing state
+				} else{
+					if(windowsToSearch != 0){
+						windowsToSearch--;
+						searchingStatus = turnCorner;
+					}else{
+						firstRun = true;
+						searchingStatus = driveToRow;
+					}
+				}
+				break;
+
+			case turnCorner:
+				//if RB go to handleRB
+				switch(turningStep){
+				case driveforwards:
+					if(firstRun){
+						firstDrive = true;
+					}
+					if(ace.distanceDrive(405) && firstDrive){
+						firstDrive = false;
+						turningStep = turn90;
+					} else if(ace.distanceDrive(405)){
+						firstRun = true;
+						searchingStatus = lookForRobin;
+					}
+					break;
+
+				case turn90:
+					if(ace.turn90CCW()){
+						turningStep = driveforwards;
+					}
+					break;
+				}
+				break;
+
+			case HandleRoadBlock:
+				//handle RB when done return to previous state
 				break;
 
 			}
 			break;
+		//end of searching SM//
 
 			case Communication:
 
 				break;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-				/*	case WAIT_FOR_DISTANCE:
-		Serial.println("test");
-		if(ace.turnDrive(200,45,25)){
-			status = nextStatus;
-		}
-		break;
-	case Pos1_2:
-
-		if(trigger){
-			target = 550;
-			target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
-			trigger = false;
-		}
-
-		distanceError =  abs(this->motor1->getAngleDegrees()) - target;
-		effort = 0.25 * distanceError;
-
-		if(goingForwards){
-			ace.driveStraight(-effort, 0, 200);
-		}else{
-			ace.driveStraight(-effort, -180, 200);
-		}
-		Serial.println(target);
-		if(motor1->getAngleDegrees() >= target){
-			if(goingForwards){
-				status = Pos2_3;
-			}else{
-				status = Halting;
-			}
-			trigger = true;
-		}
-		break;
-	case Pos2_3:
-		ace.loop();
-		//	ace.driveStraight(0, 90, 25);
-		if(goingForwards){
-			if(ace.turnDrive(0,90,10)) {
-				status = Pos3_4;
-			}
-		}else{
-			if(ace.turnDrive(0,-180,10)) {
-				status = Pos1_2;
-			}
-		}
-		break;
-	case Pos3_4:
-
-		if(trigger){
-			target = 150;
-			target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
-			trigger = false;
-		}
-
-		distanceError =  abs(this->motor1->getAngleDegrees()) - target;
-		effort = 0.25 * distanceError;
-		if(goingForwards){
-			ace.driveStraight(-effort, 90, 200);
-		}else{
-			ace.driveStraight(-effort, -90, 200);
-		}
-		Serial.println(target
-		);
-		if(motor1->getAngleDegrees() >= target){
-			if(goingForwards){
-				status = oneEighty;
-			}else{
-				status = Pos2_3;
-			}
-			trigger = true;
-		}
-		break;
-	case oneEighty:
-
-		if(ace.turnDrive(0,-89.99,10)) {
-			status = Pos3_4;
-			goingForwards = false;
-		}
-		trigger = true;
-		break; */
 
 			case Halt:
 				// in safe mode
