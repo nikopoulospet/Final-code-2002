@@ -8,6 +8,8 @@
 #include "StudentsRobot.h"
 #define wheelTrackMM  225   //pass in wheeltrack and wheel radius into mm
 #define	wheelRadiusMM 25.6
+static double sumUltrasonicReadings = 0;  //used for averaging ultrasonic readings b/c they are inconsistant
+static int countUltrasonicReadings = 0;
 
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 		PIDMotor * motor3, Servo * servo, IRCamSimplePacketComsServer * IRCam,
@@ -156,18 +158,6 @@ void StudentsRobot::updateStateMachine() {
 		}
 		break;
 
-		/*	 case UltrasonicTest:
-		Serial.println(Ultrasonic1.PingUltrasonic());
-
-		PSEUDOCODE FOR PINGING ULTRASONIC AND DETERMINING LOCATION OF A BUILDING
-	  bool areWeOnBlock1 = motor1->getAngleDegrees() > ace.mmTOdeg(380)  && motor1 ->getAngleDegrees() <  ace.mmTOdeg(430); //has motor 1 travelled at least 38cm and not passed the block at 43 cm
-		bool areWeDrivingStraight = IMU->getEULER_azimuth() + ace.offset == 0;
-		if(areWeOnBlock1 && areWeDrivingStraight && Ultrasonic1.PingUltrasonic() > 300 && Ultrasonic1.PingUltrasonic() < 400) {
-			MapArray[2][6] = 1;
-		}
-
-		break;  */
-
 	case UltrasonicTest:
 		break;
 
@@ -204,31 +194,28 @@ void StudentsRobot::updateStateMachine() {
 
 		switch(scanningStatus){
 		case Driving:
-			if(blocksTravelledX == 0 && !previousFoundBuilding) { //&& checkForBuilding == false
-				scanningStatus = ScanningBuilding;
+			if(blocksTravelledX == 0 && !previousFoundBuilding) {  //edge case when we start the program, check for any buildings in row 0
+				scanningStatus = UltrasonicCalc;
 				nextTime = millis() + 3500; //wait 3.5 seconds in the ScanninG Building state where ultrasonic will ping continously
 			}
-			if (!travelledXDistance) {  //have we completed driving 5 blocks for the x distance? && checkForBuilding == false
-				Serial.println(String(blocksTravelledX));
-				if(blocksTravelledX < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment one each time
+			if (!travelledXDistance) {  //have we completed driving 5 blocks for the x distance?
+				if(blocksTravelledX < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment each time
 					Serial.println(blocksTravelledX);
-					//ace.loop();
-
-					if(trigger){
+					if(trigger){  //trigger keeps a one time set of our target distance each time we need to travel a block
 						target = blockDistance;
-						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
+						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees()); //adds on the degrees that we need to travel to our current position instead of resetting encoders
 						trigger = false;
 					}
-					distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+					distanceError =  abs(this->motor1->getAngleDegrees()) - target; //calculate distance error between our current position and final position
 					effort = 0.25 * distanceError;
 					ace.driveStraight(-effort, 0, 200);
 
-					if(motor1->getAngleDegrees() >= target){
+					if(motor1->getAngleDegrees() >= target){ //if we have surpassed the target, allow for another set of target distance, increment block
 						trigger = true;
 						blocksTravelledX++;
 						previousFoundBuilding = false;
-						if(blocksTravelledX % 2 == 0 && !previousFoundBuilding) {
-							scanningStatus = ScanningBuilding;
+						if(blocksTravelledX % 2 == 0 && !previousFoundBuilding) { //if we have travelled an even number of blocks, check if there is a building in that row for 2 seconds
+							scanningStatus = UltrasonicCalc;
 							nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
 
 						}
@@ -237,12 +224,12 @@ void StudentsRobot::updateStateMachine() {
 
 
 				}
-				else if (blocksTravelledX == 5) {  //if we have travelled 5 blocks in the x direction, set x to true and y to false
+				else if (blocksTravelledX == 5) {  //if we have travelled 5 blocks in the x direction, set x to true and y to false so we no longer travel in the x direction but prepare to travel in y
 					travelledXDistance = true;
 					travelledYDistance = false;
 				}
 			}
-			if(travelledXDistance == true && travelledYDistance == false && completedTurn == false ) {  //turn 90 degrees **HAS PROBLEMS GETS STUCK IN TURNDRIVE
+			if(travelledXDistance == true && travelledYDistance == false && completedTurn == false ) {  //turn approximately 90 degrees only once
 				if(ace.turnDrive(0,88.5,10)) { //turnDrive has to be handled in its own separate "loop" or if statement
 					completedTurn = true;
 				}
@@ -253,7 +240,6 @@ void StudentsRobot::updateStateMachine() {
 				Serial.println(String(blocksTravelledY));
 				if(blocksTravelledY <= 5) {
 					Serial.println(blocksTravelledY);
-					//ace.loop();
 					if(trigger){
 						target = blockDistance;
 						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
@@ -267,57 +253,48 @@ void StudentsRobot::updateStateMachine() {
 						blocksTravelledY++;
 						previousFoundBuilding = false;
 						if(!(blocksTravelledY % 2 == 0) && !previousFoundBuilding) {
-							scanningStatus = ScanningBuilding;
+							scanningStatus = UltrasonicCalc;
 							nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
 						}
 
 					}
 				}
 			}
+			break;
 
-			/*		if(needToTurn90) {
-				if(ace.turnDrive(0,90,10)) {
-					status = Pos3_4;
-				}
+		case UltrasonicCalc:
+			motor1->setVelocityDegreesPerSecond(0); //halt the motors while we ping the buildings
+			motor2->setVelocityDegreesPerSecond(0);
+			ultrasonicPing = Ultrasonic1.PingUltrasonic();
+			if (millis() <= nextTime && ultrasonicPing != -1.0) {  //while we still have time to ping, and the result of our ping is a reasonable number, add it to our sum and increment a counter
+				sumUltrasonicReadings += ultrasonicPing;
+				countUltrasonicReadings++;
+				scanningStatus = UltrasonicCalc; //repeat status until millis has surpassed nextTime
 			}
-			else if (!finishedYCoordinate) {
-				if(trigger){
-					target = 1 * blockDistance;
-					target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
-					trigger = false;
-				}
-				distanceError =  abs(this->motor1->getAngleDegrees()) - target;
-				effort = 0.25 * distanceError;
-				ace.driveStraight(-effort, 0, 200);
-				if(motor1->getAngleDegrees() >= target){
-					status = ScanningBuilding;
-					trigger = true;
-					finishedYCoordinate = true;
-				}
-			} */
-
-
-
+			else if (millis() >= nextTime) { //if we have surpassed nextTime
+				averageUltrasonicReadings = sumUltrasonicReadings / countUltrasonicReadings; //calculate the average
+				sumUltrasonicReadings = 0; //reset static variables back to 0 to avoid rollover
+				countUltrasonicReadings = 0;
+				Serial.println("AVERAGE: " + String(averageUltrasonicReadings));
+				scanningStatus = ScanningBuilding; //go to scanning building state
+			}
 
 			break;
 
 		case ScanningBuilding:
-			motor1->setVelocityDegreesPerSecond(0);
-			motor2->setVelocityDegreesPerSecond(0);
-			ping123 = Ultrasonic1.PingUltrasonic();
-			//had problems with going straight into the foundBuilding state and always reading building distance of 1
-			if(ping123 > 300.0 && ping123 < 400.0  && millis() <= nextTime) {
+
+			if(averageUltrasonicReadings > 200 && averageUltrasonicReadings < 400) { //conditionals to check for the distance
 				if(blocksTravelledX < 5) {
-					buildingDistanceFromRobot = 1;
-					scanningStatus = foundBuilding;
+					buildingDistanceFromRobot = 1; //building is 1 block away from the robot
+					scanningStatus = foundBuilding; //handle placement of building in a map
 				}
-				else if (blocksTravelledY <=5) {
+				else if (blocksTravelledY <=5) { //we want to check the building when we have reached Y = 5 due to the construction of the field
 					buildingDistanceFromRobot = 4; //distances change when we travel in the Y coordinate
 					scanningStatus = foundBuilding;
 				}
 			}
 
-			if(ping123 > 1100.0 && ping123 < 1250.0  && millis() <= nextTime) {
+			if(averageUltrasonicReadings > 900 && averageUltrasonicReadings < 1200.0) {
 				if(blocksTravelledX < 5) {
 					buildingDistanceFromRobot = 3;
 					scanningStatus = foundBuilding;
@@ -328,16 +305,6 @@ void StudentsRobot::updateStateMachine() {
 				}
 			}
 
-			if(ping123 > 1900.0 && ping123 < 2100.0  && millis() <= nextTime) {
-				if(blocksTravelledX < 5) {
-					buildingDistanceFromRobot = 5;
-					scanningStatus = foundBuilding;
-				}
-				else if (blocksTravelledY <=5) {
-					buildingDistanceFromRobot = 0; //distances change when we travel in the Y coordinate
-					scanningStatus = foundBuilding;
-				}
-			}
 			/////////////////////////////////////////////////////////
 			else if (blocksTravelledY == 5) {
 				status = Halting;
@@ -352,11 +319,11 @@ void StudentsRobot::updateStateMachine() {
 			if(!previousFoundBuilding && millis() <= nextTime) { //event checking making sure building only gets checked one time
 				if (blocksTravelledX < 5) {
 					Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-					ace.buildingArray[blocksTravelledX][buildingDistanceFromRobot] = 1;
+					ace.buildingArray[blocksTravelledX][buildingDistanceFromRobot] = 1;  //add building coordinate to our map
 				}
 				else if (blocksTravelledY < 5) {
 					Serial.println("X Coordinate: " + String(buildingDistanceFromRobot) + " Y Coordinate: " + String(blocksTravelledY));
-					ace.buildingArray[buildingDistanceFromRobot][blocksTravelledY] = 1;
+					ace.buildingArray[buildingDistanceFromRobot][blocksTravelledY] = 1; //coordinates get flipped since we are travelling in the Y direction
 				}
 				Serial.println(String(Ultrasonic1.PingUltrasonic()));
 				previousFoundBuilding = true; //sets back to true to ensure this if statement only happens once per foundBuilding loop
@@ -366,7 +333,6 @@ void StudentsRobot::updateStateMachine() {
 				status = Halting;
 			}
 			if (millis() >= nextTime){
-				Serial.println("Missed building");
 				scanningStatus = Driving;
 			}
 			break;
@@ -388,106 +354,6 @@ void StudentsRobot::updateStateMachine() {
 			case Communication:
 
 				break;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-				/*	case WAIT_FOR_DISTANCE:
-		Serial.println("test");
-		if(ace.turnDrive(200,45,25)){
-			status = nextStatus;
-		}
-		break;
-	case Pos1_2:
-
-		if(trigger){
-			target = 550;
-			target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
-			trigger = false;
-		}
-
-		distanceError =  abs(this->motor1->getAngleDegrees()) - target;
-		effort = 0.25 * distanceError;
-
-		if(goingForwards){
-			ace.driveStraight(-effort, 0, 200);
-		}else{
-			ace.driveStraight(-effort, -180, 200);
-		}
-		Serial.println(target);
-		if(motor1->getAngleDegrees() >= target){
-			if(goingForwards){
-				status = Pos2_3;
-			}else{
-				status = Halting;
-			}
-			trigger = true;
-		}
-		break;
-	case Pos2_3:
-		ace.loop();
-		//	ace.driveStraight(0, 90, 25);
-		if(goingForwards){
-			if(ace.turnDrive(0,90,10)) {
-				status = Pos3_4;
-			}
-		}else{
-			if(ace.turnDrive(0,-180,10)) {
-				status = Pos1_2;
-			}
-		}
-		break;
-	case Pos3_4:
-
-		if(trigger){
-			target = 150;
-			target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
-			trigger = false;
-		}
-
-		distanceError =  abs(this->motor1->getAngleDegrees()) - target;
-		effort = 0.25 * distanceError;
-		if(goingForwards){
-			ace.driveStraight(-effort, 90, 200);
-		}else{
-			ace.driveStraight(-effort, -90, 200);
-		}
-		Serial.println(target
-		);
-		if(motor1->getAngleDegrees() >= target){
-			if(goingForwards){
-				status = oneEighty;
-			}else{
-				status = Pos2_3;
-			}
-			trigger = true;
-		}
-		break;
-	case oneEighty:
-
-		if(ace.turnDrive(0,-89.99,10)) {
-			status = Pos3_4;
-			goingForwards = false;
-		}
-		trigger = true;
-		break; */
 
 			case Halt:
 

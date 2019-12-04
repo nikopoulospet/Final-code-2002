@@ -34,7 +34,7 @@ enum RobotStateMachine {
 };
 
 enum ScanningStateMachine {
-	Driving = 0, ScanningBuilding = 1, foundBuilding = 2,
+	Driving = 0, ScanningBuilding = 1, foundBuilding = 2, UltrasonicCalc = 4,
 };
 
 enum SearchingStateMachine {
@@ -95,15 +95,12 @@ public:
 	int blocksTravelledX = 0;
 	boolean travelledXDistance = false;
 	boolean travelledYDistance = true;
-//	boolean checkForBuilding = false;
 	int blocksTravelledY = 0; //current position of robot in y coordinate
 	boolean completedTurn = false; //have we completed the turn
 	int buildingDistanceFromRobot = 0; //distance of building from Robot in blocks
 	boolean previousFoundBuilding = false;
-	double ping123 = 0;
-//	static double sumUltrasonicReadings = 0;  //used for averaging ultrasonic readings b/c they are inconsistant
-//	static int countUltrasonicReadings = 0;
-//	double averageUltrasonicReadings = 0;
+	double ultrasonicPing = 0; //Ultrasonic Reading Variable
+	double averageUltrasonicReadings = 0;
 
 
 

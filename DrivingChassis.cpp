@@ -168,8 +168,8 @@ void DrivingChassis::turn(double deg, double Kp) {
 	}
 	this->myleft->setVelocityDegreesPerSecond(- effort);
 	this->myright->setVelocityDegreesPerSecond(- effort);
-	Serial.println("+++++++++++TURNING++++++++++++");
-	Serial.println("MyLeft: " + String(myleft->getVelocityDegreesPerSecond()) + " MyRight: " + String(myright->getVelocityDegreesPerSecond()) + "effort: " + String(effort) + " theta: " + String(robotPose.theta));
+//	Serial.println("+++++++++++TURNING++++++++++++");
+//	Serial.println("MyLeft: " + String(myleft->getVelocityDegreesPerSecond()) + " MyRight: " + String(myright->getVelocityDegreesPerSecond()) + "effort: " + String(effort) + " theta: " + String(robotPose.theta));
 }
 
 bool DrivingChassis::turnDrive(double speed, double deg, double Kp){
@@ -201,8 +201,8 @@ void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ 
 
 	this->myleft->setVelocityDegreesPerSecond(speed - effort);
 	this->myright->setVelocityDegreesPerSecond(-speed - effort);
-	Serial.println("================STRAIGHT==============");
-	Serial.println("MyLeft: " + String(myleft->getVelocityDegreesPerSecond()) + " MyRight: " + String(myright->getVelocityDegreesPerSecond()) + "effort: " + String(effort) + " theta: " + String(robotPose.theta));
+//	Serial.println("================STRAIGHT==============");
+//	Serial.println("MyLeft: " + String(myleft->getVelocityDegreesPerSecond()) + " MyRight: " + String(myright->getVelocityDegreesPerSecond()) + "effort: " + String(effort) + " theta: " + String(robotPose.theta));
 }
 
 
