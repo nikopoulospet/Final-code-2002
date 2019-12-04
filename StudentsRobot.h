@@ -86,8 +86,7 @@ private:
 	RobotStateMachine nextStatus = StartupRobot;
 	IRCamSimplePacketComsServer * IRCamera;
 	GetIMU * IMU;
-	//lcd(rs, enable, d4, d5, d6, d7)
-	LiquidCrystal lcd;
+
 public:
 	boolean trigger = true;
 	double target = 0;
@@ -142,6 +141,7 @@ public:
 	 */
 	void updateStateMachine();
 
+	void publishAddress(float x_pos, float y_pos, int robot_x, int robot_y, int building_x, int building_y);
 
 
 };

@@ -118,10 +118,6 @@ void StudentsRobot::updateStateMachine() {
 		//Do this once at startup
 		status = StartRunning;
 		Serial.println("StudentsRobot::updateStateMachine StartupRobot here ");
-		lcd(12, 14, 27, 26, 25, 35);
-//		lcd.begin(cols, lines, dotsize);
-		lcd.noBlink();
-		lcd.noCursor();
 		break;
 	case StartRunning:
 		Serial.println("Start Running");
@@ -145,9 +141,9 @@ void StudentsRobot::updateStateMachine() {
 		nextStatus = Running;
 
 		//Changes values sent to field controller. Can be any float, placed in top 3 fields (X,Y,Z pos)
-		IMU->setXPosition(582);
-		IMU->setYPosition(928);
-		IMU->setZPosition(888);
+//		IMU->setXPosition(582);
+//		IMU->setYPosition(928);
+//		IMU->setZPosition(888);
 
 		// Do something
 		if (!digitalRead(BOOT_FLAG_PIN)) {
@@ -344,14 +340,7 @@ void StudentsRobot::updateStateMachine() {
 			break;
 
 		case Communication:
-			//lcd screen printing
-			lcd.display();
 
-			String address = fieldMap.getAddress();
-			lcd.clear(); //TODO: need to make sure robot is not moving while calling this, takes a long time and includes a 2 second delay
-
-			//TODO: need to feed address one char at a time into LCD without using a for loop
-//			lcd.write4bits();
 			break;
 
 
@@ -451,6 +440,39 @@ void StudentsRobot::pidLoop() {
 	motor1->loop();
 	motor2->loop();
 	motor3->loop();
+}
+
+void StudentsRobot::publishAddress(float x_pos, float y_pos, int robot_x, int robot_y, int building_x, int building_y) {
+	IMU->setXPosition(x_pos);
+	IMU->setYPosition(y_pos);
+
+	float msg; float msg1 = 100;
+	float msg2 = 90; float msg3 = 9; //initially set to impossible values so we know if they are changed or not
+//	float headin
+
+	if(robot_x == 0){
+		msg3 = 3;
+
+		if(robot_y == 1)
+			msg2 = 0;
+		else if(robot_y == 3)
+			msg2 = 30;
+		else if(robot_y == 5)
+			msg2 = 60;
+	}
+	else if(robot_y == 0){
+		msg3 = 1;
+
+		if(robot_x == 1)
+			msg2 = 0;
+		else if(robot_x == 3)
+			msg2 = 10;
+		else if(robot_x == 5)
+			msg2 = 10;
+	}
+
+	msg = msg1 + msg2 + msg3;
+	IMU->setZPosition(msg);
 }
 
 

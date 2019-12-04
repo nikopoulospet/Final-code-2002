@@ -57,6 +57,8 @@ public:
 			{fourzero,fourone,fourtwo,fourthree,fourfour,fourfive},
 			{fivezero,fiveone,fivetwo,fivethree,fivefour,fivefive}};
 	void printMap();
+
+	//Returns the address the robot is currently at
 	String getAddress();
 };
 
