@@ -29,7 +29,7 @@ double Sensors::PingUltrasonic(){
 			digitalWrite(triggerPin, HIGH);
 			trigger = false;
 		}
-		if(!trigger && dTime + 20 < micros()){ //if 20 microseconds have gone by (datasheet value), set triggerpin to low and measure the pulsewidth of the echo pin
+		if(!trigger && dTime + 100 < micros()){ //if 20 microseconds have gone by (datasheet value), set triggerpin to low and measure the pulsewidth of the echo pin
 			digitalWrite(triggerPin, LOW);
 			reading = false;
 			trigger = true;
