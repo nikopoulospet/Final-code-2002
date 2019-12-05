@@ -3,6 +3,7 @@
  *
  *  Created on: Jan 31, 2019
  *      Author: hephaestus
+ *      Author: Peter Nikopoulos
  */
 
 #include "DrivingChassis.h"
@@ -143,8 +144,9 @@ void DrivingChassis::updatePose(){
 	double angleRightMotor = myright->getAngleDegrees();  //gets angle from right and left motor
 	double angleLeftMotor = myleft->getAngleDegrees();
 	double IMUheading =  IMU->getEULER_azimuth() + offset;  //IMU mounted in reverse, going straight will give us heading of -180 unless we add 180 to offset system by PI
-	double timestamp = micros();  //set in micros, if set in millis, timestamp will be 0
-	robotPose.updateEncoderPositions(timestamp, angleRightMotor, angleLeftMotor, IMUheading);  //updates encoder position -> see Pose.cpp
+	//double timestamp = micros();  //set in micros, if set in millis, timestamp will be 0
+	//robotPose.updateEncoderPositions(timestamp, angleRightMotor, angleLeftMotor, IMUheading);  //updates encoder position -> see Pose.cpp
+	robotPose.updateRobotCoordinates(angleRightMotor, angleLeftMotor, IMUheading);
 }
 
 void DrivingChassis::turn(double deg, double Kp) {
@@ -167,14 +169,39 @@ void DrivingChassis::turn(double deg, double Kp) {
 	this->myright->setVelocityDegreesPerSecond(- effort);
 }
 
+//this->turn(deg,25);
+//if(this->IMU->getEULER_azimuth() < deg + 1 && this->IMU->getEULER_azimuth() > deg - 1){ //Possibly make this a range so robot gets out of turn drive function faster
+//	return true;
+//}else{
+//	return false;
+//}
+
 bool DrivingChassis::turnDrive(double deg){
 	this->turn(deg,25);
-	if(this->myleft->getVelocityDegreesPerSecond() == 0){ //Possibly make this a range so robot gets out of turn drive function faster
+	if(this->IMU->getEULER_azimuth() < deg + 1 && this->IMU->getEULER_azimuth() > deg - 1){ //Possibly make this a range so robot gets out of turn drive function faster
 		return true;
 	}else{
 		return false;
 	}
+}
 
+bool DrivingChassis::turnDriveEffortBool(double deg){
+	deg = deg * (PI/180);
+
+	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .98 + this->robotPose.theta * .02) - deg;
+	double effort = 25 * headingError;
+	if(effort > 50) {
+		effort = 50;
+	}
+	else if (effort < -50) {
+		effort = -50;
+	}else if(effort > -1 && effort < 1){
+		return true;
+	}
+	Serial.println(effort);
+	this->myleft->setVelocityDegreesPerSecond(- effort);
+	this->myright->setVelocityDegreesPerSecond(- effort);
+	return false;
 }
 
 void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ // usually 25 for point turn, usually 50 for driving
@@ -184,7 +211,7 @@ void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ 
 	//JUST IMU
 	// double headingError = ((offset + this->IMU->getEULER_azimuth()) * (PI/180)) - targetHeading ;
 	//WITH COMPLEMENTARY FILTER
-	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .99 + this->robotPose.theta * .01) - targetHeading;
+	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .95 + this->robotPose.theta * .05) - targetHeading;
 
 	double effort = Kp * headingError;
 
@@ -193,11 +220,10 @@ void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ 
 }
 
 
-bool DrivingChassis::distanceDrive (double mm){
+bool DrivingChassis::distanceDrive (double mm){ // Useless with implementation of PlotDrive
 	double target = mmTOdeg(mm);
 	distanceError =  abs(this->myright->getAngleDegrees()) - target;
 	double effort = kpDistance * distanceError;
-	Serial.println(effort);
 	this->driveStraight(-effort, 0, 1000);
 	if(effort < 10 && effort > -10){ // might need some tweaking
 		return true;
@@ -206,6 +232,42 @@ bool DrivingChassis::distanceDrive (double mm){
 	}
 }
 
+bool DrivingChassis::drivePlotsinDir (double plots, double heading, bool isX){
+	static bool trigger =  true;
+	if(trigger){
+		trigger = false;
+		changeInXpos = this->robotPose.posX;
+		changeInYpos = this->robotPose.posY;
+		targetDistance = (abs(this->myright->getAngleDegrees()) + abs(this->myleft->getAngleDegrees()))*0.5 + abs(plots) * plotLen;
+	}
+	double distanceTraveled = (abs(this->myright->getAngleDegrees()) + abs(this->myleft->getAngleDegrees()))*0.5;
+	distanceError = distanceTraveled - targetDistance;
+	double effort = kpDistance * distanceError;
+	if(effort > 250){effort = 250;}else if(effort < -250){effort = -250;}
+
+
+	if(isX){
+		changeInXpos = abs(changeInXpos - this->robotPose.posX);
+		if( Xdist == changeInXpos){ // distanceTraveled >= targetDistance
+				trigger = true;
+				this->driveStraight(0, heading, 1000);
+				return true;
+			}else{
+				this->driveStraight(-effort, heading, 1000);
+				return false;
+			}
+	}else{
+		changeInYpos = abs(changeInYpos - this->robotPose.posY);
+		if( Ydist == changeInYpos){ // distanceTraveled >= targetDistance
+				trigger = true;
+				this->driveStraight(0, heading, 1000);
+				return true;
+			}else{
+				this->driveStraight(-effort, heading, 1000);
+				return false;
+			}
+	}
+}
 
 double DrivingChassis::mmTOdeg(double mm){
 	return (mm/(wheelRadius * (2*PI))) * 360;
@@ -213,11 +275,11 @@ double DrivingChassis::mmTOdeg(double mm){
 
 
 bool DrivingChassis::turn90CCW(){
-	return turnDrive(this->IMU->getEULER_azimuth() - (PI / 2));
+	return turnDriveEffortBool(this->IMU->getEULER_azimuth() - (PI / 2));
 }
 
 bool DrivingChassis::turn90CW(){
-	return turnDrive(this->IMU->getEULER_azimuth() + (PI / 2));
+	return turnDriveEffortBool(this->IMU->getEULER_azimuth() + (PI / 2));
 }
 
 bool DrivingChassis::driveTo(int Xcord, int Ycord){
@@ -225,58 +287,56 @@ bool DrivingChassis::driveTo(int Xcord, int Ycord){
 	if(trigger){
 		trigger = false;
 		//Generating a path
-		Xdist = this->robotPose.posX - Xcord;
+		Xdist = Xcord - this->robotPose.posX;
 		if(Xdist != 0){
 			if(Xcord < this->robotPose.posX){
-				heading1 = 270;
+				heading1 = -90;
 			}
 			if(Xcord > this->robotPose.posX){
 				heading1 = 90;
 			}
-		}else{heading1 = this->IMU->getEULER_azimuth();}
+		}
 		Ydist = Ycord - this->robotPose.posY;
 		if(Ydist != 0){
-			if(Ycord > this->robotPose.posY){
+			if(Ycord < this->robotPose.posY){
 				heading2 = 0;
 			}
-			if(Ycord < this->robotPose.posY){
-				heading2 = 90;
+			if(Ycord > this->robotPose.posY){
+				heading2 = 180;
 			}
-		}else{heading2 = this->IMU->getEULER_azimuth();}
-
-	}
-
-	if(this->robotPose.posX != Xcord && this->robotPose.posY != Ycord){
-		switch(Step){
-		case toHeading1:
-			if(turnDrive(heading1)){
-				Step = driveX;
-			}
-			break;
-		case driveX:
-			if(distanceDrive(abs(Xdist) * 405)){
-				Step = toHeading2;
-			}
-			break;
-		case toHeading2:
-			if(turnDrive(heading2)){
-				Step = driveY;
-			}
-			break;
-		case driveY:
-			if(distanceDrive(abs(Ydist) * 405)){
-				Step = done;
-			}
-			break;
-		case done:
-			break;
 		}
 
 	}
-	if(this->robotPose.posX == Xcord && this->robotPose.posY == Ycord){ //might not need because static will reset upon next call, and wont be expeced to do 2 full loops on one call
+
+
+
+	switch(Step){
+	case toHeading1:
+		if(turnDriveEffortBool(heading1)){
+			Step = driveX;
+		}
+		break;
+	case driveX:
+		if(drivePlotsinDir(Xdist, heading1, true)){ // drives extra on the x not sure why yet
+			Step = toHeading2;
+		}
+		break;
+	case toHeading2:
+		if(turnDriveEffortBool(heading2)){
+			Step = driveY;
+		}
+		break;
+	case driveY:
+		if(drivePlotsinDir(Ydist, heading2, false)){
+			Step = done;
+		}
+		break;
+	case done:
 		trigger = true;
 		return true;
+		break;
 	}
+
 	return false;
 }
 

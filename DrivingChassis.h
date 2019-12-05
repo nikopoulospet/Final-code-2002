@@ -3,6 +3,7 @@
  *
  *  Created on: Jan 12, 2019
  *      Author: hephaestus
+ *      Author: Peter Nikopoulos
  */
 
 #ifndef DRIVINGCHASSIS_H_
@@ -36,11 +37,21 @@ private:
 	PIDMotor * myleft;
 	PIDMotor * myright;
 	GetIMU * IMU;
+
+	//DRIVE TO VARS
 	int Xdist = 0;
 	int Ydist = 0;
 	int heading1 = 0;
 	int heading2 = 0;
 	DriveToSteps Step = toHeading1;
+
+	//DRIVE PLOTS VARS
+	double kpDistance = 7;
+	double plotLen = 1200;
+	double distOfset = 0;
+	double targetDistance = 0;
+	int changeInXpos = 0;
+	int changeInYpos = 0;
 
 public:
 	Pose robotPose;  //instantiating a pose object
@@ -50,8 +61,6 @@ public:
 	bool trigger = true;
 	double wheelRadius = 25.6; // mm
 	double distanceError = 0;
-	double kpDistance = 7;
-
 	//double targetHeading = 0; //45 * (PI/180);  //hard coded heading in radians
 
 
@@ -168,7 +177,7 @@ public:
 	 * @return true when distance is reached
 	 */
 
-	bool turnDrive(double deg);
+	bool turnDriveEffortBool(double deg);
 	/**
 	 * turn function, turns to desired heading using driveStraight with zero speed and a modified heading
 	 *
@@ -198,6 +207,10 @@ public:
 	bool driveTo(int Xcord, int Ycord);
 
 	int getOrientation(int building, int row);
+
+	bool drivePlotsinDir(double plots, double heading, bool isX);
+
+	bool turnDrive(double deg);
 
 };
 

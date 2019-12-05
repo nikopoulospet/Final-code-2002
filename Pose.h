@@ -20,9 +20,6 @@ private:
 	double now = 0;
 
 
-
-
-
 public:
 	Pose(double x, double y, double theta);
 
@@ -38,12 +35,13 @@ public:
 	int posX = 0;
 	int posY = 5; // Starting position for robot
 	double avgTraveled = 0.0;
-	double blockLeninDeg = 914 / 2; // 3:1 ???
+	double blockLeninDeg = 1150 / 2; //* 3:1 ??? (914 * 6)/5 -> 1098 + 1200 /2 = */
 	int IMUheadingModulo = 0;
 	double prevIMUheading;
 
 	void updateEncoderPositions(double timestamp, double encoder0, double encoder1, double IMUheading);
 	void setRobotPosition(int posX, int posY);
+	void updateRobotCoordinates(double encoder0, double encoder1, double IMUheading);
 };
 
 

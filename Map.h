@@ -3,6 +3,7 @@
  *
  *  Created on: Nov 23, 2019
  *      Author: Brian
+ *      Author: Peter Nikopoulos
  */
 
 #ifndef MAP_H_

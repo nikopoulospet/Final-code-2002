@@ -3,6 +3,7 @@
  *
  *  Created on: Dec 28, 2018
  *      Author: hephaestus
+ *      Author: Peter Nikopoulos
  */
 
 #ifndef STUDENTSROBOT_H_
@@ -104,6 +105,11 @@ private:
 	bool oriented = false;
 	int windowsToSearch = 0;
 	bool firstDrive = true;
+
+	int x = 2;
+	int y = 1;
+	double HX = 90;
+	double HY = 0;
 public:
 	boolean trigger = true;
 	double target = 0;

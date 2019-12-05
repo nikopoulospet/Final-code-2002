@@ -3,6 +3,7 @@
  *
  *  Created on: Dec 28, 2018
  *      Author: hephaestus
+ *      Author: Peter Nikopoulos
  */
 
 #include "StudentsRobot.h"
@@ -176,27 +177,22 @@ void StudentsRobot::updateStateMachine() {
 	case Testing:
 		switch(testStep){
 		case test0:
-			//Serial.println("0");
-			if(ace.distanceDrive(410)){
+			if(ace.driveTo(3, 4)){
 				testStep = test1;
 			}
 			break;
 
 		case test1:
-			//Serial.println("1");
-			if(ace.turnDrive(90)){
+			if(ace.driveTo(0,5)){
 				testStep = test2;
 			}
 			break;
 
 		case test2:
-			//Serial.println("2");
-			ace.driveStraight(200, 90, 100);
+			status = Halting;
 			break;
-		}
-		//ace.driveStraight(200, 0, 1000);
-		//ace.turn(360, 25);
-		break;
+
+	break;
 
 
 
@@ -375,7 +371,7 @@ void StudentsRobot::updateStateMachine() {
 					buildingToSearch = fieldMap.buildingToSearch(row);
 				}
 				if(buildingsSearched < buildingsPerRow){
-					if(buildingToSearch == 0){
+					if(buildingToSearch == 0){// this might not be doing anything...
 						firstRun = true;
 						searchingStatus = driveToRow; // no more buildings in row
 					}else{
@@ -429,7 +425,7 @@ void StudentsRobot::updateStateMachine() {
 						searchingStatus = turnCorner;
 					}else{
 						firstRun = true;
-						searchingStatus = driveToRow;
+						searchingStatus = searchRow;
 					}
 				}
 				break;
