@@ -101,6 +101,7 @@ public:
 	boolean previousFoundBuilding = false;
 	double ultrasonicPing = 0; //Ultrasonic Reading Variable
 	double averageUltrasonicReadings = 0;
+	double maxUltrasonicReading = 0;
 
 
 
