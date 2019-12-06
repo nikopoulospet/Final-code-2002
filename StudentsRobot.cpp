@@ -296,9 +296,15 @@ void StudentsRobot::updateStateMachine() {
 		adc_val = analogRead(34);
 		Serial.println(adc_val);
 
-		//if amp greater than cutoff
-			//detecting beacon
-//		if(adc_val >=)
+		//Schmitt trigger high voltage of 2.7V
+		if(adc_val >= 3300) { //~2.66
+			status = Communication;
+		}
+
+		//Schmitt trigger low voltage of 0.3V
+		else if(adc_val <= 1000) { //~0.8, doesn't actually matter just needs to be low so it doesn't accidentally go off
+			status = circuit_test;
+		}
 
 		break;
 
