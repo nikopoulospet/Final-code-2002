@@ -185,6 +185,8 @@ void StudentsRobot::updateStateMachine() {
 		motor2->stop();
 		motor1->stop();
 		ace.printTemporaryBuildingArray();
+		Serial.println("ACTUAL MAP ARRAY");
+		fieldMap.printMap();
 		status = Halt;
 		break;
 
@@ -238,7 +240,7 @@ void StudentsRobot::updateStateMachine() {
 			if (!travelledYDistance && completedTurn == true) {  //Repeat using Y direction
 				//Serial.println(String(blocksTravelledY));
 				if(blocksTravelledY <= 5) {
-				//	Serial.println(blocksTravelledY);
+					//	Serial.println(blocksTravelledY);
 					if(trigger){
 						target = blockDistance;
 						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
@@ -300,8 +302,7 @@ void StudentsRobot::updateStateMachine() {
 				break;
 			}
 
-
-			if(averageUltrasonicReadings > 900 && averageUltrasonicReadings < 1200.0 && maxUltrasonicReading < 1350) {
+			if(averageUltrasonicReadings > 950 && averageUltrasonicReadings < 1200.0 && maxUltrasonicReading < 1350) {
 				if(blocksTravelledX < 5) {
 					buildingDistanceFromRobot = 3;
 					scanningStatus = foundBuilding;
@@ -333,10 +334,14 @@ void StudentsRobot::updateStateMachine() {
 				if (blocksTravelledX < 5) {
 					Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
 					ace.buildingArray[blocksTravelledX][buildingDistanceFromRobot] = 1;  //add building coordinate to our map
+					Plot& buildingPlot = fieldMap.getPlot(blocksTravelledX, 5 - buildingDistanceFromRobot);
+					buildingPlot.filledPlot = true;
 				}
 				else if (blocksTravelledY <= 5) {
 					Serial.println("X Coordinate: " + String(buildingDistanceFromRobot) + " Y Coordinate: " + String(blocksTravelledY));
 					ace.buildingArray[buildingDistanceFromRobot][blocksTravelledY] = 1; //coordinates get flipped since we are travelling in the Y direction
+					Plot& buildingPlot = fieldMap.getPlot(buildingDistanceFromRobot, 5 - blocksTravelledY);
+					buildingPlot.filledPlot = true;
 				}
 				previousFoundBuilding = true; //sets back to true to ensure this if statement only happens once per foundBuilding loop
 			}
