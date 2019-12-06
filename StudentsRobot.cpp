@@ -448,30 +448,173 @@ void StudentsRobot::publishAddress(float x_pos, float y_pos, int robot_x, int ro
 
 	float msg; float msg1 = 100;
 	float msg2 = 90; float msg3 = 9; //initially set to impossible values so we know if they are changed or not
-//	float headin
 
+	//Column 0
 	if(robot_x == 0){
 		msg3 = 3;
 
-		if(robot_y == 1)
+		if(robot_y == 1) //600 1st Street: 103
 			msg2 = 0;
-		else if(robot_y == 3)
+		else if(robot_y == 3) //400 1st Street: 133
 			msg2 = 30;
-		else if(robot_y == 5)
+		else if(robot_y == 5) //200 1st Street: 163
 			msg2 = 60;
 	}
+
+	//Row 0
 	else if(robot_y == 0){
 		msg3 = 1;
 
-		if(robot_x == 1)
+		if(robot_x == 1) //200 Oak Street: 100
 			msg2 = 0;
-		else if(robot_x == 3)
+		else if(robot_x == 3) //400 Oak Street: 110
 			msg2 = 10;
-		else if(robot_x == 5)
+		else if(robot_x == 5) //600 Oak Street: 120
 			msg2 = 10;
 	}
 
+	//Row 1
+	else if(robot_y == 1) {
+		if(robot_x == 2) {
+			if(building_x == 1) { //500 2nd Street: 101
+				msg2 = 0;
+				msg3 = 1;
+			}
+			else if(building_x == 3) { //600 2nd Street: 113
+				msg2 = 10;
+				msg3 = 3;
+			}
+		}
+		else if(robot_x == 4) {
+			if(building_x == 3) { //500 3nd Street: 111
+				msg2 = 10;
+				msg3 = 1;
+			}
+			else if(building_x == 5) { //600 3nd Street: 123
+				msg2 = 10;
+				msg3 = 3;
+			}
+		}
+	}
+
+	//Row 2
+	else if(robot_y == 2) {
+		if(robot_x == 1) {
+			if(building_y == 1) { //100 Beech Street: 102
+				msg2 = 0;
+				msg3 = 2;
+			}
+			else if(building_y == 3) { //200 Beech Street: 130
+				msg2 = 30;
+				msg3 = 0;
+			}
+		}
+		else if(robot_x == 3) {
+			if(building_y == 1) { //300 Beech Street: 112
+					msg2 = 10;
+					msg3 = 2;
+				}
+				else if(building_y == 3) { //400 Beech Street: 140
+					msg2 = 40;
+					msg3 = 0;
+				}
+			}
+		else if(robot_x == 5) {
+			if(building_y == 1) { //500 Beech Street: 122
+					msg2 = 20;
+					msg3 = 2;
+				}
+				else if(building_y == 3) { //600 Beech Street: 150
+					msg2 = 50;
+					msg3 = 0;
+				}
+			}
+		}
+
+	//Row 3
+	else if(robot_y == 3) {
+		if(robot_x == 2) {
+			if(building_x == 1) { //300 2nd Street: 131
+				msg2 = 30;
+				msg3 = 1;
+			}
+			else if(building_x == 3) { //400 2nd Street: 143
+				msg2 = 40;
+				msg3 = 3;
+			}
+		}
+		else if(robot_x == 4) {
+			if(building_x == 3) { //300 3nd Street: 141
+				msg2 = 40;
+				msg3 = 1;
+			}
+			else if(building_x == 5) { //400 3nd Street: 153
+				msg2 = 50;
+				msg3 = 3;
+			}
+		}
+	}
+
+	//Row 4
+	else if(robot_y == 4) {
+		if(robot_x == 1) {
+			if(building_y == 1) { //100 Maple Street: 132
+				msg2 = 30;
+				msg3 = 2;
+			}
+			else if(building_y == 3) { //200 Maple Street: 160
+				msg2 = 60;
+				msg3 = 0;
+			}
+		}
+		else if(robot_x == 3) {
+			if(building_y == 1) { //300 Maple Street: 142
+					msg2 = 40;
+					msg3 = 2;
+				}
+				else if(building_y == 3) { //400 Maple Street: 170
+					msg2 = 70;
+					msg3 = 0;
+				}
+			}
+		else if(robot_x == 5) {
+			if(building_y == 1) { //500 Maple Street: 152
+					msg2 = 50;
+					msg3 = 2;
+				}
+				else if(building_y == 3) { //600 Maple Street: 180
+					msg2 = 80;
+					msg3 = 0;
+				}
+			}
+	}
+
+	//Row 5
+	else if(robot_y == 5) {
+		if(robot_x == 2) {
+			if(building_x == 1) { //100 2nd Street: 161
+				msg2 = 60;
+				msg3 = 1;
+			}
+			else if(building_x == 3) { //200 2nd Street: 173
+				msg2 = 70;
+				msg3 = 3;
+			}
+		}
+		else if(robot_x == 4) {
+			if(building_x == 3) { //100 3nd Street: 171
+				msg2 = 70;
+				msg3 = 1;
+			}
+			else if(building_x == 5) { //200 3nd Street: 183
+				msg2 = 80;
+				msg3 = 3;
+			}
+		}
+	}
+
 	msg = msg1 + msg2 + msg3;
+	Serial.println(msg);
 	IMU->setZPosition(msg);
 }
 
