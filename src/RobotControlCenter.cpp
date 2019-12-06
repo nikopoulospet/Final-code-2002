@@ -94,8 +94,10 @@ void RobotControlCenter::setup() {
 	motor2.setSetpoint(motor2.getPosition());
 	motor3.setSetpoint(motor3.getPosition());
 	// Set up digital servo for the gripper
-	servo.setPeriodHertz(50);
-	servo.attach(SERVO_PIN, 1000, 2000);
+	servoTurret.setPeriodHertz(50); //50
+	servoLadder.setPeriodHertz(50);
+	servoTurret.attach(SERVO_TURRET_PIN, 500, 2500);
+	servoLadder.attach(SERVO_LADDER_PIN, 500, 2500);
 
 	//	// Create sensors and servers
 #if defined(USE_IMU)
@@ -118,7 +120,7 @@ void RobotControlCenter::setup() {
 	serverIR = new IRCamSimplePacketComsServer(&myDFRobotIRPosition);
 #endif
 
-	robot = new StudentsRobot(&motor1, &motor2, &motor3, &servo, serverIR,
+	robot = new StudentsRobot(&motor1, &motor2, &motor3, &servoTurret, &servoLadder, serverIR,
 			sensor);
 
 #if defined(USE_WIFI)

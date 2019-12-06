@@ -111,7 +111,9 @@ protected:
 	HBridgeEncoderPIDMotor motor2; // PID controlled motor object
 	HBridgeEncoderPIDMotor motor3; // PID controlled motor object
 	// Servo objects
-	Servo servo;
+	Servo servoTurret;
+	Servo servoLadder;
+
 
 	//
 	/**

@@ -28,7 +28,7 @@
  */
 enum RobotStateMachine {
 
-	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4, WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6, Searching = 14, Scanning = 15, Communication = 16, UltrasonicTest = 12,
+	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4, WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6, Searching = 14, Scanning = 15, Communication = 16, UltrasonicTest = 12, ServoTest = 11
 	//,WAIT_FOR_DISTANCE=7,Pos1_2 = 8,Pos2_3 = 9,Pos3_4 = 10, oneEighty = 11,UltrasonicTest = 12,
 
 };
@@ -69,7 +69,8 @@ private:
 	PIDMotor * motor1;
 	PIDMotor * motor2;
 	PIDMotor * motor3;
-	Servo * servo;
+	Servo * servoTurret;
+	Servo * servoLadder;
 	float lsensorVal=0;
 	float rsensorVal=0;
 	long nextTime = 0;
@@ -119,7 +120,7 @@ public:
 	 */
 	StudentsRobot(PIDMotor * motor1,
 			PIDMotor * motor2, PIDMotor * motor3,
-			Servo * servo,IRCamSimplePacketComsServer * IRCam,GetIMU * imu);
+			Servo * servoTurret, Servo * servoLadder,IRCamSimplePacketComsServer * IRCam,GetIMU * imu);
 	/**
 	 * Command status
 	 *

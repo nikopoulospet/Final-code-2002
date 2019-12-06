@@ -10,17 +10,18 @@
 #define	wheelRadiusMM 25.6
 
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
-		PIDMotor * motor3, Servo * servo, IRCamSimplePacketComsServer * IRCam,
+		PIDMotor * motor3, Servo * servoTurret, Servo * servoLadder, IRCamSimplePacketComsServer * IRCam,
 		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu), Ultrasonic1(), fieldMap()
 
 
 
 {
 	Serial.println("StudentsRobot::StudentsRobot constructor called here ");
-	this->servo = servo;
 	this->motor1 = motor1;
 	this->motor2 = motor2;
 	this->motor3 = motor3;
+	this->servoTurret = servoTurret;
+	this->servoLadder = servoLadder;
 	IRCamera = IRCam;
 	IMU = imu;
 	//ace = new DrivingChassis(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu);
@@ -98,8 +99,15 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	//Test IO
 	pinMode(WII_CONTROLLER_DETECT, OUTPUT);
 
+	//Servo
+	pinMode(SERVO_TURRET_PIN, OUTPUT);
+	pinMode(SERVO_LADDER_PIN, OUTPUT);
+//	servoTurret->attach(SERVO_TURRET_PIN);
+//	servoLadder->attach(SERVO_LADDER_PIN);
 	//SENSOR
 	Ultrasonic1.attach(TrigPIN, EchoPIN);
+
+
 
 }
 /**
@@ -114,7 +122,8 @@ void StudentsRobot::updateStateMachine() {
 	switch (status) {
 	case StartupRobot:
 		//Do this once at startup
-		status = StartRunning;
+		//status = UltrasonicTest;
+		status = ServoTest;
 		Serial.println("StudentsRobot::updateStateMachine StartupRobot here ");
 		break;
 	case StartRunning:
@@ -169,6 +178,19 @@ void StudentsRobot::updateStateMachine() {
 		break;  */
 
 	case UltrasonicTest:
+		double blah;
+		blah = Ultrasonic1.PingUltrasonic();
+		if(blah != -1.0){
+			Serial.println(blah);
+		}
+		break;
+
+	case ServoTest:
+		servoTurret->write(1640);  //CW->decrease
+		//Center=1640, 90CW=790, 90CCW=2490
+		servoLadder->write(740);  //CW->decrease
+		//In Holster=740, Deployed=2350
+
 		break;
 
 
@@ -306,7 +328,7 @@ void StudentsRobot::updateStateMachine() {
 			motor2->setVelocityDegreesPerSecond(0);
 			ping123 = Ultrasonic1.PingUltrasonic();
 			//had problems with going straight into the foundBuilding state and always reading building distance of 1
-			if(ping123 > 300.0 && ping123 < 400.0  && millis() <= nextTime) {
+			if(ping123 > 200 && ping123 < 400.0  && millis() <= nextTime) {
 				if(blocksTravelledX < 5) {
 					buildingDistanceFromRobot = 1;
 					scanningStatus = foundBuilding;
@@ -317,7 +339,7 @@ void StudentsRobot::updateStateMachine() {
 				}
 			}
 
-			if(ping123 > 1100.0 && ping123 < 1250.0  && millis() <= nextTime) {
+			if(ping123 > 1000 && ping123 < 1200.0  && millis() <= nextTime) {
 				if(blocksTravelledX < 5) {
 					buildingDistanceFromRobot = 3;
 					scanningStatus = foundBuilding;
@@ -328,16 +350,6 @@ void StudentsRobot::updateStateMachine() {
 				}
 			}
 
-			if(ping123 > 1900.0 && ping123 < 2100.0  && millis() <= nextTime) {
-				if(blocksTravelledX < 5) {
-					buildingDistanceFromRobot = 5;
-					scanningStatus = foundBuilding;
-				}
-				else if (blocksTravelledY <=5) {
-					buildingDistanceFromRobot = 0; //distances change when we travel in the Y coordinate
-					scanningStatus = foundBuilding;
-				}
-			}
 			/////////////////////////////////////////////////////////
 			else if (blocksTravelledY == 5) {
 				status = Halting;
@@ -504,6 +516,8 @@ void StudentsRobot::updateStateMachine() {
  * You call the PIDMotor's loop function. This will update the whole motor control system
  * This will read from the concoder and write to the motors and handle the hardware interface.
  */
+
+
 void StudentsRobot::pidLoop() {
 	motor1->loop();
 	motor2->loop();

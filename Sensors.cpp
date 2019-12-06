@@ -34,7 +34,7 @@ double Sensors::PingUltrasonic(){
 			//Serial.println(dTime);
 			trigger = false;
 		}
-		if(!trigger && dTime + 20 < micros()){
+		if(!trigger && dTime + 100 < micros()){
 			digitalWrite(triggerPin, LOW);
 			reading = false;
 			trigger = true;

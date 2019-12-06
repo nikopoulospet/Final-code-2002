@@ -19,7 +19,8 @@
 /**
  * Gripper pin for Servo
  */
-#define SERVO_PIN 23
+#define SERVO_TURRET_PIN 26
+#define SERVO_LADDER_PIN 25
 /**
  * Enable for all h-bridges
  */
