@@ -231,7 +231,7 @@ void StudentsRobot::updateStateMachine() {
 				}
 			}
 			if(travelledXDistance == true && travelledYDistance == false && completedTurn == false ) {  //turn approximately 90 degrees only once
-				if(ace.turnDrive(0,85,10)) { //turnDrive has to be handled in its own separate "loop" or if statement
+				if(ace.turnDrive(0,90,10)) { //turnDrive has to be handled in its own separate "loop" or if statement
 					completedTurn = true;
 				}
 
@@ -293,7 +293,6 @@ void StudentsRobot::updateStateMachine() {
 					scanningStatus = foundBuilding; //handle placement of building in a map
 					maxUltrasonicReading = 0;
 				}
-
 				else if (blocksTravelledY <=5) { //we want to check the building when we have reached Y = 5 due to the construction of the field
 					buildingDistanceFromRobot = 4; //distances change when we travel in the Y coordinate
 					scanningStatus = foundBuilding;
@@ -307,41 +306,91 @@ void StudentsRobot::updateStateMachine() {
 					buildingDistanceFromRobot = 3;
 					scanningStatus = foundBuilding;
 					maxUltrasonicReading = 0;
+
 				}
 				else if (blocksTravelledY <=5) {
 					buildingDistanceFromRobot = 2; //distances change when we travel in the Y coordinate
 					scanningStatus = foundBuilding;
 					maxUltrasonicReading = 0;
+
 				}
 				break;
 			}
-
+			if(averageUltrasonicReadings < 150 || averageUltrasonicReadings > 1200 || (averageUltrasonicReadings > 400 && averageUltrasonicReadings < 950) || (averageUltrasonicReadings > 950 && averageUltrasonicReadings < 1200.0 && maxUltrasonicReading > 1350) ) { //no building in a row
+				Serial.println("NO BUILDING IN A ROW");
+				buildingDistanceFromRobot = 0;
+				scanningStatus = foundBuilding;
+				maxUltrasonicReading = 0;
+			}
 			/////////////////////////////////////////////////////////
 			else if (blocksTravelledY == 5) {
 				status = Halting;
 			}
 			/////////////////////////////////////////////////////////
-			else {
+			/*	else {
 				Serial.println("ELSEEE");
 				previousFoundBuilding = true;
 				maxUltrasonicReading = 0;
 				scanningStatus = Driving;
-			}
+			} */
 			break;
 
 		case foundBuilding:
 			if(!previousFoundBuilding) { //event checking making sure building only gets checked one time
-				if (blocksTravelledX < 5) {
-					Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-					ace.buildingArray[blocksTravelledX][buildingDistanceFromRobot] = 1;  //add building coordinate to our map
-					Plot& buildingPlot = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot);
-					buildingPlot.filledPlot = true;
+				if(blocksTravelledX < 5) {
+					if(buildingDistanceFromRobot == 1) {
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot); //5-X,1
+						Plot& ambiguousPlot1 = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot+2); //5-X,3
+						Plot& ambiguousPlot2 = fieldMap.getPlot(5-blocksTravelledX,buildingDistanceFromRobot+4);  //5-X,5
+						buildingPlot.filledPlot = true;
+						ambiguousPlot1.filledPlot = true;
+						ambiguousPlot2.filledPlot = true;
+					}
+					else if(buildingDistanceFromRobot == 3) {
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot); // 5-X,3
+						Plot& ambiguousPlot1 = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot+2); // 5-X,5
+						Plot& ambiguousPlot2 = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot-2);  // 5-X,1
+						buildingPlot.filledPlot = true;
+						ambiguousPlot1.filledPlot = true;
+						ambiguousPlot2.filledPlot = false;
+					}
+					else if (buildingDistanceFromRobot == 0){
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						ace.buildingArray[blocksTravelledX][buildingDistanceFromRobot] = 1;  //add building coordinate to our map
+						Plot& ambiguousPlot1 = fieldMap.getPlot(5-blocksTravelledX, 5); //5-X,5
+						ambiguousPlot1.filledPlot = true;
+
+					}
 				}
 				else if (blocksTravelledY <= 5) {
-					Serial.println("X Coordinate: " + String(buildingDistanceFromRobot) + " Y Coordinate: " + String(blocksTravelledY));
-					ace.buildingArray[buildingDistanceFromRobot][blocksTravelledY] = 1; //coordinates get flipped since we are travelling in the Y direction
-					Plot& buildingPlot = fieldMap.getPlot(5-buildingDistanceFromRobot, blocksTravelledY);
-					buildingPlot.filledPlot = true;
+					if(buildingDistanceFromRobot == 4) {
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(5 - buildingDistanceFromRobot, blocksTravelledY); //1,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot(5 - buildingDistanceFromRobot + 2, blocksTravelledY); //3,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot(5 - buildingDistanceFromRobot + 4, blocksTravelledY); //5,Y
+						buildingPlot.filledPlot = true;
+					}
+					else if(buildingDistanceFromRobot == 2) { //if building is in ROW 2
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(5 - buildingDistanceFromRobot, blocksTravelledY);  //3,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot(5 - buildingDistanceFromRobot + 2, blocksTravelledY); //5,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot(5 - buildingDistanceFromRobot - 2, blocksTravelledY); //1,Y
+						buildingPlot.filledPlot = true;
+						ambiguousPlot2.filledPlot = false; //set space in front of building to false
+					}
+					else if(buildingDistanceFromRobot == 0) { //if building is in ROW 2
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(5, blocksTravelledY);  //3,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot(3, blocksTravelledY); //5,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot(1, blocksTravelledY); //1,Y
+						buildingPlot.filledPlot = true;
+						ambiguousPlot1.filledPlot = false;
+						ambiguousPlot2.filledPlot = false;
+
+					}
+
 				}
 				previousFoundBuilding = true; //sets back to true to ensure this if statement only happens once per foundBuilding loop
 			}
