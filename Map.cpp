@@ -17,7 +17,7 @@ zerothree(true,false,false,false,0),
 zerofour(true,false,false,false,0),
 zerofive(true,false,false,false,0),
 onezero(true,false,false,false,0),
-oneone(false, false, false, false, "200 Oak Street", "500 2nd Avenue", "100 Beech Street", "600 1st Avenue" , 4),
+oneone(false, true, false, false, "200 Oak Street", "500 2nd Avenue", "100 Beech Street", "600 1st Avenue" , 4),
 onetwo(true,false,false,false,0),
 onethree(false, false, false, false, "400 Oak Street", "500 3rd Avenue", "300 Beech Street", "600 2nd Avenue" ,4),
 onefour(true,false,false,false,0),
@@ -29,7 +29,7 @@ twothree(true,false,false,false,0),
 twofour(true,false,false,false,0),
 twofive(true,false,false,false,0),
 threezero(true,false,false,false,0),
-threeone(false, false, false, false, "200 Beech Street", "300 2nd Avenue", "100 Maple Street", "400 1st Avenue" ,4),
+threeone(false, true , false, false, "200 Beech Street", "300 2nd Avenue", "100 Maple Street", "400 1st Avenue" ,4),
 threetwo(true,false,false,false,0),
 threethree(false, false, false, false, "400 Beech Street", "300 3rd Avenue", "300 Maple Street", "400 2nd Avenue" ,4),
 threefour(true,false,false,false,0),
@@ -45,7 +45,7 @@ fiveone(false, false, false, false, "200 Maple Street", "100 2nd Avenue", "No Ad
 fivetwo(true,false,false,false,0),
 fivethree(false, false, false, false, "400 Maple Street", "100 3rd Avenue", "No Address", "200 2nd Avenue",3),
 fivefour(true,false,false,false,0),
-fivefive(false, false, false, false, "600 Maple Street", "No Address", "No Address", "200 3rd Avenue" ,2)
+fivefive(false, true, false, false, "600 Maple Street", "No Address", "No Address", "200 3rd Avenue" ,2)
 {
 
 

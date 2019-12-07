@@ -38,12 +38,56 @@ void Pose:: updateEncoderPositions(double timestamp, double encoder0, double enc
 
 		theta = nextAngularPosition;
 
-		// adding block counting / robot position update. checks heading and distance traveled to figure out robot X and Y pos
 
-	//Serial.println("EncO =" + String(encoder0) +"Enc1 =" + String(encoder1));
-	//Serial.println("Final pose x= " + String(x) + " y= " + String(y) + " theta= " + String(theta) + " IMU Heading: " + String(((IMUheading) * (PI/180)))); //print of pose
+		// adding block counting / robot position update. checks heading and distance traveled to figure out robot X and Y pos
+		IMUheadingModulo = int(IMUheading) % 360;
+		if((deltaEncoder0 > 0 && deltaEncoder1 < 0)||(deltaEncoder0 < 0 && deltaEncoder1 > 0)){ // if robot is traveling straight(ish)
+			avgTraveled += (abs(deltaEncoder0) + abs(deltaEncoder1)) * 0.5;
+			//Serial.println(String(avgTraveled) + "=========================");
+			if (avgTraveled >= blockLeninDeg){
+				avgTraveled = 0;
+				if((abs(IMUheadingModulo) <= 360 && abs(IMUheadingModulo) >= 340) || (abs(IMUheadingModulo) >= 0 && abs(IMUheadingModulo) <= 20)){//IMU is in degrees
+					prevIMUheading = 1;
+					setRobotPosition(posX, posY - 1);
+				}
+
+				if((abs(IMUheadingModulo) <= 110 && abs(IMUheadingModulo) >= 70)){//IMU is in degrees
+					if(IMUheadingModulo > 0){
+						prevIMUheading = 2;
+						setRobotPosition(posX + 1, posY);
+					}else{
+						prevIMUheading = 4;
+						setRobotPosition(posX - 1, posY);
+					}
+				}
+
+				if((abs(IMUheadingModulo) <= 200 && abs(IMUheadingModulo) >= 160)){
+					prevIMUheading = 3;
+					setRobotPosition(posX, posY + 1);
+				}
+
+				if((abs(IMUheadingModulo) >= 250 && abs(IMUheadingModulo) <= 290)){//IMU is in degrees
+					if(IMUheadingModulo > 0){
+						prevIMUheading = 4;
+						setRobotPosition(posX - 1, posY);
+					}else{
+						prevIMUheading = 2;
+						setRobotPosition(posX + 1, posY);
+					}
+				}
+			}
+		}else{ //robot is turning
+			avgTraveled = 0;
+		}
+
+
 
 	}
+	Serial.println("PosX " + String(posX) + " PosY " + String(posY));
+
+	Serial.println("EncO =" + String(encoder0) +"Enc1 =" + String(encoder1));
+	Serial.println("Final pose x= " + String(x) + " y= " + String(y) + " theta= " + String(theta) + " IMU Heading: " + String(((IMUheading) * (PI/180)))); //print of pose
+
 	lastEncoder0 = encoder0;  //reset values for next loop through
 	lastEncoder1 = encoder1;
 	lastTimestamp = timestamp;

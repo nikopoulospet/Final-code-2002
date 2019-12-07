@@ -31,6 +31,10 @@ enum DriveToSteps {
 	driveX = 0, toHeading1 = 1, driveY = 2, toHeading2 = 3, done =4,
 };
 
+enum CorneringSteps {
+	drive = 0, turning = 1,
+};
+
 
 class DrivingChassis {
 private:
@@ -44,6 +48,7 @@ private:
 	int heading1 = 0;
 	int heading2 = 0;
 	DriveToSteps Step = toHeading1;
+	CorneringSteps corner = drive;
 
 	//DRIVE PLOTS VARS
 	double kpDistance = 7;
@@ -53,6 +58,15 @@ private:
 	int changeInXpos = 0;
 	int changeInYpos = 0;
 
+	//turn corner Vars
+	int driveCount = 0;
+	int x;
+	int y;
+	bool decideDir = true;
+
+	double startingHeading = 0;
+	double dir = 0;
+
 public:
 	Pose robotPose;  //instantiating a pose object
 	boolean loopFlag = false;
@@ -61,6 +75,9 @@ public:
 	bool trigger = true;
 	double wheelRadius = 25.6; // mm
 	double distanceError = 0;
+	double IMUheading = 0;
+	double angleLeftMotor = 0;
+	double angleRightMotor = 0;
 	//double targetHeading = 0; //45 * (PI/180);  //hard coded heading in radians
 
 
@@ -168,7 +185,7 @@ public:
 	 *
 	 */
 
-	bool distanceDrive(double mm);
+	//bool distanceDrive(double mm);
 	/**
 	 * drives to a distance in mm, using a p controller to handle speeds
 	 *
@@ -177,7 +194,7 @@ public:
 	 * @return true when distance is reached
 	 */
 
-	bool turnDriveEffortBool(double deg);
+	//bool turnDriveEffortBool(double deg);
 	/**
 	 * turn function, turns to desired heading using driveStraight with zero speed and a modified heading
 	 *
@@ -208,9 +225,15 @@ public:
 
 	int getOrientation(int building, int row);
 
-	bool drivePlotsinDir(double plots, double heading, bool isX);
+	//bool drivePlotsinDir(double plots, double heading, bool isX);
 
-	bool turnDrive(double deg);
+	//bool turnDrive(double deg);
+
+	bool turnTo(double deg);
+
+	bool turnTheCorner(bool CCW);
+
+	bool driveOneBlock();
 
 };
 

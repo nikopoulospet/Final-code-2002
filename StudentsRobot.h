@@ -29,8 +29,7 @@
  */
 enum RobotStateMachine {
 
-	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4, WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6, Searching = 14, Scanning = 15, Communication = 16, UltrasonicTest = 12,
-	Testing = 13,
+	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4, WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6, Searching = 14, Scanning = 15, Communication = 16, UltrasonicTest = 12, Testing = 13,
 	//,WAIT_FOR_DISTANCE=7,Pos1_2 = 8,Pos2_3 = 9,Pos3_4 = 10, oneEighty = 11,UltrasonicTest = 12,
 
 };
@@ -96,6 +95,8 @@ private:
 	IRCamSimplePacketComsServer * IRCamera;
 	GetIMU * IMU;
 
+	//Searching Vars
+	bool SearchingRun = false;
 	int row = -1;
 	bool firstRun = true;
 	int buildingsSearched = 0;
@@ -110,6 +111,9 @@ private:
 	int y = 1;
 	double HX = 90;
 	double HY = 0;
+
+	int orientHeading = 0;
+	bool orienting = false;
 public:
 	boolean trigger = true;
 	double target = 0;
