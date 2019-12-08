@@ -9,6 +9,8 @@
 #include "StudentsRobot.h"
 #define wheelTrackMM  225   //pass in wheeltrack and wheel radius into mm
 #define	wheelRadiusMM 25.6
+static double sumUltrasonicReadings = 0;  //used for averaging ultrasonic readings b/c they are inconsistant
+static int countUltrasonicReadings = 0;
 
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 		PIDMotor * motor3, Servo * servo, IRCamSimplePacketComsServer * IRCam,
@@ -159,18 +161,6 @@ void StudentsRobot::updateStateMachine() {
 		}
 		break;
 
-		/*	 case UltrasonicTest:
-		Serial.println(Ultrasonic1.PingUltrasonic());
-
-		PSEUDOCODE FOR PINGING ULTRASONIC AND DETERMINING LOCATION OF A BUILDING
-	  bool areWeOnBlock1 = motor1->getAngleDegrees() > ace.mmTOdeg(380)  && motor1 ->getAngleDegrees() <  ace.mmTOdeg(430); //has motor 1 travelled at least 38cm and not passed the block at 43 cm
-		bool areWeDrivingStraight = IMU->getEULER_azimuth() + ace.offset == 0;
-		if(areWeOnBlock1 && areWeDrivingStraight && Ultrasonic1.PingUltrasonic() > 300 && Ultrasonic1.PingUltrasonic() < 400) {
-			MapArray[2][6] = 1;
-		}
-
-		break;  */
-
 	case Testing:
 		if(ace.turn90CCW()){
 			status = Halting;
@@ -178,13 +168,10 @@ void StudentsRobot::updateStateMachine() {
 		break;
 
 	case UltrasonicTest:
-		fieldMap.printMap();
-		status = Halting;
 		break;
 
 
 	case WAIT_FOR_TIME:
-
 		// Check to see if enough time has elapsed
 		if (nextTime <= millis()) {
 			// if the time is up, move on to the next state
@@ -205,53 +192,56 @@ void StudentsRobot::updateStateMachine() {
 		motor3->stop();
 		motor2->stop();
 		motor1->stop();
-
+		ace.printTemporaryBuildingArray();
+		Serial.println("ACTUAL MAP ARRAY");
+		fieldMap.printMap();
 		status = Halt;
 		break;
 
 
-
 	case Scanning:
-
 		switch(scanningStatus){
 		case Driving:
-			if (!travelledXDistance) {  //have we completed driving 5 blocks for the x distance?
-				Serial.println(String(blocksTravelledX));
-				if(blocksTravelledX < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment one each time
-					Serial.println(blocksTravelledX);
-					//ace.loop();
-					if(trigger){
+			if(blocksTravelledX == 0 && !previousFoundBuilding) {  //edge case when we start the program, check for any buildings in row 0
+				scanningStatus = UltrasonicCalc;
+				nextTime = millis() + 3500; //wait 3.5 seconds in the ScanninG Building state where ultrasonic will ping continously
+			}
+			if (!travelledXDistance) {//have we completed driving 5 blocks for the x distance?
+				if(blocksTravelledX < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment each time
+					//Serial.println(blocksTravelledX);
+					if(trigger){  //trigger keeps a one time set of our target distance each time we need to travel a block
 						target = blockDistance;
-						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
+						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees()); //adds on the degrees that we need to travel to our current position instead of resetting encoders
 						trigger = false;
 					}
-					distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+					distanceError =  abs(this->motor1->getAngleDegrees()) - target; //calculate distance error between our current position and final position
 					effort = 0.25 * distanceError;
 					ace.driveStraight(-effort, 0, 200);
-					if(motor1->getAngleDegrees() >= target){
+					if(motor1->getAngleDegrees() >= target){ //if we have surpassed the target, allow for another set of target distance, increment block
 						trigger = true;
 						blocksTravelledX++;
-						scanningStatus = ScanningBuilding; //wait 5 seconds in the ScanninG Building state where ultrasonic will ping continously
-						nextTime = millis() + 5000;
-
+						previousFoundBuilding = false;
+						if(blocksTravelledX % 2 == 0 && !previousFoundBuilding) { //if we have travelled an even number of blocks, check if there is a building in that row for 2 seconds
+							scanningStatus = UltrasonicCalc;
+							nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
+						}
 					}
 				}
-				else if (blocksTravelledX == 5) {  //if we have travelled 5 blocks in the x direction, set x to true and y to false
+				else if (blocksTravelledX == 5) {  //if we have travelled 5 blocks in the x direction, set x to true and y to false so we no longer travel in the x direction but prepare to travel in y
 					travelledXDistance = true;
 					travelledYDistance = false;
 				}
 			}
-//			if(travelledXDistance == true && travelledYDistance == false && ace.turnDrive(90) && completedTurn == true) {  //turn 90 degrees **HAS PROBLEMS GETS STUCK IN TURNDRIVE
-//				completedTurn = false;
-//				scanningStatus = ScanningBuilding;
-//				nextTime = millis() + 2000;
-//
-//			}
+			if(travelledXDistance == true && travelledYDistance == false && completedTurn == false ) {  //turn approximately 90 degrees only once
+				if(ace.turnDrive(0,90,10)) { //turnDrive has to be handled in its own separate "loop" or if statement
+					completedTurn = true;
+				}
+			}
+
 			if (!travelledYDistance && completedTurn == true) {  //Repeat using Y direction
-				Serial.println(String(blocksTravelledY));
-				if(blocksTravelledY < 5) {
-					Serial.println(blocksTravelledY);
-					//ace.loop();
+				//Serial.println(String(blocksTravelledY));
+				if(blocksTravelledY <= 5) {
+					//	Serial.println(blocksTravelledY);
 					if(trigger){
 						target = blockDistance;
 						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
@@ -263,67 +253,192 @@ void StudentsRobot::updateStateMachine() {
 					if(motor1->getAngleDegrees() >= target){
 						trigger = true;
 						blocksTravelledY++;
-						scanningStatus = ScanningBuilding;
-						nextTime = millis() + 2000;
-
+						previousFoundBuilding = false;
+						if(!(blocksTravelledY % 2 == 0) && !previousFoundBuilding) {
+							scanningStatus = UltrasonicCalc;
+							nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
+						}
 					}
 				}
-				else if (blocksTravelledY == 5) {
-					status = Halting;
-				}
 			}
+			break;
 
-			/*		if(needToTurn90) {
-				if(ace.turnDrive(0,90,10)) {
-					status = Pos3_4;
-				}
+		case UltrasonicCalc:
+			motor1->setVelocityDegreesPerSecond(0); //halt the motors while we ping the buildings
+			motor2->setVelocityDegreesPerSecond(0);
+			ultrasonicPing = Ultrasonic1.PingUltrasonic();
+			Serial.println(String(ultrasonicPing));
+			if (ultrasonicPing > maxUltrasonicReading) {
+				maxUltrasonicReading = ultrasonicPing;
 			}
-			else if (!finishedYCoordinate) {
-				if(trigger){
-					target = 1 * blockDistance;
-					target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
-					trigger = false;
-				}
-				distanceError =  abs(this->motor1->getAngleDegrees()) - target;
-				effort = 0.25 * distanceError;
-				ace.driveStraight(-effort, 0, 200);
-				if(motor1->getAngleDegrees() >= target){
-					status = ScanningBuilding;
-					trigger = true;
-					finishedYCoordinate = true;
-				}
-			} */
-
-
-
-
+			if (millis() <= nextTime && ultrasonicPing != -1.0) {  //while we still have time to ping, and the result of our ping is a reasonable number, add it to our sum and increment a counter
+				sumUltrasonicReadings += ultrasonicPing;
+				countUltrasonicReadings++;
+				scanningStatus = UltrasonicCalc; //repeat status until millis has surpassed nextTime
+			}
+			else if (millis() >= nextTime) { //if we have surpassed nextTime
+				averageUltrasonicReadings = sumUltrasonicReadings / countUltrasonicReadings; //calculate the average
+				sumUltrasonicReadings = 0; //reset static variables back to 0 to avoid rollover
+				countUltrasonicReadings = 0;
+				Serial.println("AVERAGE: " + String(averageUltrasonicReadings));
+				scanningStatus = ScanningBuilding; //go to scanning building state
+			}
 			break;
 
 		case ScanningBuilding:
-			motor1->setVelocityDegreesPerSecond(0);
-			motor2->setVelocityDegreesPerSecond(0);
-
-
-			if(Ultrasonic1.PingUltrasonic() > 300 && Ultrasonic1.PingUltrasonic() < 400 && millis() <= nextTime) {
-				Serial.println("HEADED HOME MOTHERFUCKERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-
+			if(averageUltrasonicReadings > 150 && averageUltrasonicReadings < 400) {//conditionals to check for the distance
+				if(blocksTravelledX < 5) {
+					buildingDistanceFromRobot = 1; //building is at Y=1
+					scanningStatus = foundBuilding; //handle placement of building in a map
+					maxUltrasonicReading = 0;
+				}
+				else if (blocksTravelledY <=5) { //we want to check the building when we have reached Y = 5 due to the construction of the field
+					buildingDistanceFromRobot = 4; //distances change when we travel in the Y coordinate, X = 4
+					scanningStatus = foundBuilding;
+					maxUltrasonicReading = 0;
+				}
+				break;
 			}
-			else if (millis() >= nextTime) {
-				scanningStatus = Driving;
+			if(averageUltrasonicReadings > 950 && averageUltrasonicReadings < 1200.0 && maxUltrasonicReading < 1350) {
+				if(blocksTravelledX < 5) {
+					buildingDistanceFromRobot = 3;
+					scanningStatus = foundBuilding;
+					maxUltrasonicReading = 0;
+
+				}
+				else if (blocksTravelledY <=5) {
+					buildingDistanceFromRobot = 2; //distances change when we travel in the Y coordinate
+					scanningStatus = foundBuilding;
+					maxUltrasonicReading = 0;
+
+				}
+				break;
 			}
+			if((averageUltrasonicReadings < 150 || averageUltrasonicReadings > 1200 ) || (averageUltrasonicReadings > 400 && averageUltrasonicReadings < 950 && maxUltrasonicReading > 1000) || (averageUltrasonicReadings > 950 && averageUltrasonicReadings < 1200.0 && maxUltrasonicReading > 1350)) { //no building in a row
+				Serial.println("NO BUILDING IN A ROW"); //if building is out of range/ ultrasonic reads average in between 950 & 1200 but max is greater to avoid placing an inaccurate building, or to avoid mistaking no building for a roadblock
+				buildingDistanceFromRobot = 0;
+				scanningStatus = foundBuilding;
+				Serial.println(String(maxUltrasonicReading));
+				maxUltrasonicReading = 0;
+				break;
+			}
+			if(averageUltrasonicReadings > 400 && averageUltrasonicReadings < 900 && maxUltrasonicReading < 1200) { //roadblock - large side facing towards you reads between 400 and 900 with a maximum under 1200
+				if(blocksTravelledX < 5) {
+					Serial.println("ROADBLOCK FOUND! IN X");
+					buildingDistanceFromRobot = 7;
+					scanningStatus = foundBuilding;
+					maxUltrasonicReading = 0;
 
+				}
+				else if (blocksTravelledY <=5) {
+					Serial.println("ROADBLOCK FOUND! IN Y");
+					buildingDistanceFromRobot = 9; //distances change when we travel in the Y coordinate
+					scanningStatus = foundBuilding;
+					maxUltrasonicReading = 0;
 
-
+				}
+				break;
+			}
+			/////////////////////////////////////////////////////////SENDS ROBOT INTO SEARCHING MACHINE
+			else if (blocksTravelledY == 5) {
+				status = Halting;
+			}
+			/////////////////////////////////////////////////////////
 			break;
 
 		case foundBuilding:
+			if(!previousFoundBuilding) { //event checking making sure building only gets checked one time
+				if(blocksTravelledX < 5) {
+					if(buildingDistanceFromRobot == 1) { // if the building is at Y = 1 given ultrasonic data
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						//Plot& is a reference to the actual plot in the map array, and allows us to directly modify values of those plots
+						Plot& buildingPlot = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot); //5-X,1  //sets up all plots in the row of x = 4 (0,0 being in the top left hand corner of the field)
+						Plot& ambiguousPlot1 = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot+2); //5-X,3
+						Plot& ambiguousPlot2 = fieldMap.getPlot(5-blocksTravelledX,buildingDistanceFromRobot+4);  //5-X,5
+						buildingPlot.filledPlot = true; //if we see a building right in front of us, the buildings behind it may also be buildings
+						ambiguousPlot1.filledPlot = true;
+						ambiguousPlot2.filledPlot = true;
+					}
+					else if(buildingDistanceFromRobot == 3) {
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot); // 5-X,3
+						Plot& ambiguousPlot1 = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot+2); // 5-X,5
+						Plot& ambiguousPlot2 = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot-2);  // 5-X,1
+						buildingPlot.filledPlot = true; //if we see a building in the 3rd column of the field, then the building in front is not a building, but the one behind may be a building
+						ambiguousPlot1.filledPlot = true;
+						ambiguousPlot2.filledPlot = false;
+					}
+					else if (buildingDistanceFromRobot == 0){
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						ace.buildingArray[blocksTravelledX][buildingDistanceFromRobot] = 1;  //add building coordinate to our map
+						Plot& ambiguousPlot1 = fieldMap.getPlot(5-blocksTravelledX, 5); //5-X,5
+						ambiguousPlot1.filledPlot = true; //if we cannot sense the back row of the buildings, set the one in the back to a plausible building
 
+					}
+					else if (buildingDistanceFromRobot == 7) {
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						Plot& roadBlockPlot = fieldMap.getPlot(5-blocksTravelledX, 2); // 5-X,2
+						Plot& ambiguousPlot1 = fieldMap.getPlot(5-blocksTravelledX, 3); // 5-X,3
+						Plot& ambiguousPlot2 = fieldMap.getPlot(5-blocksTravelledX, 5);  // 5-X,5
+						roadBlockPlot.filledPlot = true; //if we find a road block in 2nd column of the field, then set the buildings behind it to be possible buildings
+						ambiguousPlot1.filledPlot = true;
+						ambiguousPlot2.filledPlot = true;
+					}
+				}
+				else if (blocksTravelledY <= 5) {
+					if(buildingDistanceFromRobot == 4) {
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(5 - buildingDistanceFromRobot, blocksTravelledY); //1,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot(5 - buildingDistanceFromRobot + 2, blocksTravelledY); //3,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot(5 - buildingDistanceFromRobot + 4, blocksTravelledY); //5,Y
+						buildingPlot.filledPlot = true; //ensure that we do not overwrite previous data, and in the y we only handle the spaces in front of the buildings we measure
+					}
+					else if(buildingDistanceFromRobot == 2) { //if building is in ROW 2
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(5 - buildingDistanceFromRobot, blocksTravelledY);  //3,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot(5 - buildingDistanceFromRobot + 2, blocksTravelledY); //5,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot(5 - buildingDistanceFromRobot - 2, blocksTravelledY); //1,Y
+						buildingPlot.filledPlot = true;
+						ambiguousPlot2.filledPlot = false; //set space in front of building to false
+					}
+					else if(buildingDistanceFromRobot == 0) {//if building is in ROW 2
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(5, blocksTravelledY);  //3,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot(3, blocksTravelledY); //5,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot(1, blocksTravelledY); //1,Y
+						if(buildingPlot.filledPlot == false) {
+							buildingPlot.filledPlot = false;
+							ambiguousPlot1.filledPlot = false;
+							ambiguousPlot2.filledPlot = false;
+						}
+						else {
+							buildingPlot.filledPlot = true;
+							ambiguousPlot1.filledPlot = false;
+							ambiguousPlot2.filledPlot = false;
+						}
+					}
+					else if(buildingDistanceFromRobot == 9) { //if building is in ROW 2
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(2, blocksTravelledY);  //2,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot(3, blocksTravelledY); //3,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot(5, blocksTravelledY); //5,Y
+						Plot& finalizedOpen = fieldMap.getPlot(1, blocksTravelledY);
+						buildingPlot.filledPlot = true;
+						finalizedOpen.filledPlot = false;
+					}
+				}
+				previousFoundBuilding = true; //sets back to true to ensure this if statement only happens once per foundBuilding loop
+			}
+			else if (blocksTravelledY == 5) {
+				status = Halting;
+			}
+			else {
+				scanningStatus = Driving;
+			}
 			break;
-
-
-
 		}
 		break;
+
 
 
 
@@ -555,7 +670,9 @@ void StudentsRobot::updateStateMachine() {
 
 				break;
 
+
 			case Halt:
+
 				// in safe mode
 				break;
 
@@ -574,6 +691,3 @@ void StudentsRobot::pidLoop() {
 	motor2->loop();
 	motor3->loop();
 }
-
-
-

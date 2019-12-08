@@ -61,11 +61,13 @@ public:
 			{fourzero,fourone,fourtwo,fourthree,fourfour,fourfive},
 			{fivezero,fiveone,fivetwo,fivethree,fivefour,fivefive}};
 	void printMap();
+  
 	bool inRow(int row);
 	int buildingsPer(int row);
 	int buildingToSearch(int row);
 	int windowsToSearch(int x, int y);
 
+	Plot& getPlot(int x, int y);
 };
 
 

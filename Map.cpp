@@ -54,7 +54,7 @@ fivefive(false, true, false, false, "600 Maple Street", "No Address", "No Addres
 void Map::printMap() {
 	for (int i = 0; i < 6; i++) {
 	        for (int j = 0; j < 6; j++) {
-	            Serial.print(String(map[i][j].road));
+	            Serial.print(String(map[i][j].filledPlot));
 	        }
 	        printf("\n");
 	    }
@@ -100,6 +100,11 @@ int Map::buildingToSearch(int row){
 int Map::windowsToSearch(int x, int y){
 	return map[x][y].Windows;
 }
+
+Plot& Map::getPlot(int x, int y) {
+	return map[x][y];
+}
+
 
 
 

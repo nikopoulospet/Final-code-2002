@@ -21,7 +21,7 @@ void RBEPID::setpid(float P, float I, float D) {
 	errorSum = 0;
 	Ierr = 0;
 	errorIndex = 0;
-	this->clearIntegralBuffer(); //check with SA/Lewin if this is the reason why our motors wont spin when pressing the boot button
+	this->clearIntegralBuffer();
 }
 
 /**
@@ -40,22 +40,22 @@ float RBEPID::calc(double setPoint, double curPosition) {
 	// calculate integral error. Running average is best but hard to implement
 
 
-	this ->errorArray[this->errorIndex] = err;
+	this ->errorArray[this->errorIndex] = err; //set current index to the error
 
-	errorSum = 0;
-	for(int i = 0; i < 200; i++){
+	errorSum = 0; //reset error sum to avoid integral windup
+	for(int i = 0; i < 200; i++){ //add every value in the array
 		this->errorSum += errorArray[i];
 	}
 
-	this->errorIndex++;
+	this->errorIndex++; //concatenate index
 
-	if(this->errorIndex >= 200){
+	if(this->errorIndex >= 200){ //if we roll over 200 with our index, reset it back to 0
 		this->errorIndex = 0;
 	}
 
-	float Ierr = (this->errorSum/200.0);
+	float Ierr = (this->errorSum/200.0);  //take the average of the integral error
 
-	float out = err * kp + Ierr *ki;
+	float out = err * kp + Ierr *ki; //PI control output
 	// simple P controller
 	//return the control signal from -1 to 1
 	if (out > 1)

@@ -79,6 +79,14 @@ public:
 	int Ydist = 0;
 	int heading1 = 0;
 	int heading2 = 0;
+	double distanceError;
+	double kpDistance = 7;
+	int buildingArray[6][6] = {{0,0,0,0,0,0},
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0}};
 	//double targetHeading = 0; //45 * (PI/180);  //hard coded heading in radians
 
 
@@ -236,6 +244,10 @@ public:
 
 	bool driveOneBlock();
 
+	void printTemporaryBuildingArray();
+	/**
+	 * Used for testing location finding of ultrasonic sensor
+	 */
 };
 
 
