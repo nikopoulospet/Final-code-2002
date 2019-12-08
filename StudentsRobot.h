@@ -39,7 +39,8 @@ enum ScanningStateMachine {
 };
 
 enum SearchingStateMachine {
-	driveToRow = 0, searchRow = 1, orient = 2, lookForRobin = 3, turnCorner = 4, HandleRoadBlock = 5,
+	driveToRow = 0, searchRow = 1, //orient = 2,
+	lookForRobin = 3, turnCorner = 4, HandleRoadBlock = 5,
 };
 
 enum turningCorner {

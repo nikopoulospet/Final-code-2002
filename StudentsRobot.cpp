@@ -151,10 +151,9 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			status = Searching;
-			//nextStatus = Scanning;
+			status = Scanning;
 			scanningStatus = Driving;
-			ace.robotPose.setRobotPosition(5, 0);
+			//ace.robotPose.setRobotPosition(5, 0);
 			SearchingRun = true;
 
 
@@ -209,7 +208,16 @@ void StudentsRobot::updateStateMachine() {
 			if (!travelledXDistance) {//have we completed driving 5 blocks for the x distance?
 				if(blocksTravelledX < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment each time
 					//Serial.println(blocksTravelledX);
-					if(trigger){  //trigger keeps a one time set of our target distance each time we need to travel a block
+					if(ace.driveOneBlock()) {
+						blocksTravelledX++;
+						previousFoundBuilding = false;
+						if(blocksTravelledX % 2 == 0 && !previousFoundBuilding) { //if we have travelled an even number of blocks, check if there is a building in that row for 2 seconds
+							scanningStatus = UltrasonicCalc;
+							nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
+						}
+					}
+
+					/*	if(trigger){  //trigger keeps a one time set of our target distance each time we need to travel a block
 						target = blockDistance;
 						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees()); //adds on the degrees that we need to travel to our current position instead of resetting encoders
 						trigger = false;
@@ -225,7 +233,7 @@ void StudentsRobot::updateStateMachine() {
 							scanningStatus = UltrasonicCalc;
 							nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
 						}
-					}
+					} */
 				}
 				else if (blocksTravelledX == 5) {  //if we have travelled 5 blocks in the x direction, set x to true and y to false so we no longer travel in the x direction but prepare to travel in y
 					travelledXDistance = true;
@@ -233,11 +241,11 @@ void StudentsRobot::updateStateMachine() {
 				}
 			}
 			if(travelledXDistance == true && travelledYDistance == false && completedTurn == false ) {  //turn approximately 90 degrees only once
-				if(ace.turnDrive(0,90,10)) { //turnDrive has to be handled in its own separate "loop" or if statement
+				if(ace.turnTo(90)) { //turnDrive has to be handled in its own separate "loop" or if statement
+					//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					completedTurn = true;
 				}
 			}
-
 			if (!travelledYDistance && completedTurn == true) {  //Repeat using Y direction
 				//Serial.println(String(blocksTravelledY));
 				if(blocksTravelledY <= 5) {
@@ -341,7 +349,8 @@ void StudentsRobot::updateStateMachine() {
 			}
 			/////////////////////////////////////////////////////////SENDS ROBOT INTO SEARCHING MACHINE
 			else if (blocksTravelledY == 5) {
-				status = Halting;
+				status = Searching;
+				searchingStatus = driveToRow;
 			}
 			/////////////////////////////////////////////////////////
 			break;
@@ -490,7 +499,7 @@ void StudentsRobot::updateStateMachine() {
 				if(RoadBlockDetected){
 					previousStatus = driveToRow;
 					firstRun = true;
-					scanningStatus = HandleRoadBlock;
+					searchingStatus = HandleRoadBlock;
 					currentTargetX = 2;
 					currentTargetY = row - 1;
 					break;
@@ -533,7 +542,7 @@ void StudentsRobot::updateStateMachine() {
 				if(RoadBlockDetected){
 					previousStatus = searchRow;
 					firstRun = true;
-					scanningStatus = HandleRoadBlock;
+					searchingStatus = HandleRoadBlock;
 					currentTargetX = buildingToSearch;
 					currentTargetY = row - 1;
 					break;
@@ -541,40 +550,40 @@ void StudentsRobot::updateStateMachine() {
 
 				break;
 
-//			case orient:
-//				Serial.println("ORIENTING+++++++++++++++++++++++++++++++++++++++++++++++++++");
-//				//oriented, go to look for robin
-//				if(firstRun){
-//					firstRun = false;
-//					orienting = false;
-//					orientation = ace.getOrientation(buildingToSearch, row); // int representing how to orient the robot will go wrong if robot is not directly NSE or W of the building
-//				}
-//				Serial.println(row);
-//				Serial.println(buildingToSearch);
-//				if(orientation == 1 && !orienting){
-//					orienting = true;
-//					orientHeading = 0;
-//				}
-//				if(orientation == 2 && !orienting){
-//					orienting = true;
-//					orientHeading = 90;
-//				}
-//				if(orientation == 3 && !orienting){
-//					orienting = true;
-//					orientHeading = 180;
-//				}
-//				if(orientation == 4 && !orienting){
-//					orienting = true;
-//					orientHeading = 270;
-//				}
-//
-//				if(orienting && ace.turnTo(orientHeading)){
-//					firstRun = true;
-//					//status = Halting;
-//					searchingStatus = lookForRobin;
-//				}
-//
-//				break;
+				//			case orient:
+				//				Serial.println("ORIENTING+++++++++++++++++++++++++++++++++++++++++++++++++++");
+				//				//oriented, go to look for robin
+				//				if(firstRun){
+				//					firstRun = false;
+				//					orienting = false;
+				//					orientation = ace.getOrientation(buildingToSearch, row); // int representing how to orient the robot will go wrong if robot is not directly NSE or W of the building
+				//				}
+				//				Serial.println(row);
+				//				Serial.println(buildingToSearch);
+				//				if(orientation == 1 && !orienting){
+				//					orienting = true;
+				//					orientHeading = 0;
+				//				}
+				//				if(orientation == 2 && !orienting){
+				//					orienting = true;
+				//					orientHeading = 90;
+				//				}
+				//				if(orientation == 3 && !orienting){
+				//					orienting = true;
+				//					orientHeading = 180;
+				//				}
+				//				if(orientation == 4 && !orienting){
+				//					orienting = true;
+				//					orientHeading = 270;
+				//				}
+				//
+				//				if(orienting && ace.turnTo(orientHeading)){
+				//					firstRun = true;
+				//					//status = Halting;
+				//					searchingStatus = lookForRobin;
+				//				}
+				//
+				//				break;
 
 			case lookForRobin:
 				Serial.println("looking for Robin");
@@ -612,7 +621,7 @@ void StudentsRobot::updateStateMachine() {
 				if(RoadBlockDetected){
 					previousStatus = turnCorner;
 					firstRun = true;
-					scanningStatus = HandleRoadBlock;
+					searchingStatus = HandleRoadBlock;
 					break;
 				}
 
@@ -627,9 +636,9 @@ void StudentsRobot::updateStateMachine() {
 						//Calculate roadblock X and Y
 
 						//if robot is driving in Y pos
-							//turn to 270
+						//turn to 270
 						//Else
-							//turn to 0
+						//turn to 0
 
 						//widows to scan--;
 					}
@@ -641,7 +650,7 @@ void StudentsRobot::updateStateMachine() {
 					//drive up 2 plots.
 				}
 
-				if(/* roadblock X Y match targetPos X Y*/){
+				if(/* roadblock X Y match targetPos X Y*/ false){
 					if(previousStatus == driveToRow){
 						//just drive around to another row pos position
 						//back up to prev row
@@ -664,7 +673,7 @@ void StudentsRobot::updateStateMachine() {
 
 			}
 			break;
-		//end of searching SM//
+			//end of searching SM//
 
 			case Communication:
 
