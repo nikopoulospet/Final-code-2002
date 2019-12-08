@@ -192,13 +192,6 @@ void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ 
 	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * .99 + this->robotPose.theta * .01) - targetHeading;
 
 	double effort = Kp * headingError;
-	/*if(effort > 50) {
-					effort = 50;
-				}
-				else if (effort < -50) {
-					effort = -50;
-				} */
-
 	this->myleft->setVelocityDegreesPerSecond(speed - effort);
 	this->myright->setVelocityDegreesPerSecond(-speed - effort);
 //	Serial.println("================STRAIGHT==============");
