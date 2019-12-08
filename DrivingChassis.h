@@ -43,10 +43,6 @@ private:
 	GetIMU * IMU;
 
 	//DRIVE TO VARS
-	int Xdist = 0;
-	int Ydist = 0;
-	int heading1 = 0;
-	int heading2 = 0;
 	DriveToSteps Step = toHeading1;
 	CorneringSteps corner = drive;
 
@@ -78,6 +74,11 @@ public:
 	double IMUheading = 0;
 	double angleLeftMotor = 0;
 	double angleRightMotor = 0;
+
+	int Xdist = 0;
+	int Ydist = 0;
+	int heading1 = 0;
+	int heading2 = 0;
 	//double targetHeading = 0; //45 * (PI/180);  //hard coded heading in radians
 
 

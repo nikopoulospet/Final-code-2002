@@ -114,7 +114,20 @@ private:
 
 	int orientHeading = 0;
 	bool orienting = false;
+
+	int TestingVar = 0; // added because no way to update map yet!!!!!!!!!!!!!!!!!!!
+
+	//Halting state machine Vars
+	SearchingStateMachine previousStatus = driveToRow;
+	int DeltaX = 0;
+	int DeltaY = 0;
+	bool RoadBlockDetected = false;
+	int currentXpos = 0;
+	int currentYpos = 0;
+	int currentTargetX = 0;
+	int currentTargetY = 0;
 public:
+	//volatile interupt for US sensor (add later)
 	boolean trigger = true;
 	double target = 0;
 	double distanceError = 0;
