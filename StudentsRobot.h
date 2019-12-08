@@ -126,6 +126,8 @@ private:
 	int currentYpos = 0;
 	int currentTargetX = 0;
 	int currentTargetY = 0;
+
+	double Testheading = 0;
 public:
 	//volatile interupt for US sensor (add later)
 	boolean trigger = true;

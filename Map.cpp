@@ -17,7 +17,7 @@ zerothree(true,false,false,false,0),
 zerofour(true,false,false,false,0),
 zerofive(true,false,false,false,0),
 onezero(true,false,false,false,0),
-oneone(false, false, false, false, "200 Oak Street", "500 2nd Avenue", "100 Beech Street", "600 1st Avenue" , 4),
+oneone(false, true, false, false, "200 Oak Street", "500 2nd Avenue", "100 Beech Street", "600 1st Avenue" , 4),
 onetwo(true,false,false,false,0),
 onethree(false, true, false, false, "400 Oak Street", "500 3rd Avenue", "300 Beech Street", "600 2nd Avenue" ,4),
 onefour(true,false,false,false,0),
@@ -31,7 +31,7 @@ twofive(true,false,false,false,0),
 threezero(true,false,false,false,0),
 threeone(false, false , false, false, "200 Beech Street", "300 2nd Avenue", "100 Maple Street", "400 1st Avenue" ,4),
 threetwo(true,false,false,false,0),
-threethree(false, false, false, false, "400 Beech Street", "300 3rd Avenue", "300 Maple Street", "400 2nd Avenue" ,4),
+threethree(false, true, false, false, "400 Beech Street", "300 3rd Avenue", "300 Maple Street", "400 2nd Avenue" ,4),
 threefour(true,false,false,false,0),
 threefive(false, false, false, false, "600 Beech Street", "No Address", "500 Maple Street", "400 3rd Avenue", 3),
 fourzero(true,false,false,false,0),
@@ -73,10 +73,15 @@ bool Map::inRow(int row){
 }
 
 int Map::buildingsPer(int row){
-	for(int i = 1; i < 5; i+=2){
-		if(map[i][row].filledPlot){
-			buildingCounter++;
-		}
+	buildingCounter = 0;
+	if(map[1][row].filledPlot && !map[1][row].searched){
+		buildingCounter++;
+	}
+	if(map[3][row].filledPlot && !map[3][row].searched){
+		buildingCounter++;
+	}
+	if(map[5][row].filledPlot && !map[5][row].searched){
+		buildingCounter++;
 	}
 	return buildingCounter;
 }
