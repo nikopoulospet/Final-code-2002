@@ -413,8 +413,6 @@ void StudentsRobot::updateStateMachine() {
 							searchingStatus = lookForRobin;
 						}
 					}
-					//ad
-
 				}else{firstRun = true;searchingStatus = driveToRow;}
 				//check RB
 				if(RoadBlockDetected){
