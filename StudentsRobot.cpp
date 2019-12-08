@@ -316,23 +316,38 @@ void StudentsRobot::updateStateMachine() {
 				}
 				break;
 			}
-			if(averageUltrasonicReadings < 150 || averageUltrasonicReadings > 1200 || (averageUltrasonicReadings > 400 && averageUltrasonicReadings < 950) || (averageUltrasonicReadings > 950 && averageUltrasonicReadings < 1200.0 && maxUltrasonicReading > 1350) ) { //no building in a row
+			if((averageUltrasonicReadings < 150 || averageUltrasonicReadings > 1200 ) || (averageUltrasonicReadings > 400 && averageUltrasonicReadings < 950 && maxUltrasonicReading > 1000) || (averageUltrasonicReadings > 950 && averageUltrasonicReadings < 1200.0 && maxUltrasonicReading > 1350)) { //no building in a row
 				Serial.println("NO BUILDING IN A ROW");
 				buildingDistanceFromRobot = 0;
 				scanningStatus = foundBuilding;
+				Serial.println(String(maxUltrasonicReading));
 				maxUltrasonicReading = 0;
+				break;
+			}
+
+
+			if(averageUltrasonicReadings > 400 && averageUltrasonicReadings < 900 && maxUltrasonicReading < 1200) {
+				if(blocksTravelledX < 5) {
+					Serial.println("ROADBLOCK FOUND! IN X");
+					buildingDistanceFromRobot = 7;
+					scanningStatus = foundBuilding;
+					maxUltrasonicReading = 0;
+
+				}
+				else if (blocksTravelledY <=5) {
+					Serial.println("ROADBLOCK FOUND! IN Y");
+					buildingDistanceFromRobot = 9; //distances change when we travel in the Y coordinate
+					scanningStatus = foundBuilding;
+					maxUltrasonicReading = 0;
+
+				}
+				break;
 			}
 			/////////////////////////////////////////////////////////
 			else if (blocksTravelledY == 5) {
 				status = Halting;
 			}
 			/////////////////////////////////////////////////////////
-			/*	else {
-				Serial.println("ELSEEE");
-				previousFoundBuilding = true;
-				maxUltrasonicReading = 0;
-				scanningStatus = Driving;
-			} */
 			break;
 
 		case foundBuilding:
@@ -363,6 +378,15 @@ void StudentsRobot::updateStateMachine() {
 						ambiguousPlot1.filledPlot = true;
 
 					}
+					else if (buildingDistanceFromRobot == 7) {
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(5-blocksTravelledX, 2); // 5-X,2
+						Plot& ambiguousPlot1 = fieldMap.getPlot(5-blocksTravelledX, 3); // 5-X,3
+						Plot& ambiguousPlot2 = fieldMap.getPlot(5-blocksTravelledX, 5);  // 5-X,5
+						buildingPlot.filledPlot = true;
+						ambiguousPlot1.filledPlot = true;
+						ambiguousPlot2.filledPlot = true;
+					}
 				}
 				else if (blocksTravelledY <= 5) {
 					if(buildingDistanceFromRobot == 4) {
@@ -380,15 +404,32 @@ void StudentsRobot::updateStateMachine() {
 						buildingPlot.filledPlot = true;
 						ambiguousPlot2.filledPlot = false; //set space in front of building to false
 					}
-					else if(buildingDistanceFromRobot == 0) { //if building is in ROW 2
+					else if(buildingDistanceFromRobot == 0) {//if building is in ROW 2
 						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
 						Plot& buildingPlot = fieldMap.getPlot(5, blocksTravelledY);  //3,Y
 						Plot& ambiguousPlot1 = fieldMap.getPlot(3, blocksTravelledY); //5,Y
 						Plot& ambiguousPlot2 = fieldMap.getPlot(1, blocksTravelledY); //1,Y
-						buildingPlot.filledPlot = true;
-						ambiguousPlot1.filledPlot = false;
-						ambiguousPlot2.filledPlot = false;
+						if(buildingPlot.filledPlot == false) {
+							buildingPlot.filledPlot = false;
+							ambiguousPlot1.filledPlot = false;
+							ambiguousPlot2.filledPlot = false;
+						}
+						else {
+							buildingPlot.filledPlot = true;
+							ambiguousPlot1.filledPlot = false;
+							ambiguousPlot2.filledPlot = false;
 
+						}
+
+					}
+					else if(buildingDistanceFromRobot == 9) { //if building is in ROW 2
+						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(2, blocksTravelledY);  //2,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot(3, blocksTravelledY); //3,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot(5, blocksTravelledY); //5,Y
+						Plot& finalizedOpen = fieldMap.getPlot(1, blocksTravelledY);
+						buildingPlot.filledPlot = true;
+						finalizedOpen.filledPlot = false;
 					}
 
 				}
