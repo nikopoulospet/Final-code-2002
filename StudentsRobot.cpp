@@ -203,68 +203,84 @@ void StudentsRobot::updateStateMachine() {
 		break;
 
 
+	case circuit_test:
+		//read ADC, find amplitude
+		adc_val = analogRead(34);
+		Serial.println(adc_val);
+
+		//Schmitt trigger high voltage of 2.7V
+		if(adc_val >= 3300) { //~2.66
+			status = Communication;
+		}
+
+		//Schmitt trigger low voltage of 0.3V
+		else if(adc_val <= 1000) { //~0.8, doesn't actually matter just needs to be low so it doesn't accidentally go off
+			status = circuit_test;
+		}
+
+		break;
 
 	case Scanning:
 
 		switch(scanningStatus){
 		case Driving:
-			if (!travelledXDistance) {  //have we completed driving 5 blocks for the x distance?
-				Serial.println(String(blocksTravelledX));
-				if(blocksTravelledX < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment one each time
-					Serial.println(blocksTravelledX);
-					//ace.loop();
-					if(trigger){
-						target = blockDistance;
-						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
-						trigger = false;
-					}
-					distanceError =  abs(this->motor1->getAngleDegrees()) - target;
-					effort = 0.25 * distanceError;
-					ace.driveStraight(-effort, 0, 200);
-					if(motor1->getAngleDegrees() >= target){
-						trigger = true;
-						blocksTravelledX++;
-						scanningStatus = ScanningBuilding; //wait 5 seconds in the ScanninG Building state where ultrasonic will ping continously
-						nextTime = millis() + 5000;
-
-					}
-				}
-				else if (blocksTravelledX == 5) {  //if we have travelled 5 blocks in the x direction, set x to true and y to false
-					travelledXDistance = true;
-					travelledYDistance = false;
-				}
-			}
-			if(travelledXDistance == true && travelledYDistance == false && ace.turnDrive(0,90,10) && completedTurn == true) {  //turn 90 degrees **HAS PROBLEMS GETS STUCK IN TURNDRIVE
-				completedTurn = false;
-				scanningStatus = ScanningBuilding;
-				nextTime = millis() + 2000;
-
-			}
-			if (!travelledYDistance && completedTurn == true) {  //Repeat using Y direction
-				Serial.println(String(blocksTravelledY));
-				if(blocksTravelledY < 5) {
-					Serial.println(blocksTravelledY);
-					//ace.loop();
-					if(trigger){
-						target = blockDistance;
-						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
-						trigger = false;
-					}
-					distanceError =  abs(this->motor1->getAngleDegrees()) - target;
-					effort = 0.25 * distanceError;
-					ace.driveStraight(-effort, 90, 200);
-					if(motor1->getAngleDegrees() >= target){
-						trigger = true;
-						blocksTravelledY++;
-						scanningStatus = ScanningBuilding;
-						nextTime = millis() + 2000;
-
-					}
-				}
-				else if (blocksTravelledY == 5) {
-					status = Halting;
-				}
-			}
+//			if (!travelledXDistance) {  //have we completed driving 5 blocks for the x distance?
+//				Serial.println(String(blocksTravelledX));
+//				if(blocksTravelledX < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment one each time
+//					Serial.println(blocksTravelledX);
+//					//ace.loop();
+//					if(trigger){
+//						target = blockDistance;
+//						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
+//						trigger = false;
+//					}
+//					distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+//					effort = 0.25 * distanceError;
+//					ace.driveStraight(-effort, 0, 200);
+//					if(motor1->getAngleDegrees() >= target){
+//						trigger = true;
+//						blocksTravelledX++;
+//						scanningStatus = ScanningBuilding; //wait 5 seconds in the ScanninG Building state where ultrasonic will ping continously
+//						nextTime = millis() + 5000;
+//
+//					}
+//				}
+//				else if (blocksTravelledX == 5) {  //if we have travelled 5 blocks in the x direction, set x to true and y to false
+//					travelledXDistance = true;
+//					travelledYDistance = false;
+//				}
+//			}
+//			if(travelledXDistance == true && travelledYDistance == false && ace.turnDrive(0,90,10) && completedTurn == true) {  //turn 90 degrees **HAS PROBLEMS GETS STUCK IN TURNDRIVE
+//				completedTurn = false;
+//				scanningStatus = ScanningBuilding;
+//				nextTime = millis() + 2000;
+//
+//			}
+//			if (!travelledYDistance && completedTurn == true) {  //Repeat using Y direction
+//				Serial.println(String(blocksTravelledY));
+//				if(blocksTravelledY < 5) {
+//					Serial.println(blocksTravelledY);
+//					//ace.loop();
+//					if(trigger){
+//						target = blockDistance;
+//						target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
+//						trigger = false;
+//					}
+//					distanceError =  abs(this->motor1->getAngleDegrees()) - target;
+//					effort = 0.25 * distanceError;
+//					ace.driveStraight(-effort, 90, 200);
+//					if(motor1->getAngleDegrees() >= target){
+//						trigger = true;
+//						blocksTravelledY++;
+//						scanningStatus = ScanningBuilding;
+//						nextTime = millis() + 2000;
+//
+//					}
+//				}
+//				else if (blocksTravelledY == 5) {
+//					status = Halting;
+//				}
+//			}
 
 			/*		if(needToTurn90) {
 				if(ace.turnDrive(0,90,10)) {
@@ -291,22 +307,6 @@ void StudentsRobot::updateStateMachine() {
 
 
 			break;
-	case circuit_test:
-		//read ADC, find amplitude
-		adc_val = analogRead(34);
-		Serial.println(adc_val);
-
-		//Schmitt trigger high voltage of 2.7V
-		if(adc_val >= 3300) { //~2.66
-			status = Communication;
-		}
-
-		//Schmitt trigger low voltage of 0.3V
-		else if(adc_val <= 1000) { //~0.8, doesn't actually matter just needs to be low so it doesn't accidentally go off
-			status = circuit_test;
-		}
-
-		break;
 
 		case ScanningBuilding:
 			motor1->setVelocityDegreesPerSecond(0);
@@ -349,22 +349,6 @@ void StudentsRobot::updateStateMachine() {
 			case Communication:
 
 				break;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -469,6 +453,23 @@ void StudentsRobot::pidLoop() {
 	motor2->loop();
 	motor3->loop();
 }
+
+bool scanBeacon() {
+	//read ADC, find amplitude
+	float adc_val = analogRead(34);
+	Serial.println(adc_val);
+
+	//Schmitt trigger high voltage of 2.7V
+	if(adc_val >= 3300) { //~2.66
+		return true;
+	}
+
+	//Schmitt trigger low voltage of 0.3V
+	else {//if(adc_val <= 1000) { //~0.8, doesn't actually matter just needs to be low so it doesn't accidentally go off
+		return true;
+	}
+}
+
 
 
 

@@ -137,6 +137,8 @@ public:
 	 */
 	void updateStateMachine();
 
+	bool scanBeacon();
+
 
 
 };
