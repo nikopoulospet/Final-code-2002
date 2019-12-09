@@ -453,5 +453,20 @@ void StudentsRobot::pidLoop() {
 	motor3->loop();
 }
 
+bool StudentsRobot::scanBeacon() {
+	//read ADC, find amplitude
+	float adc_val = analogRead(36);
+	Serial.println(adc_val);
+
+	//Inverting Schmitt trigger, detecting when drops low (1.1-1.3). High 1.6 OR 2.7 op amp depending.
+	if(adc_val <= 1500) { //Regardless of what value settles at, this is a low enough threshold to be unmistakable 1.3V
+		Serial.println("Beacon detected!");
+		return true;
+	}
+
+	else {
+		return false;
+	}
+}
 
 
