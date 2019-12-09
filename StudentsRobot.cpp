@@ -199,9 +199,6 @@ void StudentsRobot::updateStateMachine() {
 		motor3->stop();
 		motor2->stop();
 		motor1->stop();
-		ace.printTemporaryBuildingArray();
-		Serial.println("ACTUAL MAP ARRAY");
-		fieldMap.printMap();
 		status = Halt;
 		break;
 
@@ -368,7 +365,11 @@ void StudentsRobot::updateStateMachine() {
 			}
 			/////////////////////////////////////////////////////////SENDS ROBOT INTO SEARCHING MACHINE
 			else if (blocksTravelledY == 5) {
-				status = Halting;
+				status = Searching;
+				searchingStatus = driveToRow;
+				ace.printTemporaryBuildingArray();
+				Serial.println("ACTUAL MAP ARRAY");
+				fieldMap.printMap();
 			}
 			/////////////////////////////////////////////////////////
 			break;
@@ -457,7 +458,11 @@ void StudentsRobot::updateStateMachine() {
 				previousFoundBuilding = true; //sets back to true to ensure this if statement only happens once per foundBuilding loop
 			}
 			else if (blocksTravelledY == 5) {
-				status = Halting;
+				status = Searching;
+				searchingStatus = driveToRow;
+				ace.printTemporaryBuildingArray();
+				Serial.println("ACTUAL MAP ARRAY");
+				fieldMap.printMap();
 			}
 			else {
 				scanningStatus = Driving;
