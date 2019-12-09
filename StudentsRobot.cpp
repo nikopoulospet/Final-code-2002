@@ -127,7 +127,7 @@ void StudentsRobot::updateStateMachine() {
 		motor2->startInterpolationDegrees(motor2->getAngleDegrees(), 1000, SIN);
 		motor3->startInterpolationDegrees(motor3->getAngleDegrees(), 1000, SIN);
 		status = WAIT_FOR_MOTORS_TO_FINNISH; // set the state machine to wait for the motors to finish
-		nextStatus = circuit_test; // the next status to move to when the motors finish
+		nextStatus = Running; // the next status to move to when the motors finish
 		startTime = now + 1000; // the motors should be done in 1000 ms
 		nextTime = startTime + 1000; // the next timer loop should be 1000ms after the motors stop
 		break;
@@ -138,6 +138,9 @@ void StudentsRobot::updateStateMachine() {
 		nextTime = nextTime + 100; // ensure no timer drift by incremeting the target
 		// After 1000 ms, come back to this state
 		nextStatus = Running;
+
+		Serial.println("Scanning for beacon");
+		scanBeacon();
 
 		// Do something
 		if (!digitalRead(BOOT_FLAG_PIN)) {
@@ -454,19 +457,19 @@ void StudentsRobot::pidLoop() {
 	motor3->loop();
 }
 
-bool scanBeacon() {
+bool StudentsRobot::scanBeacon() {
 	//read ADC, find amplitude
-	float adc_val = analogRead(34);
+	float adc_val = analogRead(36);
 	Serial.println(adc_val);
 
-	//Schmitt trigger high voltage of 2.7V
-	if(adc_val >= 3300) { //~2.66
+	//Inverting Schmitt trigger, detecting when drops low (1.1-1.3). High 1.6 OR 2.7 op amp depending.
+	if(adc_val <= 1500) { //Regardless of what value settles at, this is a low enough threshold to be unmistakable 1.3V
+		Serial.println("Beacon detected!");
 		return true;
 	}
 
-	//Schmitt trigger low voltage of 0.3V
-	else {//if(adc_val <= 1000) { //~0.8, doesn't actually matter just needs to be low so it doesn't accidentally go off
-		return true;
+	else {
+		return false;
 	}
 }
 
