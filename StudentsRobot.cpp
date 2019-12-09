@@ -151,10 +151,9 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			status = Testing;
-			//nextStatus = Scanning;
+			status = Scanning;
 			scanningStatus = Driving;
-			ace.robotPose.setRobotPosition(5, 0);
+		//	ace.robotPose.setRobotPosition(5, 0);
 			SearchingRun = true;
 
 
@@ -241,7 +240,7 @@ void StudentsRobot::updateStateMachine() {
 				}
 			}
 			if(travelledXDistance == true && travelledYDistance == false && completedTurn == false ) {  //turn approximately 90 degrees only once
-				if(ace.turnDrive(0,90,10)) { //turnDrive has to be handled in its own separate "loop" or if statement
+				if(ace.turnTo(90)) { //turnDrive has to be handled in its own separate "loop" or if statement
 					completedTurn = true;
 				}
 			}
