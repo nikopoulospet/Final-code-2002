@@ -149,7 +149,7 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			status = Searching;
+			status = Testing;
 			//nextStatus = Scanning;
 			scanningStatus = Driving;
 			ace.robotPose.setRobotPosition(5, 0);
@@ -172,12 +172,15 @@ void StudentsRobot::updateStateMachine() {
 		break;  */
 
 	case Testing:
-		if(ace.turnTo(Testheading)){
-			delay(1000);
-			Testheading += 90;
-			if(Testheading > 270){
-				Testheading = 0;
-			}
+
+		if(ace.turnTo(180)){
+			status = Testting2;		}
+
+		break;
+
+	case Testting2:
+		if(ace.turnTo(0)){
+			status = Testing;
 		}
 		break;
 
@@ -364,12 +367,11 @@ void StudentsRobot::updateStateMachine() {
 				}
 
 				if(row > 5){
-					status = Halting;
+					status = Halting; // return to home if no beacon detected
 				}
 
-				//Serial.println(row);
+
 				if(fieldMap.inRow(row)){
-					//Serial.println("map" + String(fieldMap.inRow(row)));
 					if(ace.driveTo(2, row - 1)){
 						firstRun = true;
 						searchingStatus = searchRow;
@@ -394,22 +396,21 @@ void StudentsRobot::updateStateMachine() {
 				//building to search reached go to orient
 				if(firstRun){
 					previousStatus = searchRow;
-
 					firstRun = false;
 					buildingsPerRow = fieldMap.buildingsPer(row);
 					buildingToSearch = fieldMap.buildingToSearch(row);
-					buildingsSearched = TestingVar;
+					//buildingsSearched = TestingVar;
 				}
 				Serial.println(buildingToSearch);
 				Serial.println(buildingsPerRow);
-				Serial.println(buildingsSearched);
+				//Serial.println(buildingsSearched);
 
-				if(buildingsSearched >= buildingsPerRow){
-					searchingStatus = driveToRow;
-				}
-
-				if(buildingsSearched < buildingsPerRow){
-					if(buildingToSearch == 0){// this might not be doing anything...
+//				if(buildingsSearched >= buildingsPerRow){
+//					searchingStatus = driveToRow;
+//				}
+//
+//				if(buildingsSearched < buildingsPerRow){
+					if(buildingToSearch == 0){
 						firstRun = true;
 						searchingStatus = driveToRow; // no more buildings in row
 					}else{
@@ -419,7 +420,7 @@ void StudentsRobot::updateStateMachine() {
 								searchingStatus = orient;
 						}
 					}
-				}else{firstRun = true;searchingStatus = driveToRow;}
+				//}else{firstRun = true;searchingStatus = driveToRow;}
 				//check RB
 				if(RoadBlockDetected){
 					previousStatus = searchRow;
@@ -484,7 +485,7 @@ void StudentsRobot::updateStateMachine() {
 						windowsToSearch--;
 						searchingStatus = turnCorner;
 					}else{
-						TestingVar++;
+						//TestingVar++;
 						firstRun = true;
 						searchingStatus = searchRow;
 					}
@@ -495,9 +496,7 @@ void StudentsRobot::updateStateMachine() {
 				Serial.println("turnTHECOrnerrrrrrrrrrrrrrrrrrrr");
 				//if RB go to handleRB
 				if(ace.turnTheCorner(true)){
-					previousStatus = turnCorner;
 					searchingStatus = lookForRobin;
-					//status = ;
 				}
 
 				if(RoadBlockDetected){

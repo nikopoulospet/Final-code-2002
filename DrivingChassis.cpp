@@ -131,8 +131,8 @@ void DrivingChassis::loop(){//polls for data every 20ms
 		loopFlag = true;
 	}
 	else {
-		if(now >= millis() - 20) {
-			Serial.println("looping");
+		if(now + 20 <= millis()) {
+			//Serial.println("looping");
 			updatePose();
 			loopFlag = false;
 		}
@@ -171,7 +171,7 @@ void DrivingChassis::turn(double deg, double Kp) {
 
 bool DrivingChassis::turnTo(double deg){
 	deg = deg * (PI/180);
-	double headingError = (((this->robotPose.IMUheadingModulo) * (PI/180)) * 0.94 + this->robotPose.theta * 0.06) - deg; // IMU MOD ++++++++++++++++++++++++++++++++++++++++++++++++
+	double headingError = (((this->robotPose.IMUheadingModulo) * (PI/180)) * 0.85 + this->robotPose.theta * 0.15) - deg; // IMU MOD ++++++++++++++++++++++++++++++++++++++++++++++++
 
 	double effort = 25 * headingError; // 25 is KP
 	if(effort > 50) {
@@ -182,7 +182,8 @@ bool DrivingChassis::turnTo(double deg){
 	} else if(effort > -0.5 && effort < .5){
 		return true;
 	}
-	this->myleft->setVelocityDegreesPerSecond(- effort);
+	Serial.println(effort);
+	this->myleft->setVelocityDegreesPerSecond(- effort * 1.05);
 	this->myright->setVelocityDegreesPerSecond(- effort);
 	return false;
 }
@@ -195,7 +196,7 @@ void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ 
 	//JUST IMU
 	// double headingError = ((offset + this->IMU->getEULER_azimuth()) * (PI/180)) - targetHeading ;
 	//WITH COMPLEMENTARY FILTER
-	double headingError = (((this->robotPose.IMUheadingModulo) * (PI/180)) * .95 + this->robotPose.theta * .05) - targetHeading; // IMU MOD+++++++++++++++++++++++++++++++++++++++++
+	double headingError = (((this->robotPose.IMUheadingModulo) * (PI/180)) * 0.98 + this->robotPose.theta * 0.02) - targetHeading; // IMU MOD+++++++++++++++++++++++++++++++++++++++++
 	double effort = Kp * headingError;
 	this->myleft->setVelocityDegreesPerSecond(speed - effort);
 	this->myright->setVelocityDegreesPerSecond(-speed - effort);
