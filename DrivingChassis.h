@@ -70,6 +70,7 @@ public:
 	double offset = 0;
 	bool trigger = true;
 	double wheelRadius = 25.6; // mm
+
 	double distanceError = 0;
 	double IMUheading = 0;
 	double angleLeftMotor = 0;
@@ -79,6 +80,14 @@ public:
 	int Ydist = 0;
 	int heading1 = 0;
 	int heading2 = 0;
+  
+	int buildingArray[6][6] = {{0,0,0,0,0,0},
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0},
+			{0,0,0,0,0,0}};
+
 	//double targetHeading = 0; //45 * (PI/180);  //hard coded heading in radians
 
 
@@ -218,6 +227,7 @@ public:
 	 * Drives to some coordinate where each coord corresponds to a multiple of 40.5 cm distance
 	 */
 
+
 	bool turn90CCW();
 
 	bool turn90CW();
@@ -235,6 +245,12 @@ public:
 	bool turnTheCorner(bool CCW);
 
 	bool driveOneBlock();
+
+
+	void printTemporaryBuildingArray();
+	/**
+	 * Used for testing location finding of ultrasonic sensor
+	 */
 
 };
 

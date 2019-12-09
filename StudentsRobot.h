@@ -35,7 +35,7 @@ enum RobotStateMachine {
 };
 
 enum ScanningStateMachine {
-	Driving = 0, ScanningBuilding = 1, foundBuilding = 2,
+	Driving = 0, ScanningBuilding = 1, foundBuilding = 2, UltrasonicCalc = 4,
 };
 
 enum SearchingStateMachine {
@@ -139,11 +139,18 @@ public:
 	boolean goingForwards = true;  //Lab 4 going forwards from position 1 to 2 is true
 	double blockDistance = 405;  //mm distance of one block on the field
 	int blocksTravelledX = 0;
-	boolean needToTurn90 = false;
 	boolean travelledXDistance = false;
 	boolean travelledYDistance = true;
-	int blocksTravelledY = 0;
-	boolean completedTurn = false;
+	int blocksTravelledY = 0; //current position of robot in y coordinate
+	boolean completedTurn = false; //have we completed the turn
+	int buildingDistanceFromRobot = 0; //distance of building from Robot in blocks
+	boolean previousFoundBuilding = false;
+	double ultrasonicPing = 0; //Ultrasonic Reading Variable
+	double averageUltrasonicReadings = 0;
+	double maxUltrasonicReading = 0;
+	boolean checkedForRoadBlock = false;
+
+
 
 	/**
 	 * Constructor for StudentsRobot
