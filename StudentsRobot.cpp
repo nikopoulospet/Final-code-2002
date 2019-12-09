@@ -191,9 +191,6 @@ void StudentsRobot::updateStateMachine() {
 		motor3->stop();
 		motor2->stop();
 		motor1->stop();
-		ace.printTemporaryBuildingArray();
-		Serial.println("ACTUAL MAP ARRAY");
-		fieldMap.printMap();
 		status = Halt;
 		break;
 
@@ -248,7 +245,7 @@ void StudentsRobot::updateStateMachine() {
 			}
 			if (!travelledYDistance && completedTurn == true) {  //Repeat using Y direction
 				//Serial.println(String(blocksTravelledY));
-				if(blocksTravelledY <= 5) {
+				/*if(blocksTravelledY <= 5) {
 					//	Serial.println(blocksTravelledY);
 					if(trigger){
 						target = blockDistance;
@@ -263,6 +260,17 @@ void StudentsRobot::updateStateMachine() {
 						blocksTravelledY++;
 						previousFoundBuilding = false;
 						if(!(blocksTravelledY % 2 == 0) && !previousFoundBuilding) {
+							scanningStatus = UltrasonicCalc;
+							nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
+						}
+					}
+				}*/
+				if(blocksTravelledY < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment each time
+					//Serial.println(blocksTravelledX);
+					if(ace.driveOneBlock()) {
+						blocksTravelledY++;
+						previousFoundBuilding = false;
+						if(!(blocksTravelledY % 2 == 0) && !previousFoundBuilding) { //if we have travelled an even number of blocks, check if there is a building in that row for 2 seconds
 							scanningStatus = UltrasonicCalc;
 							nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
 						}
@@ -389,7 +397,7 @@ void StudentsRobot::updateStateMachine() {
 						Plot& roadBlockPlot = fieldMap.getPlot(5-blocksTravelledX, 2); // 5-X,2
 						Plot& ambiguousPlot1 = fieldMap.getPlot(5-blocksTravelledX, 3); // 5-X,3
 						Plot& ambiguousPlot2 = fieldMap.getPlot(5-blocksTravelledX, 5);  // 5-X,5
-						roadBlockPlot.filledPlot = true; //if we find a road block in 2nd column of the field, then set the buildings behind it to be possible buildings
+						//roadBlockPlot.filledPlot = true; //if we find a road block in 2nd column of the field, then set the buildings behind it to be possible buildings
 						ambiguousPlot1.filledPlot = true;
 						ambiguousPlot2.filledPlot = true;
 					}
@@ -432,14 +440,18 @@ void StudentsRobot::updateStateMachine() {
 						Plot& ambiguousPlot1 = fieldMap.getPlot(3, blocksTravelledY); //3,Y
 						Plot& ambiguousPlot2 = fieldMap.getPlot(5, blocksTravelledY); //5,Y
 						Plot& finalizedOpen = fieldMap.getPlot(1, blocksTravelledY);
-						buildingPlot.filledPlot = true;
+						//buildingPlot.filledPlot = true;
 						finalizedOpen.filledPlot = false;
 					}
 				}
 				previousFoundBuilding = true; //sets back to true to ensure this if statement only happens once per foundBuilding loop
 			}
 			else if (blocksTravelledY == 5) {
-				status = Halting;
+				status = Searching;
+				ace.printTemporaryBuildingArray();
+				Serial.println("ACTUAL MAP ARRAY");
+				fieldMap.printMap();
+				searchingStatus = driveToRow;
 			}
 			else {
 				scanningStatus = Driving;
@@ -447,9 +459,6 @@ void StudentsRobot::updateStateMachine() {
 			break;
 		}
 		break;
-
-
-
 
 
 
