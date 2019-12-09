@@ -171,7 +171,7 @@ void DrivingChassis::turn(double deg, double Kp) {
 
 bool DrivingChassis::turnTo(double deg){
 	deg = deg * (PI/180);
-	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * 0.9 + this->robotPose.theta * 0.1) - deg;
+	double headingError = (((offset + this->IMU->getEULER_azimuth()) * (PI/180)) * 0.85 + this->robotPose.theta * 0.15) - deg;
 
 	double effort = 25 * headingError; // 25 is KP
 	if(effort > 50) {
@@ -182,7 +182,7 @@ bool DrivingChassis::turnTo(double deg){
 	} else if(effort > -0.5 && effort < .5){
 		return true;
 	}
-	this->myleft->setVelocityDegreesPerSecond(- effort);
+	this->myleft->setVelocityDegreesPerSecond(- effort * 1.05);
 	this->myright->setVelocityDegreesPerSecond(- effort);
 	return false;
 }
