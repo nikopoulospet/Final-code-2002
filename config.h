@@ -15,7 +15,7 @@
 #define USE_IMU
 
 #define WHEEL_TRACK 175.0
-#define WHEEL_RADIUS (2.0*25.4/2.0)
+#define WHEEL_RADIUS 25.4
 /**
  * Gripper pin for Servo
  */

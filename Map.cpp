@@ -3,20 +3,49 @@
  *
  *  Created on: Nov 23, 2019
  *      Author: Brian
+ *      Author: Peter Nikopoulos
  */
 
 #include "Map.h"
 #include "Plot.h"
 //RowColumn
-Map::Map() : zerozero(true,false,false,false), zeroone(true,false,false,false), zerotwo(true,false,false,false), zerothree(true,false,false,false), zerofour(true,false,false,false) , zerofive(true,false,false,false),
-onezero(true,false,false,false), oneone(false, false, false, false, "200 Oak Street", "500 2nd Avenue", "100 Beech Street", "600 1st Avenue"), onetwo(true,false,false,false),
-onethree(false, false, false, false, "400 Oak Street", "500 3rd Avenue", "300 Beech Street", "600 2nd Avenue"), onefour(true,false,false,false), onefive(false, false, false, false, "600 Oak Street", "No Address", "500 Beech Street", "600 3rd Avenue"),
-twozero(true,false,false,false), twoone(true,false,false,false), twotwo(true,false,false,false), twothree(true,false,false,false), twofour(true,false,false,false), twofive(true,false,false,false),
-threezero(true,false,false,false), threeone(false, false, false, false, "200 Beech Street", "300 2nd Avenue", "100 Maple Street", "400 1st Avenue"), threetwo(true,false,false,false),
-threethree(false, false, false, false, "400 Beech Street", "300 3rd Avenue", "300 Maple Street", "400 2nd Avenue"), threefour(true,false,false,false), threefive(false, false, false, false, "600 Beech Street", "No Address", "500 Maple Street", "400 3rd Avenue"),
-fourzero(true,false,false,false), fourone(true,false,false,false), fourtwo(true,false,false,false), fourthree(true,false,false,false), fourfour(true,false,false,false), fourfive(true,false,false,false),
-fivezero(true,false,false,false), fiveone(false, false, false, false, "200 Maple Street", "100 2nd Avenue", "No Address", "200 1st Avenue"), fivetwo(true,false,false,false),
-fivethree(false, false, false, false, "400 Maple Street", "100 3rd Avenue", "No Address", "200 2nd Avenue"), fivefour(true,false,false,false), fivefive(false, false, false, false, "600 Maple Street", "No Address", "No Address", "200 3rd Avenue")
+Map::Map() :
+zerozero(true,false,false,false,0),
+zeroone(true,false,false,false,0),
+zerotwo(true,false,false,false,0),
+zerothree(true,false,false,false,0),
+zerofour(true,false,false,false,0),
+zerofive(true,false,false,false,0),
+onezero(true,false,false,false,0),
+oneone(false, true, false, false, "200 Oak Street", "500 2nd Avenue", "100 Beech Street", "600 1st Avenue" , 4),
+onetwo(true,false,false,false,0),
+onethree(false, false, false, false, "400 Oak Street", "500 3rd Avenue", "300 Beech Street", "600 2nd Avenue" ,4),
+onefour(true,false,false,false,0),
+onefive(false, false, false, false, "600 Oak Street", "No Address", "500 Beech Street", "600 3rd Avenue" , 2),
+twozero(true,false,false,false,0),
+twoone(true,false,false,false,0),
+twotwo(true,false,false,false,0),
+twothree(true,false,false,false,0),
+twofour(true,false,false,false,0),
+twofive(true,false,false,false,0),
+threezero(true,false,false,false,0),
+threeone(false, true , false, false, "200 Beech Street", "300 2nd Avenue", "100 Maple Street", "400 1st Avenue" ,4),
+threetwo(true,false,false,false,0),
+threethree(false, false, false, false, "400 Beech Street", "300 3rd Avenue", "300 Maple Street", "400 2nd Avenue" ,4),
+threefour(true,false,false,false,0),
+threefive(false, false, false, false, "600 Beech Street", "No Address", "500 Maple Street", "400 3rd Avenue", 2),
+fourzero(true,false,false,false,0),
+fourone(true,false,false,false,0),
+fourtwo(true,false,false,false,0),
+fourthree(true,false,false,false,0),
+fourfour(true,false,false,false,0),
+fourfive(true,false,false,false,0),
+fivezero(true,false,false,false,0),
+fiveone(false, true, false, false, "200 Maple Street", "100 2nd Avenue", "No Address", "200 1st Avenue" ,2), //start from left
+fivetwo(true,false,false,false,0),
+fivethree(false, false, false, false, "400 Maple Street", "100 3rd Avenue", "No Address", "200 2nd Avenue",2), // start from left
+fivefour(true,false,false,false,0),
+fivefive(false, true, false, false, "600 Maple Street", "No Address", "No Address", "200 3rd Avenue" ,1)
 {
 
 
@@ -31,9 +60,56 @@ void Map::printMap() {
 	    }
 }
 
+bool Map::inRow(int row){
+	if(map[1][row].filledPlot){
+		return true;
+	}
+	if(map[3][row].filledPlot){
+		return true;
+	}
+	if(map[5][row].filledPlot){
+		return true;
+	}else{return false;}
+}
+
+int Map::buildingsPer(int row){
+	buildingCounter = 0;
+	if(map[1][row].filledPlot && !map[1][row].searched){
+		buildingCounter++;
+	}
+	if(map[3][row].filledPlot && !map[3][row].searched){
+		buildingCounter++;
+	}
+	if(map[5][row].filledPlot && !map[5][row].searched){
+		buildingCounter++;
+	}
+	return buildingCounter;
+}
+
+int Map::buildingToSearch(int row){
+	if(map[1][row].filledPlot && !map[1][row].searched){
+		map[1][row].searched = true;
+		return 1;
+	}
+	if(map[3][row].filledPlot && !map[3][row].searched){
+		map[3][row].searched = true;
+		return 3;
+	}
+	if(map[5][row].filledPlot && !map[5][row].searched){
+		map[5][row].searched = true;
+		return 5;
+	}
+	else{return 0;}
+}
+
+int Map::windowsToSearch(int x, int y){
+	return map[x][y].Windows;
+}
+
 Plot& Map::getPlot(int x, int y) {
 	return map[x][y];
 }
+
 
 
 

@@ -3,6 +3,7 @@
  *
  *  Created on: Jan 12, 2019
  *      Author: hephaestus
+ *      Author: Peter Nikopoulos
  */
 
 #ifndef DRIVINGCHASSIS_H_
@@ -24,21 +25,62 @@
  *
  * This object should manage the setting of motor setpoints to enable driving
  */
+
+
+enum DriveToSteps {
+	driveX = 0, toHeading1 = 1, driveY = 2, toHeading2 = 3, done =4,
+};
+
+enum CorneringSteps {
+	drive = 0, turning = 1,
+};
+
+
 class DrivingChassis {
 private:
 	PIDMotor * myleft;
 	PIDMotor * myright;
 	GetIMU * IMU;
 
+	//DRIVE TO VARS
+	DriveToSteps Step = toHeading1;
+	CorneringSteps corner = drive;
+
+	//DRIVE PLOTS VARS
+	double kpDistance = 7;
+	double plotLen = 1200;
+	double distOfset = 0;
+	double targetDistance = 0;
+	int changeInXpos = 0;
+	int changeInYpos = 0;
+
+	//turn corner Vars
+	int driveCount = 0;
+	int x;
+	int y;
+	bool decideDir = true;
+
+	double startingHeading = 0;
+	double dir = 0;
+
 public:
 	Pose robotPose;  //instantiating a pose object
 	boolean loopFlag = false;
 	long now = 0;
-	double offset;
+	double offset = 0;
 	bool trigger = true;
 	double wheelRadius = 25.6; // mm
-	double distanceError;
-	double kpDistance = 7;
+
+	double distanceError = 0;
+	double IMUheading = 0;
+	double angleLeftMotor = 0;
+	double angleRightMotor = 0;
+
+	int Xdist = 0;
+	int Ydist = 0;
+	int heading1 = 0;
+	int heading2 = 0;
+  
 	int buildingArray[6][6] = {{0,0,0,0,0,0},
 			{0,0,0,0,0,0},
 			{0,0,0,0,0,0},
@@ -153,7 +195,7 @@ public:
 	 *
 	 */
 
-	void distanceDrive(double mm);
+	//bool distanceDrive(double mm);
 	/**
 	 * drives to a distance in mm, using a p controller to handle speeds
 	 *
@@ -162,7 +204,7 @@ public:
 	 * @return true when distance is reached
 	 */
 
-	bool turnDrive(double speed,double deg, double Kp);
+	//bool turnDriveEffortBool(double deg);
 	/**
 	 * turn function, turns to desired heading using driveStraight with zero speed and a modified heading
 	 *
@@ -185,10 +227,31 @@ public:
 	 * Drives to some coordinate where each coord corresponds to a multiple of 40.5 cm distance
 	 */
 
+
+	bool turn90CCW();
+
+	bool turn90CW();
+
+	bool driveTo(int Xcord, int Ycord);
+
+	int getOrientation(int building, int row);
+
+	//bool drivePlotsinDir(double plots, double heading, bool isX);
+
+	//bool turnDrive(double deg);
+
+	bool turnTo(double deg);
+
+	bool turnTheCorner(bool CCW);
+
+	bool driveOneBlock();
+
+
 	void printTemporaryBuildingArray();
 	/**
 	 * Used for testing location finding of ultrasonic sensor
 	 */
+
 };
 
 

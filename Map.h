@@ -3,6 +3,7 @@
  *
  *  Created on: Nov 23, 2019
  *      Author: Brian
+ *      Author: Peter Nikopoulos
  */
 
 #ifndef MAP_H_
@@ -12,6 +13,9 @@
 #include "Plot.h"
 
 class Map {
+private:
+	int buildingCounter = 0;
+	int toSearch = 0;
 public:
 	Map();
 	Plot zerozero;
@@ -58,7 +62,13 @@ public:
 			{fivezero,fiveone,fivetwo,fivethree,fivefour,fivefive}};
 	void printMap();
 
+	bool inRow(int row);
+	int buildingsPer(int row);
+	int buildingToSearch(int row);
+	int windowsToSearch(int x, int y);
+
 	Plot& getPlot(int x, int y);
+
 };
 
 

@@ -3,6 +3,7 @@
  *
  *  Created on: Nov 23, 2019
  *      Author: Brian
+ *      Author: Peter Nikopoulos
  */
 
 #ifndef PLOT_H_
@@ -12,8 +13,8 @@
 class Plot {
 public:
 	Plot();
-	Plot(bool road, bool filledPlot, bool searched, bool roadBlock, String addy1, String addy2, String addy3, String addy4);
-	Plot (bool road, bool filledPlot, bool searched, bool roadBlock);
+	Plot(bool road, bool filledPlot, bool searched, bool roadBlock, String addy1, String addy2, String addy3, String addy4, int Windows);
+	Plot (bool road, bool filledPlot, bool searched, bool roadBlock, int Windows);
 	bool road;
 	bool filledPlot;
 	bool searched;
@@ -22,6 +23,7 @@ public:
 	String addy2;
 	String addy3;
 	String addy4;
+	int Windows;
 
 	virtual ~Plot();
 };

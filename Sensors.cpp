@@ -36,7 +36,6 @@ double Sensors::PingUltrasonic(){
 			double pulseWidth = pulseIn(echoPin,HIGH);
 			double distance = pulseWidth * (1/58.0) * 10;
 			return distance;  //pulsewidth of echoPin multiplied by conversion factor converted to mm from cm
-
 		}
 	}
 	return -1.0;
