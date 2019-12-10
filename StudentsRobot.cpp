@@ -338,7 +338,7 @@ void StudentsRobot::updateStateMachine() {
 				Serial.println("BUILDING DISTANCE FROM ROBOT: ///////////////////////////////////" + String(buildingDistanceFromRobot));
 				if(blocksTravelledX < 5) {
 					if(buildingDistanceFromRobot == 1) { // if the building is at Y = 1 given ultrasonic data
-					//	Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						//	Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
 						//Plot& is a reference to the actual plot in the map array, and allows us to directly modify values of those plots
 						Plot& buildingPlot = fieldMap.getPlot(buildingDistanceFromRobot,5-blocksTravelledX ); //5-X,1  //sets up all plots in the row of x = 4 (0,0 being in the top left hand corner of the field)
 						Plot& ambiguousPlot1 = fieldMap.getPlot(buildingDistanceFromRobot+2,5-blocksTravelledX); //5-X,3
@@ -364,7 +364,7 @@ void StudentsRobot::updateStateMachine() {
 
 					}
 					else if (buildingDistanceFromRobot == 7) {
-					//	Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						//	Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
 						Plot& roadBlockPlot = fieldMap.getPlot(2, 5-blocksTravelledX); // 5-X,2
 						Plot& ambiguousPlot1 = fieldMap.getPlot(3, 5-blocksTravelledX); // 5-X,3
 						Plot& ambiguousPlot2 = fieldMap.getPlot(5, 5-blocksTravelledX);  // 5-X,5
@@ -582,8 +582,14 @@ void StudentsRobot::updateStateMachine() {
 					// Announcing state
 				} else{
 					if(windowsToSearch != 0){
-						windowsToSearch--;
-						searchingStatus = turnCorner;
+						if(scanBeacon()){
+							status = Communication;
+						}
+						else {
+							windowsToSearch--;
+							searchingStatus = turnCorner;
+						}
+
 					}else{
 						//TestingVar++;
 						firstRun = true;
@@ -656,7 +662,8 @@ void StudentsRobot::updateStateMachine() {
 			//end of searching SM//
 
 			case Communication:
-/////////////////////////////////////////////////////////////////////////////Ryans code deploying ladder, buzzer, printing to field controller, call return home
+				/////////////////////////////////////////////////////////////////////////////Ryans code deploying ladder, buzzer, printing to field controller, call return home
+				status = Halting;
 				break;
 			case Halt:
 
@@ -764,25 +771,25 @@ void StudentsRobot::publishAddress(float x_pos, float y_pos, int robot_x, int ro
 		}
 		else if(robot_x == 3) {
 			if(building_y == 1) { //300 Beech Street: 112
-					msg2 = 10;
-					msg3 = 2;
-				}
-				else if(building_y == 3) { //400 Beech Street: 140
-					msg2 = 40;
-					msg3 = 0;
-				}
+				msg2 = 10;
+				msg3 = 2;
 			}
-		else if(robot_x == 5) {
-			if(building_y == 1) { //500 Beech Street: 122
-					msg2 = 20;
-					msg3 = 2;
-				}
-				else if(building_y == 3) { //600 Beech Street: 150
-					msg2 = 50;
-					msg3 = 0;
-				}
+			else if(building_y == 3) { //400 Beech Street: 140
+				msg2 = 40;
+				msg3 = 0;
 			}
 		}
+		else if(robot_x == 5) {
+			if(building_y == 1) { //500 Beech Street: 122
+				msg2 = 20;
+				msg3 = 2;
+			}
+			else if(building_y == 3) { //600 Beech Street: 150
+				msg2 = 50;
+				msg3 = 0;
+			}
+		}
+	}
 
 	//Row 3
 	else if(robot_y == 3) {
@@ -822,24 +829,24 @@ void StudentsRobot::publishAddress(float x_pos, float y_pos, int robot_x, int ro
 		}
 		else if(robot_x == 3) {
 			if(building_y == 1) { //300 Maple Street: 142
-					msg2 = 40;
-					msg3 = 2;
-				}
-				else if(building_y == 3) { //400 Maple Street: 170
-					msg2 = 70;
-					msg3 = 0;
-				}
+				msg2 = 40;
+				msg3 = 2;
 			}
+			else if(building_y == 3) { //400 Maple Street: 170
+				msg2 = 70;
+				msg3 = 0;
+			}
+		}
 		else if(robot_x == 5) {
 			if(building_y == 1) { //500 Maple Street: 152
-					msg2 = 50;
-					msg3 = 2;
-				}
-				else if(building_y == 3) { //600 Maple Street: 180
-					msg2 = 80;
-					msg3 = 0;
-				}
+				msg2 = 50;
+				msg3 = 2;
 			}
+			else if(building_y == 3) { //600 Maple Street: 180
+				msg2 = 80;
+				msg3 = 0;
+			}
+		}
 	}
 
 	//Row 5
