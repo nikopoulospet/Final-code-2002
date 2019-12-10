@@ -196,7 +196,9 @@ public:
 	 */
 	void updateStateMachine();
 
+	bool scanBeacon();
 
+	void publishAddress(float x_pos, float y_pos, int robot_x, int robot_y, int building_x, int building_y);
 
 };
 
