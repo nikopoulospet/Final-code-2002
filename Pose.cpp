@@ -15,9 +15,9 @@ Pose::Pose(double x, double y, double theta) {
 void Pose:: updateEncoderPositions(double timestamp, double encoder0, double encoder1, double IMUheading){  //same code from java, transposed into eclipse second order forward kinematic model
 	if (lastTimestamp > 0) {
 		double deltaTime = timestamp - lastTimestamp;
-		deltaEncoder0 = encoder0 - lastEncoder0;
-		deltaEncoder1 = encoder1 - lastEncoder1;
-		double deltaIMU = IMUheading - lastIMUHeading;
+		double deltaEncoder0 = encoder0 - lastEncoder0;
+		double deltaEncoder1 = encoder1 - lastEncoder1;
+		//double deltaIMU = IMUheading - lastIMUHeading;
 		if (abs(deltaEncoder1) > 0 && abs(deltaEncoder0) > 0) {
 			//Serial.println("Delta Time=" + String(deltaTime) + " enc0=" + String(deltaEncoder0) + " enc1=" + String(deltaEncoder1)+ " heading=" + String(deltaIMU));
 		}
@@ -42,9 +42,8 @@ void Pose:: updateEncoderPositions(double timestamp, double encoder0, double enc
 		// adding block counting / robot position update. checks heading and distance traveled to figure out robot X and Y pos
 		IMUheadingModulo = int(IMUheading) % 360;
 		if((deltaEncoder0 > 0 && deltaEncoder1 < 0)||(deltaEncoder0 < 0 && deltaEncoder1 > 0)){ // if robot is traveling straight(ish)
-			avgTraveled += abs(deltaEncoder1); //(abs(deltaEncoder0) + abs(deltaEncoder1)) * 0.5;   // deltaEnc 0 and deltaEnc 1 start at the same value and slowly appear to drift apart. this could be a PID or motor issue where the motors need to spin at different speeds in order to maintian a constant heading.
-			// the working solution at the moment is to only track one delta Encoder. this means the slight dift apart of both encoder values wont slowly change the distance needed to travel for each block. a magic value still needs to be found, indicating that issues remain but those are unresolved for now. this fix should let us drive a constant distance for one block.
-			//Serial.println(String(avgTraveled) + "=====================================================");
+			avgTraveled += (abs(deltaEncoder0) + abs(deltaEncoder1)) * 0.5;
+			//Serial.println(String(avgTraveled) + "=========================");
 			if (avgTraveled >= blockLeninDeg){
 				avgTraveled = 0;
 				if((abs(IMUheadingModulo) <= 360 && abs(IMUheadingModulo) >= 340) || (abs(IMUheadingModulo) >= 0 && abs(IMUheadingModulo) <= 20)){//IMU is in degrees
@@ -86,11 +85,8 @@ void Pose:: updateEncoderPositions(double timestamp, double encoder0, double enc
 	}
 	Serial.println("PosX " + String(posX) + " PosY " + String(posY));
 
-	Serial.println("EncO =" + String(deltaEncoder0) +"Enc1 =" + String(deltaEncoder1));
-	//Serial.println(millis());
-	Serial.println("Final pose x= " + String(x) + " y= " + String(y) + " theta= " + String(theta) + " IMU Heading: " + String(((IMUheading)))); //print of pose
-	//Serial.println(millis());
-
+	Serial.println("EncO =" + String(encoder0) +"Enc1 =" + String(encoder1));
+	Serial.println("Final pose x= " + String(x) + " y= " + String(y) + " theta= " + String(theta) + " IMU Heading: " + String(((IMUheading) * (PI/180)))); //print of pose
 
 	lastEncoder0 = encoder0;  //reset values for next loop through
 	lastEncoder1 = encoder1;

@@ -121,7 +121,7 @@ bool DrivingChassis::isChassisDoneDriving() {
 void DrivingChassis::loop(){//polls for data every 20ms
 
 	if(trigger){
-		if(IMU->getEULER_azimuth() != 0){
+		if(abs(IMU->getEULER_azimuth()) > 45){
 			offset = IMU->getEULER_azimuth() * (-1);
 			trigger = false;
 		}
@@ -366,24 +366,42 @@ bool DrivingChassis::driveOneBlock(){
 	return false;
 }
 
+bool DrivingChassis::driveDistanceBlocks(double fractionBlock){
+	static bool trigger = true;
+	if(trigger){
+		trigger = false;
+		startingHeading = this->robotPose.IMUheadingModulo;
+		x = robotPose.posX;
+		y = robotPose.posY;
+	}
+	//Serial.println(startingHeading);
+	//Serial.println(trigger);
+	//Serial.println("driving ONEEE");
+	driveStraight(200, startingHeading, 1000);
+	if(abs(robotPose.posX - x) >= fractionBlock || abs(robotPose.posY - y) >= fractionBlock){
+		trigger = true;
+		return true;
+	}
+	return false;
+}
 
 
 
 
 
-//
-//bool DrivingChassis::distanceDrive (double mm){ // Useless with implementation of PlotDrive
-//	double target = mmTOdeg(mm);
-//	distanceError =  abs(this->myright->getAngleDegrees()) - target;
-//	double effort = kpDistance * distanceError;
-//	this->driveStraight(-effort, 0, 1000);
-//	if(effort < 10 && effort > -10){ // might need some tweaking
-//		return true;
-//	}else{
-//		return false;
-//	}
-//}
-//
+
+bool DrivingChassis::distanceDrive (double mm){ // Useless with implementation of PlotDrive
+	double target = mmTOdeg(mm);
+	distanceError =  abs(this->myright->getAngleDegrees()) - target;
+	double effort = kpDistance * distanceError;
+	this->driveStraight(-effort, 0, 1000);
+	if(effort < 10 && effort > -10){ // might need some tweaking
+		return true;
+	}else{
+		return false;
+	}
+}
+
 //bool DrivingChassis::drivePlotsinDir (double plots, double heading, bool isX){
 //	static bool trigger =  true;
 //	if(trigger){

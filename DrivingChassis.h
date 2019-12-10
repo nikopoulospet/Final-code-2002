@@ -195,7 +195,7 @@ public:
 	 *
 	 */
 
-	//bool distanceDrive(double mm);
+	bool distanceDrive(double mm);
 	/**
 	 * drives to a distance in mm, using a p controller to handle speeds
 	 *
@@ -246,6 +246,7 @@ public:
 
 	bool driveOneBlock();
 
+	bool driveDistanceBlocks(double fractionBlock);
 
 	void printTemporaryBuildingArray();
 	/**

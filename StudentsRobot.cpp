@@ -12,13 +12,30 @@
 static double sumUltrasonicReadings = 0;  //used for averaging ultrasonic readings b/c they are inconsistant
 static int countUltrasonicReadings = 0;
 
+//PIEZO
+unsigned long previousMillis = 0;
+const int pauseDuration = 100;
+const int longPauseDuration = 200;
+const int noteDuration = 100;
+const int longNoteDuration = 200;
+const int extraLongNoteDuration = 600;
+boolean outputTone = false;
+boolean longNote = false;
+boolean extraLongNote = false;
+boolean longPause = false;
+int c = 523;
+int cSh = 554;
+int d = 587;
+int noteCount = 1;
+
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
-		PIDMotor * motor3, Servo * servo, IRCamSimplePacketComsServer * IRCam,
+		PIDMotor * motor3, Servo * servoTurret, Servo * servoLadder, IRCamSimplePacketComsServer * IRCam,
 		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu), Ultrasonic1(), fieldMap(), Ultrasonic2()
 
 {
 	Serial.println("StudentsRobot::StudentsRobot constructor called here ");
-	this->servo = servo;
+	this->servoTurret = servoTurret;
+	this->servoLadder = servoLadder;
 	this->motor1 = motor1;
 	this->motor2 = motor2;
 	this->motor3 = motor3;
@@ -87,8 +104,6 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	// Set up the Analog sensors
 	pinMode(ANALOG_SENSE_ONE, ANALOG);
 	pinMode(ANALOG_SENSE_TWO, ANALOG);
-	pinMode(ANALOG_SENSE_THREE, ANALOG);
-	pinMode(ANALOG_SENSE_FOUR, ANALOG);
 	// H-Bridge enable pin
 	pinMode(H_BRIDGE_ENABLE, OUTPUT);
 	// Stepper pins
@@ -103,11 +118,54 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	Ultrasonic1.attach(TrigPIN, EchoPIN);
 	Ultrasonic2.attach(TrigPIN2,EchoPIN2);
 
+	//SERVO
+	pinMode(SERVO_TURRET_PIN, OUTPUT);
+	pinMode(SERVO_LADDER_PIN, OUTPUT);
+
+	//PIEZO
+	ledcSetup(CHANNEL, FREQ, RESOLUTION);
+	ledcAttachPin(PIEZO_PIN, CHANNEL);
+
 }
 /**
  * Seperate from running the motor control,
  * update the state machine for running the final project code here
  */
+
+
+//SERVO HELPERS
+void turretCenter(Servo x){
+	x.write(1640);
+}
+void turretLeft(Servo x){
+	x.write(2490);
+}
+void turretRight(Servo x){
+	x.write(790);
+}
+void ladderDeploy(Servo x){
+	x.write(2350);
+}
+void ladderHolster(Servo x){
+	x.write(740);
+}
+
+
+//PIEZO HELPERS
+int checkNoteDuration(){
+	if(longNote == true){return longNoteDuration;}
+	else if(extraLongNote == true){return extraLongNoteDuration;}
+	else return noteDuration;
+	longNote = false;
+}
+
+int checkPauseDuration(){
+	if(longPause == true){return longPauseDuration;}
+	else return pauseDuration;
+}
+
+
+
 void StudentsRobot::updateStateMachine() {
 	digitalWrite(WII_CONTROLLER_DETECT, 1);
 	long now = millis();
@@ -150,8 +208,8 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			status = Scanning;
-			scanningStatus = Driving;
+			status = piezzoBuzzer;
+			//scanningStatus = Driving;
 			SearchingRun = true;
 		}
 		break;
@@ -204,6 +262,8 @@ void StudentsRobot::updateStateMachine() {
 	case Scanning:
 		switch(scanningStatus){
 		case Driving:
+			turretRight(*servoTurret);
+			ladderHolster(*servoLadder);
 			if(blocksTravelledX == 0 && !previousFoundBuilding) {  //edge case when we start the program, check for any buildings in row 0
 				scanningStatus = UltrasonicCalc;
 				nextTime = millis() + 3500; //wait 3.5 seconds in the ScanninG Building state where ultrasonic will ping continously
@@ -329,6 +389,7 @@ void StudentsRobot::updateStateMachine() {
 				ace.printTemporaryBuildingArray();
 				Serial.println("ACTUAL MAP ARRAY");
 				fieldMap.printMap();
+				turretLeft(*servoTurret);
 			}
 			/////////////////////////////////////////////////////////
 			break;
@@ -423,6 +484,8 @@ void StudentsRobot::updateStateMachine() {
 				ace.printTemporaryBuildingArray();
 				Serial.println("ACTUAL MAP ARRAY");
 				fieldMap.printMap();
+				turretLeft(*servoTurret);
+
 			}
 			else {
 				scanningStatus = Driving;
@@ -583,7 +646,7 @@ void StudentsRobot::updateStateMachine() {
 				} else{
 					if(windowsToSearch != 0){
 						if(scanBeacon()){
-							status = Communication;
+							status = piezzoBuzzer;
 						}
 						else {
 							windowsToSearch--;
@@ -604,7 +667,6 @@ void StudentsRobot::updateStateMachine() {
 				if(ace.turnTheCorner(true)){
 					searchingStatus = lookForRobin;
 				}
-
 				if(RoadBlockDetected){
 					previousStatus = turnCorner;
 					firstRun = true;
@@ -663,7 +725,79 @@ void StudentsRobot::updateStateMachine() {
 
 			case Communication:
 				/////////////////////////////////////////////////////////////////////////////Ryans code deploying ladder, buzzer, printing to field controller, call return home
-				status = Halting;
+				if(fractionDistanceTrigger){  //trigger keeps a one time set of our target distance each time we need to travel a block
+					target2 = hardCodeDistance;
+					target2 = ace.mmTOdeg(target2) + (motor1->getAngleDegrees()); //adds on the degrees that we need to travel to our current position instead of resetting encoders
+					fractionDistanceTrigger = false;
+				}
+				distanceError =  abs(this->motor1->getAngleDegrees()) - target2; //calculate distance error between our current position and final position
+				effort = 0.25 * distanceError;
+				ace.driveStraight(-effort, 0, 200);
+				/*if(motor1->getAngleDegrees() >= target2){ //if we have surpassed the target, allow for another set of target distance, increment block
+					ladderDeploy(*servoLadder);
+					//servoLadder->write(2350);
+					//ladderHolster(*servoLadder);
+					status = Halting;
+				}*/
+
+				break;
+
+			case piezzoBuzzer:
+				if(noteCount < 20){
+
+					unsigned long currentMillis = millis();
+
+					if (outputTone) {
+						if (currentMillis - previousMillis >= checkNoteDuration()) {
+							previousMillis = currentMillis;
+							//ledcWriteTone(CHANNEL, 0);
+							ledcDetachPin(PIEZO_PIN);
+							outputTone = false;
+						}
+					}
+					else {
+						if (currentMillis - previousMillis >= checkPauseDuration()) {
+							previousMillis = currentMillis;
+							ledcAttachPin(PIEZO_PIN, CHANNEL);
+
+							if(noteCount == 1){ledcWriteTone(CHANNEL, d);}
+							else if(noteCount == 2){ledcWriteTone(CHANNEL, d);}
+							else if(noteCount == 3){ledcWriteTone(CHANNEL, cSh);}
+							else if(noteCount == 4){ledcWriteTone(CHANNEL, cSh);}
+							else if(noteCount == 5){ledcWriteTone(CHANNEL, c);}
+							else if(noteCount == 6){ledcWriteTone(CHANNEL, c);}
+							else if(noteCount == 7){ledcWriteTone(CHANNEL, cSh);}
+							else if(noteCount == 8){ledcWriteTone(CHANNEL, cSh);}
+							else if(noteCount == 9){ledcWriteTone(CHANNEL, d);}
+							else if(noteCount == 10){ledcWriteTone(CHANNEL, d);}
+							else if(noteCount == 11){ledcWriteTone(CHANNEL, cSh);}
+							else if(noteCount == 12){ledcWriteTone(CHANNEL, cSh);}
+							else if(noteCount == 13){ledcWriteTone(CHANNEL, c);}
+							else if(noteCount == 14){ledcWriteTone(CHANNEL, c);}
+							else if(noteCount == 15){ledcWriteTone(CHANNEL, cSh);}
+							else if(noteCount == 16){ledcWriteTone(CHANNEL, cSh);}
+							else if(noteCount == 17){ledcWriteTone(CHANNEL, d);
+							longNote = true;
+							longPause = true;
+							}
+							else if(noteCount == 18){ledcWriteTone(CHANNEL, d);
+							longNote = false;
+							longPause = false;
+							extraLongNote = true;
+							}
+							else if(noteCount>=19){
+								extraLongNote = false;
+								ledcDetachPin(PIEZO_PIN);
+							}
+
+							noteCount = noteCount+1;
+							outputTone = true;
+						}
+					}
+				}
+				else {
+					status = Communication;
+				}
 				break;
 			case Halt:
 
