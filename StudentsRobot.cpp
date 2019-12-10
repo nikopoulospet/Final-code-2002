@@ -111,7 +111,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 void StudentsRobot::updateStateMachine() {
 	digitalWrite(WII_CONTROLLER_DETECT, 1);
 	long now = millis();
-	//ace.loop();
+	ace.loop();
 	//polling for pose every 20ms, see DrivingChassis.cpp
 	switch (status) {
 	case StartupRobot:
@@ -150,20 +150,16 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			status = UltrasonicTest;
-			//scanningStatus = Driving;
-			//	ace.robotPose.setRobotPosition(5, 0);
+			status = Scanning;
+			scanningStatus = Driving;
 			SearchingRun = true;
-
-
 		}
 		break;
 
-
 	case Testing:
-
 		if(ace.turnTo(180)){
-			status = Testting2;		}
+			status = Testting2;
+		}
 
 		break;
 
@@ -223,24 +219,6 @@ void StudentsRobot::updateStateMachine() {
 							nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
 						}
 					}
-
-					/*	if(trigger){  //trigger keeps a one time set of our target distance each time we need to travel a block
-								target = blockDistance;
-								target = ace.mmTOdeg(target) + (motor1->getAngleDegrees()); //adds on the degrees that we need to travel to our current position instead of resetting encoders
-								trigger = false;
-							}
-							distanceError =  abs(this->motor1->getAngleDegrees()) - target; //calculate distance error between our current position and final position
-							effort = 0.25 * distanceError;
-							ace.driveStraight(-effort, 0, 200);
-							if(motor1->getAngleDegrees() >= target){ //if we have surpassed the target, allow for another set of target distance, increment block
-								trigger = true;
-								blocksTravelledX++;
-								previousFoundBuilding = false;
-								if(blocksTravelledX % 2 == 0 && !previousFoundBuilding) { //if we have travelled an even number of blocks, check if there is a building in that row for 2 seconds
-									scanningStatus = UltrasonicCalc;
-									nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
-								}
-							} */
 				}
 				else if (blocksTravelledX == 5) {  //if we have travelled 5 blocks in the x direction, set x to true and y to false so we no longer travel in the x direction but prepare to travel in y
 					travelledXDistance = true;
@@ -254,27 +232,6 @@ void StudentsRobot::updateStateMachine() {
 				}
 			}
 			if (!travelledYDistance && completedTurn == true) {  //Repeat using Y direction
-				//Serial.println(String(blocksTravelledY));
-				/*if(blocksTravelledY <= 5) {
-							//	Serial.println(blocksTravelledY);
-							if(trigger){
-								target = blockDistance;
-								target = ace.mmTOdeg(target) + (motor1->getAngleDegrees());
-								trigger = false;
-							}
-							distanceError =  abs(this->motor1->getAngleDegrees()) - target;
-							effort = 0.25 * distanceError;
-							ace.driveStraight(-effort, 90, 200);
-							if(motor1->getAngleDegrees() >= target){
-								trigger = true;
-								blocksTravelledY++;
-								previousFoundBuilding = false;
-								if(!(blocksTravelledY % 2 == 0) && !previousFoundBuilding) {
-									scanningStatus = UltrasonicCalc;
-									nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
-								}
-							}
-						}*/
 				if(blocksTravelledY < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment each time
 					//Serial.println(blocksTravelledX);
 					if(ace.driveOneBlock()) {
@@ -378,38 +335,39 @@ void StudentsRobot::updateStateMachine() {
 
 		case foundBuilding:
 			if(!previousFoundBuilding) { //event checking making sure building only gets checked one time
+				Serial.println("BUILDING DISTANCE FROM ROBOT: ///////////////////////////////////" + String(buildingDistanceFromRobot));
 				if(blocksTravelledX < 5) {
 					if(buildingDistanceFromRobot == 1) { // if the building is at Y = 1 given ultrasonic data
-						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+					//	Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
 						//Plot& is a reference to the actual plot in the map array, and allows us to directly modify values of those plots
-						Plot& buildingPlot = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot); //5-X,1  //sets up all plots in the row of x = 4 (0,0 being in the top left hand corner of the field)
-						Plot& ambiguousPlot1 = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot+2); //5-X,3
-						Plot& ambiguousPlot2 = fieldMap.getPlot(5-blocksTravelledX,buildingDistanceFromRobot+4);  //5-X,5
+						Plot& buildingPlot = fieldMap.getPlot(buildingDistanceFromRobot,5-blocksTravelledX ); //5-X,1  //sets up all plots in the row of x = 4 (0,0 being in the top left hand corner of the field)
+						Plot& ambiguousPlot1 = fieldMap.getPlot(buildingDistanceFromRobot+2,5-blocksTravelledX); //5-X,3
+						Plot& ambiguousPlot2 = fieldMap.getPlot(buildingDistanceFromRobot+4,5-blocksTravelledX);  //5-X,5
 						buildingPlot.filledPlot = true; //if we see a building right in front of us, the buildings behind it may also be buildings
 						ambiguousPlot1.filledPlot = true;
 						ambiguousPlot2.filledPlot = true;
 					}
 					else if(buildingDistanceFromRobot == 3) {
-						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-						Plot& buildingPlot = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot); // 5-X,3
-						Plot& ambiguousPlot1 = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot+2); // 5-X,5
-						Plot& ambiguousPlot2 = fieldMap.getPlot(5-blocksTravelledX, buildingDistanceFromRobot-2);  // 5-X,1
+						//Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot( buildingDistanceFromRobot,5-blocksTravelledX); // 5-X,3
+						Plot& ambiguousPlot1 = fieldMap.getPlot(buildingDistanceFromRobot+2, 5-blocksTravelledX); // 5-X,5
+						Plot& ambiguousPlot2 = fieldMap.getPlot(buildingDistanceFromRobot-2, 5-blocksTravelledX);  // 5-X,1
 						buildingPlot.filledPlot = true; //if we see a building in the 3rd column of the field, then the building in front is not a building, but the one behind may be a building
 						ambiguousPlot1.filledPlot = true;
 						ambiguousPlot2.filledPlot = false;
 					}
 					else if (buildingDistanceFromRobot == 0){
-						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						//Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
 						ace.buildingArray[blocksTravelledX][buildingDistanceFromRobot] = 1;  //add building coordinate to our map
-						Plot& ambiguousPlot1 = fieldMap.getPlot(5-blocksTravelledX, 5); //5-X,5
+						Plot& ambiguousPlot1 = fieldMap.getPlot(5, 5-blocksTravelledX); //5-X,5
 						ambiguousPlot1.filledPlot = true; //if we cannot sense the back row of the buildings, set the one in the back to a plausible building
 
 					}
 					else if (buildingDistanceFromRobot == 7) {
-						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-						Plot& roadBlockPlot = fieldMap.getPlot(5-blocksTravelledX, 2); // 5-X,2
-						Plot& ambiguousPlot1 = fieldMap.getPlot(5-blocksTravelledX, 3); // 5-X,3
-						Plot& ambiguousPlot2 = fieldMap.getPlot(5-blocksTravelledX, 5);  // 5-X,5
+					//	Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
+						Plot& roadBlockPlot = fieldMap.getPlot(2, 5-blocksTravelledX); // 5-X,2
+						Plot& ambiguousPlot1 = fieldMap.getPlot(3, 5-blocksTravelledX); // 5-X,3
+						Plot& ambiguousPlot2 = fieldMap.getPlot(5, 5-blocksTravelledX);  // 5-X,5
 						roadBlockPlot.filledPlot = true; //if we find a road block in 2nd column of the field, then set the buildings behind it to be possible buildings
 						ambiguousPlot1.filledPlot = true;
 						ambiguousPlot2.filledPlot = true;
@@ -418,24 +376,24 @@ void StudentsRobot::updateStateMachine() {
 				else if (blocksTravelledY <= 5) {
 					if(buildingDistanceFromRobot == 4) {
 						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-						Plot& buildingPlot = fieldMap.getPlot(5 - buildingDistanceFromRobot, blocksTravelledY); //1,Y
-						Plot& ambiguousPlot1 = fieldMap.getPlot(5 - buildingDistanceFromRobot + 2, blocksTravelledY); //3,Y
-						Plot& ambiguousPlot2 = fieldMap.getPlot(5 - buildingDistanceFromRobot + 4, blocksTravelledY); //5,Y
+						Plot& buildingPlot = fieldMap.getPlot(blocksTravelledY,5 - buildingDistanceFromRobot ); //1,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot(blocksTravelledY, 5 - buildingDistanceFromRobot + 2); //3,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot(blocksTravelledY, 5 - buildingDistanceFromRobot + 4); //5,Y
 						buildingPlot.filledPlot = true; //ensure that we do not overwrite previous data, and in the y we only handle the spaces in front of the buildings we measure
 					}
 					else if(buildingDistanceFromRobot == 2) { //if building is in ROW 2
 						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-						Plot& buildingPlot = fieldMap.getPlot(5 - buildingDistanceFromRobot, blocksTravelledY);  //3,Y
-						Plot& ambiguousPlot1 = fieldMap.getPlot(5 - buildingDistanceFromRobot + 2, blocksTravelledY); //5,Y
-						Plot& ambiguousPlot2 = fieldMap.getPlot(5 - buildingDistanceFromRobot - 2, blocksTravelledY); //1,Y
+						Plot& buildingPlot = fieldMap.getPlot( blocksTravelledY,5 - buildingDistanceFromRobot );  //3,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot(blocksTravelledY, 5 - buildingDistanceFromRobot + 2  ); //5,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot( blocksTravelledY, 5 - buildingDistanceFromRobot - 2); //1,Y
 						buildingPlot.filledPlot = true;
 						ambiguousPlot2.filledPlot = false; //set space in front of building to false
 					}
 					else if(buildingDistanceFromRobot == 0) {//if building is in ROW 2
 						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-						Plot& buildingPlot = fieldMap.getPlot(5, blocksTravelledY);  //3,Y
-						Plot& ambiguousPlot1 = fieldMap.getPlot(3, blocksTravelledY); //5,Y
-						Plot& ambiguousPlot2 = fieldMap.getPlot(1, blocksTravelledY); //1,Y
+						Plot& buildingPlot = fieldMap.getPlot(  blocksTravelledY, 5);  //3,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot( blocksTravelledY, 3 ); //5,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot( blocksTravelledY, 1 ); //1,Y
 						if(buildingPlot.filledPlot == false) {
 							buildingPlot.filledPlot = false;
 							ambiguousPlot1.filledPlot = false;
@@ -449,10 +407,10 @@ void StudentsRobot::updateStateMachine() {
 					}
 					else if(buildingDistanceFromRobot == 9) { //if building is in ROW 2
 						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-						Plot& buildingPlot = fieldMap.getPlot(2, blocksTravelledY);  //2,Y
-						Plot& ambiguousPlot1 = fieldMap.getPlot(3, blocksTravelledY); //3,Y
-						Plot& ambiguousPlot2 = fieldMap.getPlot(5, blocksTravelledY); //5,Y
-						Plot& finalizedOpen = fieldMap.getPlot(1, blocksTravelledY);
+						Plot& buildingPlot = fieldMap.getPlot( blocksTravelledY, 2 );  //2,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot( blocksTravelledY, 3); //3,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot( blocksTravelledY, 5); //5,Y
+						Plot& finalizedOpen = fieldMap.getPlot( blocksTravelledY, 1);
 						buildingPlot.filledPlot = true;
 						finalizedOpen.filledPlot = false;
 					}

@@ -17,7 +17,7 @@ zerothree(true,false,false,false,0),
 zerofour(true,false,false,false,0),
 zerofive(true,false,false,false,0),
 onezero(true,false,false,false,0),
-oneone(false, true, false, false, "200 Oak Street", "500 2nd Avenue", "100 Beech Street", "600 1st Avenue" , 4),
+oneone(false, false, false, false, "200 Oak Street", "500 2nd Avenue", "100 Beech Street", "600 1st Avenue" , 4),
 onetwo(true,false,false,false,0),
 onethree(false, false, false, false, "400 Oak Street", "500 3rd Avenue", "300 Beech Street", "600 2nd Avenue" ,4),
 onefour(true,false,false,false,0),
@@ -29,7 +29,7 @@ twothree(true,false,false,false,0),
 twofour(true,false,false,false,0),
 twofive(true,false,false,false,0),
 threezero(true,false,false,false,0),
-threeone(false, true , false, false, "200 Beech Street", "300 2nd Avenue", "100 Maple Street", "400 1st Avenue" ,4),
+threeone(false, false , false, false, "200 Beech Street", "300 2nd Avenue", "100 Maple Street", "400 1st Avenue" ,4),
 threetwo(true,false,false,false,0),
 threethree(false, false, false, false, "400 Beech Street", "300 3rd Avenue", "300 Maple Street", "400 2nd Avenue" ,4),
 threefour(true,false,false,false,0),
@@ -41,11 +41,11 @@ fourthree(true,false,false,false,0),
 fourfour(true,false,false,false,0),
 fourfive(true,false,false,false,0),
 fivezero(true,false,false,false,0),
-fiveone(false, true, false, false, "200 Maple Street", "100 2nd Avenue", "No Address", "200 1st Avenue" ,2), //start from left
+fiveone(false, false, false, false, "200 Maple Street", "100 2nd Avenue", "No Address", "200 1st Avenue" ,2), //start from left
 fivetwo(true,false,false,false,0),
 fivethree(false, false, false, false, "400 Maple Street", "100 3rd Avenue", "No Address", "200 2nd Avenue",2), // start from left
 fivefour(true,false,false,false,0),
-fivefive(false, true, false, false, "600 Maple Street", "No Address", "No Address", "200 3rd Avenue" ,1)
+fivefive(false, false, false, false, "600 Maple Street", "No Address", "No Address", "200 3rd Avenue" ,1)
 {
 
 
@@ -54,7 +54,7 @@ fivefive(false, true, false, false, "600 Maple Street", "No Address", "No Addres
 void Map::printMap() {
 	for (int i = 0; i < 6; i++) {
 	        for (int j = 0; j < 6; j++) {
-	            Serial.print(String(map[i][j].filledPlot));
+	            Serial.print(String(map[j][i].filledPlot));
 	        }
 	        printf("\n");
 	    }

@@ -355,9 +355,9 @@ bool DrivingChassis::driveOneBlock(){
 		x = robotPose.posX;
 		y = robotPose.posY;
 	}
-	Serial.println(startingHeading);
-	Serial.println(trigger);
-	Serial.println("driving ONEEE");
+	//Serial.println(startingHeading);
+	//Serial.println(trigger);
+	//Serial.println("driving ONEEE");
 	driveStraight(200, startingHeading, 1000);
 	if(abs(robotPose.posX - x) >= 1 || abs(robotPose.posY - y) >= 1){
 		trigger = true;
