@@ -68,8 +68,6 @@
 // Sensor Pins
 #define ANALOG_SENSE_ONE		36
 #define ANALOG_SENSE_TWO		39
-#define ANALOG_SENSE_THREE		34
-#define ANALOG_SENSE_FOUR		35
 
 // Pins used by a perpheral, may be re-used
 #define BOOT_FLAG_PIN 			0
@@ -80,8 +78,17 @@
 #define WII_CONTROLLER_DETECT 	27
 
 //Ultrasonic Pins
-#define TrigPIN					33
-#define EchoPIN					32
+#define Trig1PIN  				33 //33
+#define Echo1PIN				32 //32
+
+#define Trig2PIN				23 //35
+#define Echo2PIN				34 //34
+
+//Piezo
+#define CHANNEL                 14
+#define FREQ                    2000
+#define RESOLUTION              8
+#define PIEZO_PIN               14
 
 
 #endif /* SRC_CONFIG_H_ */

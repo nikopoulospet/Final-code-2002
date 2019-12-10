@@ -9,9 +9,28 @@
 #define wheelTrackMM  225   //pass in wheeltrack and wheel radius into mm
 #define	wheelRadiusMM 25.6
 
+
+//PIEZO
+unsigned long previousMillis = 0;
+const int pauseDuration = 100;
+const int longPauseDuration = 200;
+const int noteDuration = 100;
+const int longNoteDuration = 200;
+const int extraLongNoteDuration = 600;
+boolean outputTone = false;
+boolean longNote = false;
+boolean extraLongNote = false;
+boolean longPause = false;
+
+int c = 523;
+int cSh = 554;
+int d = 587;
+int noteCount = 1;
+
+
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 		PIDMotor * motor3, Servo * servoTurret, Servo * servoLadder, IRCamSimplePacketComsServer * IRCam,
-		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu), Ultrasonic1(), fieldMap()
+		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu), Ultrasonic1(), Ultrasonic2(), fieldMap()
 
 
 
@@ -24,6 +43,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	this->servoLadder = servoLadder;
 	IRCamera = IRCam;
 	IMU = imu;
+	ledcWriteTone(CHANNEL, d);
 	//ace = new DrivingChassis(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu);
 #if defined(USE_IMU)
 	IMU->setXPosition(200);
@@ -87,8 +107,6 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	// Set up the Analog sensors
 	pinMode(ANALOG_SENSE_ONE, ANALOG);
 	pinMode(ANALOG_SENSE_TWO, ANALOG);
-	pinMode(ANALOG_SENSE_THREE, ANALOG);
-	pinMode(ANALOG_SENSE_FOUR, ANALOG);
 	// H-Bridge enable pin
 	pinMode(H_BRIDGE_ENABLE, OUTPUT);
 	// Stepper pins
@@ -105,15 +123,53 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 //	servoTurret->attach(SERVO_TURRET_PIN);
 //	servoLadder->attach(SERVO_LADDER_PIN);
 	//SENSOR
-	Ultrasonic1.attach(TrigPIN, EchoPIN);
-
-
+	Ultrasonic1.attach(Trig1PIN, Echo1PIN);
+	Ultrasonic2.attach(Trig2PIN, Echo2PIN);
+	ledcSetup(CHANNEL, FREQ, RESOLUTION);
+	ledcAttachPin(PIEZO_PIN, CHANNEL);
 
 }
 /**
  * Seperate from running the motor control,
  * update the state machine for running the final project code here
  */
+
+void turretCenter(Servo x){
+	x.write(1640);
+}
+
+void turretLeft(Servo x){
+	x.write(2490);
+}
+
+void turretRight(Servo x){
+	x.write(790);
+}
+
+void ladderDeploy(Servo x){
+	x.write(2350);
+}
+
+void ladderHolster(Servo x){
+	x.write(740);
+}
+
+
+
+int checkNoteDuration(){
+  if(longNote == true){return longNoteDuration;}
+  else if(extraLongNote == true){return extraLongNoteDuration;}
+  else return noteDuration;
+  longNote = false;
+}
+
+int checkPauseDuration(){
+  if(longPause == true){return longPauseDuration;}
+  else return pauseDuration;
+}
+
+
+
 void StudentsRobot::updateStateMachine() {
 	digitalWrite(WII_CONTROLLER_DETECT, 1);
 	long now = millis();
@@ -179,18 +235,86 @@ void StudentsRobot::updateStateMachine() {
 
 	case UltrasonicTest:
 		double blah;
-		blah = Ultrasonic1.PingUltrasonic();
+		blah = Ultrasonic2.PingUltrasonic();
 		if(blah != -1.0){
 			Serial.println(blah);
 		}
 		break;
 
 	case ServoTest:
-		servoTurret->write(1640);  //CW->decrease
+		//servoTurret->write(1640);  //CW->decrease
 		//Center=1640, 90CW=790, 90CCW=2490
-		servoLadder->write(740);  //CW->decrease
+		//servoLadder->write(740);  //CW->decrease
 		//In Holster=740, Deployed=2350
+		turretCenter(*servoTurret);
+		ladderDeploy(*servoLadder);
 
+		break;
+
+	case PiezoTone:
+		if(noteCount < 20){
+
+		  unsigned long currentMillis = millis();
+
+		  if (outputTone) {
+		      if (currentMillis - previousMillis >= checkNoteDuration()) {
+		          previousMillis = currentMillis;
+		          //ledcWriteTone(CHANNEL, 0);
+		          ledcDetachPin(PIEZO_PIN);
+		          outputTone = false;
+		          Serial.println("pause");
+		      }
+		  }
+		  else {
+		      if (currentMillis - previousMillis >= checkPauseDuration()) {
+		          previousMillis = currentMillis;
+		          ledcAttachPin(PIEZO_PIN, CHANNEL);
+
+		          if(noteCount == 1){ledcWriteTone(CHANNEL, d);
+		          Serial.println("d");}
+		          else if(noteCount == 2){ledcWriteTone(CHANNEL, d);
+		          Serial.println("d");}
+		          else if(noteCount == 3){ledcWriteTone(CHANNEL, cSh);
+		          Serial.println("cSh");}
+		          else if(noteCount == 4){ledcWriteTone(CHANNEL, cSh);
+		          Serial.println("cSh");}
+		          else if(noteCount == 5){ledcWriteTone(CHANNEL, c);
+		          Serial.println("c");}
+		          else if(noteCount == 6){ledcWriteTone(CHANNEL, c);
+		          Serial.println("c");}
+		          else if(noteCount == 7){ledcWriteTone(CHANNEL, cSh);}
+		          else if(noteCount == 8){ledcWriteTone(CHANNEL, cSh);
+		          Serial.println("cSh");}
+		          else if(noteCount == 9){ledcWriteTone(CHANNEL, d);}
+		          else if(noteCount == 10){ledcWriteTone(CHANNEL, d);}
+		          else if(noteCount == 11){ledcWriteTone(CHANNEL, cSh);}
+		          else if(noteCount == 12){ledcWriteTone(CHANNEL, cSh);}
+		          else if(noteCount == 13){ledcWriteTone(CHANNEL, c);}
+		          else if(noteCount == 14){ledcWriteTone(CHANNEL, c);}
+		          else if(noteCount == 15){ledcWriteTone(CHANNEL, cSh);}
+		          else if(noteCount == 16){ledcWriteTone(CHANNEL, cSh);}
+		          else if(noteCount == 17){ledcWriteTone(CHANNEL, d);
+		            longNote = true;
+		            longPause = true;
+		          }
+		          else if(noteCount == 18){ledcWriteTone(CHANNEL, d);
+		            longNote = false;
+		            longPause = false;
+		            extraLongNote = true;
+		          }
+		          else if(noteCount>=19){
+		            extraLongNote = false;
+//			        digitalWrite(PIEZO_PIN, 0);
+//		            ledcWriteTone(CHANNEL, 0);
+		            ledcDetachPin(PIEZO_PIN);
+			        Serial.println("finished");
+		          }
+
+		          noteCount = noteCount+1;
+		          outputTone = true;
+		      }
+		  }
+		}
 		break;
 
 
@@ -523,6 +647,7 @@ void StudentsRobot::pidLoop() {
 	motor2->loop();
 	motor3->loop();
 }
+
 
 
 
