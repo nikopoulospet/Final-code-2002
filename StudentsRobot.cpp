@@ -14,9 +14,7 @@ static int countUltrasonicReadings = 0;
 
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 		PIDMotor * motor3, Servo * servo, IRCamSimplePacketComsServer * IRCam,
-		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu), Ultrasonic1(), fieldMap()
-
-
+		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu), Ultrasonic1(), fieldMap(), Ultrasonic2()
 
 {
 	Serial.println("StudentsRobot::StudentsRobot constructor called here ");
@@ -103,6 +101,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 
 	//SENSOR
 	Ultrasonic1.attach(TrigPIN, EchoPIN);
+	Ultrasonic2.attach(TrigPIN2,EchoPIN2);
 
 }
 /**
@@ -112,7 +111,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 void StudentsRobot::updateStateMachine() {
 	digitalWrite(WII_CONTROLLER_DETECT, 1);
 	long now = millis();
-	ace.loop();
+	//ace.loop();
 	//polling for pose every 20ms, see DrivingChassis.cpp
 	switch (status) {
 	case StartupRobot:
@@ -151,8 +150,8 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			status = Scanning;
-			scanningStatus = Driving;
+			status = UltrasonicTest;
+			//scanningStatus = Driving;
 			//	ace.robotPose.setRobotPosition(5, 0);
 			SearchingRun = true;
 
@@ -175,6 +174,9 @@ void StudentsRobot::updateStateMachine() {
 		break;
 
 	case UltrasonicTest:
+		ultrasonicPing2 = Ultrasonic2.PingUltrasonic();
+		Serial.println(String(ultrasonicPing2));
+		status = UltrasonicTest;
 		break;
 
 
@@ -618,6 +620,7 @@ void StudentsRobot::updateStateMachine() {
 				Serial.println(windowsToSearch);
 
 				if(false){ // ping window
+					///////////////////////////////TOGGLE TURRET, PING IR, IF NO BUILDING SET WINDOWS TO SEARCH TO 0
 					// Announcing state
 				} else{
 					if(windowsToSearch != 0){
@@ -683,7 +686,6 @@ void StudentsRobot::updateStateMachine() {
 						//either on 0 X side of RB -> CCW search
 						//on 5 X side of RB -> CW search
 						//mark window as read
-
 					}
 				}
 
@@ -696,7 +698,7 @@ void StudentsRobot::updateStateMachine() {
 			//end of searching SM//
 
 			case Communication:
-
+/////////////////////////////////////////////////////////////////////////////Ryans code deploying ladder, buzzer, printing to field controller, call return home
 				break;
 			case Halt:
 

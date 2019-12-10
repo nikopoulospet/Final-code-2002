@@ -17,6 +17,8 @@ private:
 	//GetIMU * IMU;
 	 */
 	bool loopFlag = false;
+
+
 	double now = 0;
 
 
@@ -35,7 +37,7 @@ public:
 	int posX = 0;
 	int posY = 5; // Starting position for robot
 	double avgTraveled = 0.0;
-	double blockLeninDeg = 710; //* 3:1 ??? (914 * 6)/5 -> 1098 + 1200 /2 = */
+	double blockLeninDeg = 800; //* 3:1 ??? (914 * 6)/5 -> 1098 + 1200 /2 = */
 	int IMUheadingModulo = 0;
 	int prevIMUheading = 0;
 	double deltaEncoder0 = 0;

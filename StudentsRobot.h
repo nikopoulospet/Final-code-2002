@@ -91,6 +91,7 @@ private:
     DrivingChassis  ace;  //added driving chassis object for our robot
     Sensors Ultrasonic1;
     Map fieldMap;
+    Sensors Ultrasonic2;
 	RobotStateMachine nextStatus = StartupRobot;
 	IRCamSimplePacketComsServer * IRCamera;
 	GetIMU * IMU;
@@ -149,6 +150,7 @@ public:
 	double averageUltrasonicReadings = 0;
 	double maxUltrasonicReading = 0;
 	boolean checkedForRoadBlock = false;
+	double ultrasonicPing2 = 0;
 
 
 

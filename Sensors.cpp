@@ -41,6 +41,13 @@ double Sensors::PingUltrasonic(){
 	return -1.0;
 }
 
+boolean Sensors::foundRoadBlockInStreet() {
+	if(PingUltrasonic() >= 300.0 && PingUltrasonic() <= 500) {
+		return true;
+	}
+	return false;
+}
+
 
 
 

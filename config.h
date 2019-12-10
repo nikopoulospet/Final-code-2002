@@ -81,6 +81,8 @@
 //Ultrasonic Pins
 #define TrigPIN					33
 #define EchoPIN					32
+#define TrigPIN2				35
+#define EchoPIN2				34
 
 
 #endif /* SRC_CONFIG_H_ */

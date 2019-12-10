@@ -9,13 +9,14 @@
 #define SENSORS_H_
 #include "config.h"
 #include "Arduino.h"
+#include "Pose.h"
 
 class Sensors {
 public:
 	Sensors();
 	int attach(int trig, int echo);
 	double PingUltrasonic();
-
+	boolean foundRoadBlockInStreet();
 
 private:
 	int triggerPin = 0;
