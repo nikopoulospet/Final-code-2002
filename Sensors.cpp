@@ -17,19 +17,19 @@ int Sensors::attach(int trig, int echo){
 	this->triggerPin = trig;
 	this->echoPin = echo;
 	pinMode(this->triggerPin, OUTPUT);
-	digitalWrite(this->triggerPin, LOW);
+	digitalWrite(this->triggerPin, LOW);  //must write trigger pin to low at the attach function
 	pinMode(this->echoPin, INPUT);
 	return 0;
 }
 
 double Sensors::PingUltrasonic(){
-	if(!reading){
-		if(trigger){
+	if(!reading){ //if we have not taken a reading yet,
+		if(trigger){  //write trigger pin to high and do not enter this loop until a reading has been taken
 			dTime = micros();
 			digitalWrite(triggerPin, HIGH);
 			trigger = false;
 		}
-		if(!trigger && dTime + 20 < micros()){
+		if(!trigger && dTime + 100 < micros()){ //if 20 microseconds have gone by (datasheet value), set triggerpin to low and measure the pulsewidth of the echo pin
 			digitalWrite(triggerPin, LOW);
 			reading = false;
 			trigger = true;
