@@ -208,7 +208,7 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			status = piezzoBuzzer;
+			status = Scanning;
 			//scanningStatus = Driving;
 			SearchingRun = true;
 		}
@@ -654,9 +654,12 @@ void StudentsRobot::updateStateMachine() {
 						}
 
 					}else{
-						//TestingVar++;
-						firstRun = true;
-						searchingStatus = searchRow;
+						if(ace.robotPose.posY == row){
+							searchingStatus = returnToRow;
+						} else{
+							firstRun = true;
+							searchingStatus = searchRow;
+						}
 					}
 				}
 				break;
@@ -664,8 +667,53 @@ void StudentsRobot::updateStateMachine() {
 			case turnCorner:
 				Serial.println("turnTHECOrnerrrrrrrrrrrrrrrrrrrr");
 				//if RB go to handleRB
-				if(ace.turnTheCorner(true)){
-					searchingStatus = lookForRobin;
+				if(fieldMap.edgeCase(buildingToSearch, row) == 1){ // edge case 1 is (1,5) corner building search CW , only one window
+					switch (EC1) {
+						case orientto2:
+							if(ace.turnTo(90)){
+								EC1 = turn;
+							}
+							break;
+						case turn:
+							if(ace.turnTheCorner(false)){
+								EC1 = orientto2;
+								searchingStatus = lookForRobin;
+							}
+							break;
+					}
+
+				}else if(fieldMap.edgeCase(buildingToSearch, row) == 2){
+					switch (EC2){ // broken========================================================================================
+					case turnCCW:
+						if(ace.turnTheCorner(true)){
+							EC2 = orientto1;
+							searchingStatus = lookForRobin;
+						}
+						break;
+					case orientto1:
+						if(ace.turnTo(0)){
+							EC2 = turnCW1;
+							//searchingStatus = lookForRobin;
+						}
+						break;
+					case turnCW1:
+						if(ace.turnTheCorner(false)){
+							EC2 = turnCW2;
+							searchingStatus = lookForRobin;
+						}
+						break;
+					case turnCW2:
+						if(ace.turnTheCorner(false)){
+							EC2 = turnCCW;
+							searchingStatus = lookForRobin;
+						}
+						break;
+					}
+
+				}else{
+					if(ace.turnTheCorner(true)){
+						searchingStatus = lookForRobin;
+					}
 				}
 				if(RoadBlockDetected){
 					previousStatus = turnCorner;
@@ -676,47 +724,13 @@ void StudentsRobot::updateStateMachine() {
 
 				break;
 
-			case HandleRoadBlock:
-				if(previousStatus == turnCorner){
-					if(firstRun){
-						firstRun = false;
-						currentXpos = ace.robotPose.posX;
-						currentYpos = ace.robotPose.posY;
-						//Calculate roadblock X and Y
-
-						//if robot is driving in Y pos
-						//turn to 270
-						//Else
-						//turn to 0
-
-						//widows to scan--;
-					}
-
-					// or add switch and set status to inPath
-
-					//drive up 2 plots
-					//2X CCW turn
-					//drive up 2 plots.
+			case returnToRow:
+				if(ace.driveTo(ace.robotPose.posX, row - 1)){
+					searchingStatus = turnCorner;
 				}
+				break;
 
-				if(/* roadblock X Y match targetPos X Y*/ false){
-					if(previousStatus == driveToRow){
-						//just drive around to another row pos position
-						//back up to prev row
-						//face 4
-						//drive to x = 0 or next block
-						//turn corner 2 X
-						//end
-					}else if(previousStatus == searchRow){
-						//drive to next building side
-						//either on 0 X side of RB -> CCW search
-						//on 5 X side of RB -> CW search
-						//mark window as read
-					}
-				}
-
-				//handle RB when done return to previous state
-
+			case HandleRoadBlock: // this is only 2.5 points. nuked for now
 				break;
 
 			}

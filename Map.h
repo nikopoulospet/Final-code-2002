@@ -69,6 +69,8 @@ public:
 
 	Plot& getPlot(int x, int y);
 
+	int edgeCase(int x, int y);
+
 };
 
 

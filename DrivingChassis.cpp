@@ -212,6 +212,10 @@ bool DrivingChassis::turn90CCW(){
 	static bool trigger = true;
 	if(trigger){
 		trigger = false;
+		dir = robotPose.prevIMUheading;
+		if(dir == 1){
+
+		}
 		dir = this->robotPose.IMUheadingModulo - 90;
 	}
 	if(turnTo(dir)){

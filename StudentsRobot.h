@@ -40,7 +40,7 @@ enum ScanningStateMachine {
 };
 
 enum SearchingStateMachine {
-	driveToRow = 0, searchRow = 1, orient = 2, lookForRobin = 3, turnCorner = 4, HandleRoadBlock = 5,
+	driveToRow = 0, searchRow = 1, orient = 2, lookForRobin = 3, turnCorner = 4, HandleRoadBlock = 5, returnToRow = 6,
 };
 
 enum turningCorner {
@@ -49,6 +49,14 @@ enum turningCorner {
 
 enum testing{
 	test0 = 0, test1 = 1, test2 = 2,
+};
+
+enum edgeCase1{
+	orientto2 = 0, turn = 1,
+};
+
+enum edgeCase2{
+	turnCCW = 0, orientto1 = 1, turnCW1 = 2, turnCW2 = 3,
 };
 /**
  * @enum ComStackStatusState
@@ -133,6 +141,9 @@ private:
 	double Testheading = 0;
 
 	bool run = true;
+
+	edgeCase1 EC1 = orientto2;
+	edgeCase2 EC2 = turnCCW;
 public:
 	//volatile interupt for US sensor (add later)
 	boolean trigger = true;

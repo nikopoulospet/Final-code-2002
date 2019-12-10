@@ -21,7 +21,7 @@ oneone(false, false, false, false, "200 Oak Street", "500 2nd Avenue", "100 Beec
 onetwo(true,false,false,false,0),
 onethree(false, false, false, false, "400 Oak Street", "500 3rd Avenue", "300 Beech Street", "600 2nd Avenue" ,4),
 onefour(true,false,false,false,0),
-onefive(false, false, false, false, "600 Oak Street", "No Address", "500 Beech Street", "600 3rd Avenue" , 2),
+onefive(false, false, false, false, "600 Oak Street", "No Address", "500 Beech Street", "600 3rd Avenue" , 1), // inverse corner building
 twozero(true,false,false,false,0),
 twoone(true,false,false,false,0),
 twotwo(true,false,false,false,0),
@@ -33,7 +33,7 @@ threeone(false, false , false, false, "200 Beech Street", "300 2nd Avenue", "100
 threetwo(true,false,false,false,0),
 threethree(false, false, false, false, "400 Beech Street", "300 3rd Avenue", "300 Maple Street", "400 2nd Avenue" ,4),
 threefour(true,false,false,false,0),
-threefive(false, false, false, false, "600 Beech Street", "No Address", "500 Maple Street", "400 3rd Avenue", 2),
+threefive(false, false, false, false, "600 Beech Street", "No Address", "500 Maple Street", "400 3rd Avenue", 3), // start at top, go CWW , return to top search CW
 fourzero(true,false,false,false,0),
 fourone(true,false,false,false,0),
 fourtwo(true,false,false,false,0),
@@ -110,6 +110,15 @@ Plot& Map::getPlot(int x, int y) {
 	return map[x][y];
 }
 
+int Map::edgeCase(int x, int y){
+	if((x == 1) && (y == 5)){
+		return 1;
+	}else if((x == 3) && (y == 5)){
+		return 2;
+	}else{
+		return 0;
+	}
+}
 
 
 
