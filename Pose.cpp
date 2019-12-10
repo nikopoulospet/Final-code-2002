@@ -151,6 +151,36 @@ void Pose::setRobotPosition(int posX, int posY){
 	this->posY = posY;
 }
 
+int Pose::returnRobotHeading(double IMUheading){
+	IMUheadingModulo = int(IMUheading) % 360;
+	if((abs(IMUheadingModulo) <= 360 && abs(IMUheadingModulo) >= 340) || (abs(IMUheadingModulo) >= 0 && abs(IMUheadingModulo) <= 20)){//IMU is in degrees
+		generalIMUheading = 0;
+	}
+
+	if((abs(IMUheadingModulo) <= 110 && abs(IMUheadingModulo) >= 70)){//IMU is in degrees
+		if(IMUheadingModulo > 0){
+			generalIMUheading = 90;
+		}else{
+			generalIMUheading = 270;
+		}
+	}
+
+	if((abs(IMUheadingModulo) <= 200 && abs(IMUheadingModulo) >= 160)){
+		generalIMUheading = 180;
+	}
+
+
+	if((abs(IMUheadingModulo) >= 250 && abs(IMUheadingModulo) <= 290)){//IMU is in degrees
+		if(IMUheadingModulo > 0){
+			generalIMUheading = 270;
+		}else{
+			generalIMUheading = 90;
+		}
+	}
+
+	return generalIMUheading;
+
+}
 
 
 

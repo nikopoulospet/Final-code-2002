@@ -212,11 +212,7 @@ bool DrivingChassis::turn90CCW(){
 	static bool trigger = true;
 	if(trigger){
 		trigger = false;
-		dir = robotPose.prevIMUheading;
-		if(dir == 1){
-
-		}
-		dir = this->robotPose.IMUheadingModulo - 90;
+		dir = robotPose.returnRobotHeading(this->IMU->getEULER_azimuth()) - 90;
 	}
 	if(turnTo(dir)){
 		trigger = true;
@@ -229,7 +225,7 @@ bool DrivingChassis::turn90CW(){
 	static bool trigger = true;
 	if(trigger){
 		trigger = false;
-		dir = this->robotPose.IMUheadingModulo + 90;
+		dir = robotPose.returnRobotHeading(this->IMU->getEULER_azimuth()) + 90;
 	}
 	if(turnTo(dir)){
 		trigger = true;
@@ -245,6 +241,8 @@ bool DrivingChassis::driveTo(int Xcord, int Ycord){
 		//Generating a path
 		Xdist = Xcord - this->robotPose.posX;
 		if(Xdist != 0){
+
+
 			if(Xcord < this->robotPose.posX){
 				heading1 = -90;
 			}

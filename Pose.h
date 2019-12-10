@@ -42,12 +42,14 @@ public:
 	int prevIMUheading = 0;
 	double deltaEncoder0 = 0;
 	double deltaEncoder1 = 0;
+	int generalIMUheading = 0;
+
 
 	void updateEncoderPositions(double timestamp, double encoder0, double encoder1, double IMUheading);
 
 	void setRobotPosition(int posX, int posY);
 	void updateRobotCoordinates(double encoder0, double encoder1, double IMUheading);
-
+	int returnRobotHeading(double IMUheading);
 };
 
 
