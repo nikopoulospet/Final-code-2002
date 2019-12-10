@@ -188,6 +188,27 @@ bool DrivingChassis::turnTo(double deg){
 	return false;
 }
 
+bool DrivingChassis::turnNum(int dir){
+	if(dir == 1){
+		if(turnTo(0)){
+			return true;
+		}
+	}else if(dir == 2){
+		if(turnTo(90)){
+			return true;
+		}
+	}else if(dir == 3){
+		if(turnTo(180)){
+			return true;
+		}
+	}else{
+		if(turnTo(270)){
+			return true;
+		}
+	}
+	return false;
+}
+
 
 void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ // usually 25 for point turn, usually 50 for driving
 	targetHeading = targetHeading * (PI/180);

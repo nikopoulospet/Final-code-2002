@@ -348,7 +348,7 @@ void StudentsRobot::updateStateMachine() {
 				DeltaX = abs(ace.robotPose.posX) - abs(DeltaX);
 				DeltaY = abs(ace.robotPose.posY) - abs(DeltaY);
 			}
-			if((DeltaX != 0 || DeltaY != 0) && false){ //false is replaced by RB scan
+			if((DeltaX != 0 || DeltaY != 0) && false){ //false is replaced by RB scan ////// add check for bad plots
 				//trigger RoadBlock Scan every time robot moves a coordinate
 				RoadBlockDetected = true;
 			}
@@ -474,7 +474,8 @@ void StudentsRobot::updateStateMachine() {
 				//all windows checked go to driveToRow
 				if(firstRun){
 					firstRun = false;
-					windowsToSearch = fieldMap.windowsToSearch(buildingToSearch, row);
+					windowsToSearch = fieldMap.windowsToSearch(buildingToSearch, row) + RBmodifyer;
+					RBmodifyer = 0;
 				}
 				Serial.println(windowsToSearch);
 
@@ -509,6 +510,89 @@ void StudentsRobot::updateStateMachine() {
 				break;
 
 			case HandleRoadBlock:
+				if(previousStatus == driveToRow){ // if from driving to row -> will drive to row in alternate path
+					if(firstRun){
+						firstRun = false;
+						currentXpos = ace.robotPose.posX;
+						currentYpos = ace.robotPose.posY;
+						currentHeading = ace.robotPose.returnRobotHeading(this->IMU->getEULER_azimuth());
+						counter = 0;
+					}
+
+					if(currentHeading == 3){
+						switch(dtrop1){
+						case turn:
+							if(ace.turnNum(4)){
+								dtrop1 = CCW;
+							}
+							break;
+
+						case CCW:
+							if(counter < 2 && ace.turnTheCorner(true)){
+								counter++;
+							}
+							if(counter >= 2){
+								firstRun = true;
+								searchingStatus = searchRow;
+							}
+							break;
+
+						}
+					} else if (currentHeading == 4 || currentHeading == 2){
+						if(ace.driveTo(currentTargetX, currentTargetY + 2)){
+							firstRun = true;
+							searchingStatus = searchRow;
+						}
+					}
+			}
+				if(previousStatus == searchRow){
+					if(firstRun){
+						firstRun = false;
+						currentXpos = ace.robotPose.posX;
+						currentYpos = ace.robotPose.posY;
+						currentHeading = ace.robotPose.returnRobotHeading(this->IMU->getEULER_azimuth());
+						lookingAtX = ace.robotPose.lookingAtX();
+						lookingAtY = ace.robotPose.lookingAtY();
+						if(currentHeading == 4){
+							turnCCWbool = true;
+						} else{
+							turnCCWbool = false;
+						}
+						counter = 0;
+						// have current target X and Y
+					}
+
+					if(((lookingAtX == currentTargetX) && (lookingAtY == currentTargetY)) && (currentHeading != 4)){// if roadblock is in final pos
+						RBmodifyer = 1; // subtract 1 window
+					} else{
+						switch(sropa){
+						case turn:
+							if(ace.turnNum(1)){
+								dtrop1 = turnTheCorner;
+							}
+							break;
+
+						case CCW:
+							if(counter < 2 && ace.turnTheCorner(turnCCWbool)){
+								counter++;
+							}
+							if(counter >= 2){
+								searchingStatus = searchRow;
+							}
+							break;
+
+						}
+
+					}
+				}
+
+
+
+
+
+
+
+
 				if(previousStatus == turnCorner){
 					if(firstRun){
 						firstRun = false;
@@ -520,7 +604,25 @@ void StudentsRobot::updateStateMachine() {
 							//turn to 270
 						//Else
 							//turn to 0
+						currentHeading = ace.robotPose.returnRobotHeading(this->IMU->getEULER_azimuth());
+						if((currentYpos == 4 || currentYpos == 5) && currentHeading ==3){
+							// send to handleBottom
+						}
 
+						if(true){ //traveling in ccw search
+							if(currentHeading == 4 || currentHeading == 2){
+								faceDir = 270;
+							} else {
+								faceDir = 0;
+							}
+						} else {
+							if(currentHeading == 4 || currentHeading == 2){
+								faceDir = 90;
+							} else{
+								faceDir = 180;
+							}
+						}
+						windowsToSearch--;
 						//widows to scan--;
 					}
 

@@ -44,6 +44,9 @@ public:
 	void updateEncoderPositions(double timestamp, double encoder0, double encoder1, double IMUheading);
 	void setRobotPosition(int posX, int posY);
 	void updateRobotCoordinates(double encoder0, double encoder1, double IMUheading);
+	int returnRobotHeading(double IMUheading);
+	int lookingAtX();
+	int lookingAtY();
 };
 
 

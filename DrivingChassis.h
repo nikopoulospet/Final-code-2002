@@ -236,6 +236,8 @@ public:
 
 	bool driveOneBlock();
 
+	bool turnNum(int dir);
+
 };
 
 

@@ -70,6 +70,14 @@ enum ComStackStatusState {
 	Fault_obstructed_path = 11,
 	Fault_E_Stop_pressed = 12
 };
+
+enum DTROP1 {
+	turn =0, CCW = 1,
+};
+
+enum SROPA {
+	turn = 0, turnTheCorner = 1,
+};
 /**
  * @class StudentsRobot
  */
@@ -117,7 +125,7 @@ private:
 
 	int TestingVar = 0; // added because no way to update map yet!!!!!!!!!!!!!!!!!!!
 
-	//Halting state machine Vars
+	//RB state machine Vars
 	SearchingStateMachine previousStatus = driveToRow;
 	int DeltaX = 0;
 	int DeltaY = 0;
@@ -130,6 +138,18 @@ private:
 	double Testheading = 0;
 
 	bool run = true;
+
+	int currentHeading = 0;
+	double faceDir = 0;
+
+
+	DTROP1 dtrop1 = turn;
+	int counter = 0;
+	int lookingAtX = 0;
+	int lookingAtY = 0;
+	bool turnCCWbool = false;
+	SROPA sropa = turn;
+	int RBmodifyer = 0;
 public:
 	//volatile interupt for US sensor (add later)
 	boolean trigger = true;
