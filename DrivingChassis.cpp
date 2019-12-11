@@ -182,7 +182,7 @@ bool DrivingChassis::turnTo(double deg){
 	} else if(effort > -0.5 && effort < .5){
 		return true;
 	}
-	Serial.println(effort);
+	//Serial.println(effort);
 	this->myleft->setVelocityDegreesPerSecond(- effort * 1.20);
 	this->myright->setVelocityDegreesPerSecond(- effort);
 	return false;
@@ -316,8 +316,8 @@ int DrivingChassis::getOrientation(int building, int row){
 bool DrivingChassis::turnTheCorner(bool CCW){
 	switch(corner){
 	case drive:
-		Serial.println("TURNTHECORNER DRIVING");
-		Serial.println(driveCount);
+		//Serial.println("TURNTHECORNER DRIVING");
+		//Serial.println(driveCount);
 		if(driveOneBlock()){
 			driveCount++;
 			corner = turning;
@@ -325,8 +325,8 @@ bool DrivingChassis::turnTheCorner(bool CCW){
 		break;
 
 	case turning:
-		Serial.println("TURNTHECORNER TURNING");
-		Serial.println(driveCount);
+	//	Serial.println("TURNTHECORNER TURNING");
+	//	Serial.println(driveCount);
 		if(driveCount < 2 && CCW){
 			if(turn90CCW()){
 				corner = drive;

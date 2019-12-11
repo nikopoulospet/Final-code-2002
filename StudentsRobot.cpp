@@ -34,14 +34,14 @@ int interruptCounter = 0;
 void setPiezoStatus() {
 	IRdetected = true;
 	interruptCounter++;
-	Serial.println("INTERRUPT TRIGGED");
+	//Serial.println("INTERRUPT TRIGGED");
 
 }
 
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 		PIDMotor * motor3, Servo * servoTurret, Servo * servoLadder,
 		IRCamSimplePacketComsServer * IRCam, GetIMU * imu) :
-						ace(motor1, motor2, wheelTrackMM, wheelRadiusMM, imu), Ultrasonic1(), fieldMap(), Ultrasonic2()
+										ace(motor1, motor2, wheelTrackMM, wheelRadiusMM, imu), Ultrasonic1(), fieldMap(), Ultrasonic2()
 
 {
 	Serial.println("StudentsRobot::StudentsRobot constructor called here ");
@@ -194,7 +194,7 @@ void StudentsRobot::updateStateMachine() {
 	long now = millis();
 	if (status != StartupRobot){
 		ace.loop();
-	/*	if(IRdetected && interruptCounter <= 1) { //if interrupt is triggered and beacon is detected
+		/*	if(IRdetected && interruptCounter <= 1) { //if interrupt is triggered and beacon is detected
 			status = piezzoBuzzer;
 		} */
 	}
@@ -242,7 +242,7 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			status = Scanning;
+			status = piezzoBuzzer;
 			scanningStatus = Driving;
 			searchingStatus = driveToRow;
 			SearchingRun = true;
@@ -250,9 +250,9 @@ void StudentsRobot::updateStateMachine() {
 		break;
 
 	case Testing:
-				if (ace.turnTo(180)) {
-					status = Testting2;
-				}
+		if (ace.turnTo(180)) {
+			status = Testting2;
+		}
 		break;
 
 	case Testting2:
@@ -344,7 +344,7 @@ void StudentsRobot::updateStateMachine() {
 			motor1->setVelocityDegreesPerSecond(0); //halt the motors while we ping the buildings
 			motor2->setVelocityDegreesPerSecond(0);
 			ultrasonicPing = Ultrasonic1.PingUltrasonic();
-			Serial.println(String(ultrasonicPing));
+			//	Serial.println(String(ultrasonicPing));
 			if (ultrasonicPing > maxUltrasonicReading) {
 				maxUltrasonicReading = ultrasonicPing;
 			}
@@ -439,9 +439,6 @@ void StudentsRobot::updateStateMachine() {
 
 		case foundBuilding:
 			if (!previousFoundBuilding) { //event checking making sure building only gets checked one time
-				Serial.println(
-						"BUILDING DISTANCE FROM ROBOT: ///////////////////////////////////"
-						+ String(buildingDistanceFromRobot));
 				if (blocksTravelledX < 5) {
 					if (buildingDistanceFromRobot == 1) { // if the building is at Y = 1 given ultrasonic data
 						//	Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
@@ -592,10 +589,10 @@ void StudentsRobot::updateStateMachine() {
 				RoadBlockDetected = true;
 			}
 
-			beaconDetected = scanBeacon();
+			// = scanBeacon();
 
 			case driveToRow:
-				Serial.println("Drive to row");
+				//		Serial.println("Drive to row");
 				//if RB go to handleRB
 				//next row reached go to search row (done)
 				if (firstRun) {
@@ -629,8 +626,8 @@ void StudentsRobot::updateStateMachine() {
 				break;
 
 			case searchRow:
-				Serial.print(
-						"searchRow================================================");
+				//	Serial.print(
+				//			"searchRow================================================");
 				//if RB go to handleRB
 				//building to search reached go to orient
 				if (firstRun) {
@@ -640,8 +637,8 @@ void StudentsRobot::updateStateMachine() {
 					buildingToSearch = fieldMap.buildingToSearch(row);
 					//buildingsSearched = TestingVar;
 				}
-				Serial.println(buildingToSearch);
-				Serial.println(buildingsPerRow);
+				//	Serial.println(buildingToSearch);
+				//	Serial.println(buildingsPerRow);
 				//Serial.println(buildingsSearched);
 
 				//				if(buildingsSearched >= buildingsPerRow){
@@ -653,7 +650,7 @@ void StudentsRobot::updateStateMachine() {
 					firstRun = true;
 					searchingStatus = driveToRow; // no more buildings in row
 				} else {
-					Serial.println(row);
+					//		Serial.println(row);
 					if (ace.driveTo(buildingToSearch, row - 1)) { // go to spot above building
 						firstRun = true;
 						searchingStatus = orient;
@@ -673,16 +670,16 @@ void StudentsRobot::updateStateMachine() {
 				break;
 
 			case orient:
-				Serial.println(
-						"ORIENTING+++++++++++++++++++++++++++++++++++++++++++++++++++");
+				//		Serial.println(
+				//				"ORIENTING+++++++++++++++++++++++++++++++++++++++++++++++++++");
 				//oriented, go to look for robin
 				if (firstRun) {
 					firstRun = false;
 					orienting = false;
 					orientation = ace.getOrientation(buildingToSearch, row); // int representing how to orient the robot will go wrong if robot is not directly NSE or W of the building
 				}
-				Serial.println(row);
-				Serial.println(buildingToSearch);
+				//		Serial.println(row);
+				//		Serial.println(buildingToSearch);
 				if (orientation == 1 && !orienting) {
 					orienting = true;
 					orientHeading = 0;
@@ -716,16 +713,22 @@ void StudentsRobot::updateStateMachine() {
 					firstRun = false;
 					windowsToSearch = fieldMap.windowsToSearch(buildingToSearch, row);
 				}
-				Serial.println(windowsToSearch);
+				//Serial.println(windowsToSearch);
 
 				if (false) { // ping window
 					///////////////////////////////TOGGLE TURRET, PING IR, IF NO BUILDING SET WINDOWS TO SEARCH TO 0
 					// Announcing state
 				} else {
 					if (windowsToSearch != 0) {
-						if (beaconDetected) {
+						if (scanBeacon()) {
+							//status = piezzoBuzzer;
+							Serial.println("BEACON DETECTED IN LOOKFORROBIN++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+							Serial.println("BEACON DETECTED IN LOOKFORROBIN++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+							Serial.println("BEACON DETECTED IN LOOKFORROBIN++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+							Serial.println("BEACON DETECTED IN LOOKFORROBIN++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 							//status = piezzoBuzzer;
 							status = Halting;
+							break;
 						} else {
 							windowsToSearch--;
 							searchingStatus = turnCorner;
@@ -745,8 +748,10 @@ void StudentsRobot::updateStateMachine() {
 					searchingStatus = lookForRobin;
 				}
 
-				if(beaconDetected) {
+				if(scanBeacon()) {
 					//status = piezzoBuzzer;
+					Serial.println("BEACON DETECTED IN TURN CORNER++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+
 					status = Halting;
 					break;
 				}
@@ -809,28 +814,41 @@ void StudentsRobot::updateStateMachine() {
 			//end of searching SM//
 
 			case Communication:
-				/////////////////////////////////////////////////////////////////////////////Ryans code deploying ladder, buzzer, printing to field controller, call return home
-			if(communicationCounter < 2) { //run two instances of driving straight
-				if (fractionDistanceTrigger) { //trigger keeps a one time set of our target distance each time we need to travel a block
-					target2 = hardCodeDistance;
-					target2 = ace.mmTOdeg(target2) + (motor1->getAngleDegrees()); //adds on the degrees that we need to travel to our current position instead of resetting encoders
-					fractionDistanceTrigger = false;
+				if(commTrigger) {
+					IMUHeadingCommunication = IMU->getEULER_azimuth();
+					commTrigger = false;
 				}
-				distanceError = abs(this->motor1->getAngleDegrees()) - target2; //calculate distance error between our current position and final position
-				effort = 0.25 * distanceError;
-				ace.driveStraight(-effort, 0, 200);
-				if (motor1->getAngleDegrees() >= target2) { //if we have surpassed the target, allow for another set of target distance, increment block
+				/*if(((ace.robotPose.posY = 5) && (abs(IMU->getEULER_azimuth()) > 160 && abs(IMU->getEULER_azimuth() < 200))) || ((ace.robotPose.posX = 5)  && (IMU->getEULER_azimuth() > 70 && IMU->getEULER_azimuth() < 110))){
 					ladderDeploy(*servoLadder);
-					//servoLadder->write(2350);
-					//ladderHolster(*servoLadder);
-					fractionDistanceTrigger = true;
-					communicationCounter++;
-				}
-			}
-			else{
-				status = Halting;
-			}
+					if(millis() >= communicationTime) {
+						ladderHolster(*servoLadder);
+					}
+				} */
+				if (communicationCounter < 2) { //run two instances of driving straight
+					Serial.println("COMMUNICATION COUNTER: " + String(communicationCounter));
+					if (fractionDistanceTrigger) { //trigger keeps a one time set of our target distance each time we need to travel a block
+						target2 = hardCodeDistance;
+						target2 = ace.mmTOdeg(target2) + (motor1->getAngleDegrees()); //adds on the degrees that we need to travel to our current position instead of resetting encoders
+						fractionDistanceTrigger = false;
+						Serial.println("WE ARE IN THIS SHIT");
+					}
+					distanceError = abs(this->motor1->getAngleDegrees()) - target2; //calculate distance error between our current position and final position
+					effort = 0.25 * distanceError;
+					Serial.println("EFFORT" + String(effort));
+					ace.driveStraight(-effort, IMUHeadingCommunication, 200);
+					if (motor1->getAngleDegrees() >= target2) { //if we have surpassed the target, allow for another set of target distance, increment block
+						ladderDeploy(*servoLadder);
+						Serial.println("AYYY LMAOOOOOOOOOOO");
+						//servoLadder->write(2350);
+						//ladderHolster(*servoLadder);
+						fractionDistanceTrigger = true;
+						communicationCounter++;
+					}
 
+				}
+				else{
+					status = Halting;
+				}
 				break;
 
 			case piezzoBuzzer:
@@ -900,9 +918,12 @@ void StudentsRobot::updateStateMachine() {
 							outputTone = true;
 						}
 					}
+					Serial.println("ASUDLKJSAJMDJ:OIMSAJM><MD><DKJMSAD><MSOI><DMDSAOI><SADKJMSADLK><SADJMOISA><DJSAMD");
 				} else {
-					IRdetected = 0;
+					//IRdetected = 0;
+					Serial.println("HELOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
 					status = Communication;
+					communicationTime = millis() + 2000;
 				}
 				break;
 			case Halt:

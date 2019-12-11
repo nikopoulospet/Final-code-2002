@@ -155,10 +155,13 @@ public:
 	boolean checkedForRoadBlock = false;
 	double ultrasonicPing2 = 0;
 	boolean fractionDistanceTrigger = true;
-	double hardCodeDistance = 135;
+	double hardCodeDistance = 300;
 	double target2 = 0;
 	boolean beaconDetected = false;
 	int communicationCounter = 0;
+	long communicationTime = 0;
+	double IMUHeadingCommunication = 0;
+	boolean commTrigger = true;
 
 
 	/**
