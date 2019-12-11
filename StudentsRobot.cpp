@@ -615,6 +615,7 @@ void StudentsRobot::updateStateMachine() {
 					}
 				} else {
 					row += 2;
+
 				}
 				//check RB
 				if (RoadBlockDetected) {
