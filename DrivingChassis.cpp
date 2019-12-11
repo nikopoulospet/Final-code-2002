@@ -183,7 +183,7 @@ bool DrivingChassis::turnTo(double deg){
 		return true;
 	}
 	Serial.println(effort);
-	this->myleft->setVelocityDegreesPerSecond(- effort * 1.05);
+	this->myleft->setVelocityDegreesPerSecond(- effort * 1.20);
 	this->myright->setVelocityDegreesPerSecond(- effort);
 	return false;
 }
@@ -212,7 +212,7 @@ bool DrivingChassis::turn90CCW(){
 	static bool trigger = true;
 	if(trigger){
 		trigger = false;
-		dir = robotPose.returnRobotHeading(this->IMU->getEULER_azimuth()) - 90;
+		dir = robotPose.returnRobotHeading(this->IMU->getEULER_azimuth()) + 90;
 	}
 	if(turnTo(dir)){
 		trigger = true;
@@ -225,7 +225,7 @@ bool DrivingChassis::turn90CW(){
 	static bool trigger = true;
 	if(trigger){
 		trigger = false;
-		dir = robotPose.returnRobotHeading(this->IMU->getEULER_azimuth()) + 90;
+		dir = robotPose.returnRobotHeading(this->IMU->getEULER_azimuth()) - 90;
 	}
 	if(turnTo(dir)){
 		trigger = true;

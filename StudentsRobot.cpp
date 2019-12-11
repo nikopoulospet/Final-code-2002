@@ -58,7 +58,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	motor3->myPID.setpid(0.00015, 0, 0);
 
 	motor1->velocityPID.setpid(0.004, 0.00001, 0);
-	motor2->velocityPID.setpid(0.004, 0.00001, 0);
+	motor2->velocityPID.setpid(0.004, 0.0007, 0);
 	motor3->velocityPID.setpid(0.1, 0, 0);
 	// compute ratios and bounding
 	double motorToWheel = 3;
@@ -530,6 +530,7 @@ void StudentsRobot::updateStateMachine() {
 
 				if(row > 5){
 					status = Halting; // return to home if no beacon detected
+
 				}
 
 
@@ -537,6 +538,7 @@ void StudentsRobot::updateStateMachine() {
 					if(ace.driveTo(2, row - 1)){
 						firstRun = true;
 						searchingStatus = searchRow;
+
 					}
 				}else {
 					row+=2;
@@ -575,11 +577,13 @@ void StudentsRobot::updateStateMachine() {
 				if(buildingToSearch == 0){
 					firstRun = true;
 					searchingStatus = driveToRow; // no more buildings in row
+					break;
 				}else{
 					Serial.println(row);
 					if(ace.driveTo(buildingToSearch, row -1)){ // go to spot above building
 						firstRun = true;
 						searchingStatus = orient;
+
 					}
 				}
 				//}else{firstRun = true;searchingStatus = driveToRow;}
@@ -811,6 +815,23 @@ void StudentsRobot::updateStateMachine() {
 				}
 				else {
 					status = Communication;
+				}
+				break;
+
+			case driveHome:
+				switch(gH){
+				case toNearest:
+					if((ace.robotPose.posY == 0)||(ace.robotPose.posY == 2)||(ace.robotPose.posY == 4)){
+						gH = toStart;
+					} else {
+						ace.driveTo(ace.robotPose.posX, ace.robotPose.posY -1);
+					}
+					break;
+				case toStart:
+					if(ace.driveTo(0, 5)){
+						status = Halting;
+					}
+					break;
 				}
 				break;
 			case Halt:
