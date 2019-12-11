@@ -170,6 +170,10 @@ void DrivingChassis::turn(double deg, double Kp) {
 }
 
 bool DrivingChassis::turnTo(double deg){
+	static bool trigger = true;
+	if(trigger){
+
+	}
 	deg = deg * (PI/180);
 	double headingError = (((this->robotPose.IMUheadingModulo) * (PI/180)) * 0.85 + this->robotPose.theta * 0.15) - deg; // IMU MOD ++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -179,7 +183,7 @@ bool DrivingChassis::turnTo(double deg){
 	}
 	else if (effort < -50) {
 		effort = -50;
-	} else if(effort > -0.5 && effort < .5){
+	} else if(effort > -1 && effort < 1){
 		return true;
 	}
 	Serial.println(effort);
@@ -266,28 +270,33 @@ bool DrivingChassis::driveTo(int Xcord, int Ycord){
 
 	switch(Step){
 	case toHeading1:
+		Serial.println("H1");
 		if(turnTo(heading1)){
 			Step = driveX;
 		}
 		break;
 	case driveX:
+		Serial.println("DX");
 		this->driveStraight(200, heading1, 1000);
 		if(this->robotPose.posX == Xcord){
 			Step = toHeading2;
 		}
 		break;
 	case toHeading2:
+		Serial.println("H2");
 		if(turnTo(heading2)){
 			Step = driveY;
 		}
 		break;
 	case driveY:
+		Serial.println("DY");
 		this->driveStraight(200, heading2, 1000);
 		if(this->robotPose.posY == Ycord){
 			Step = done;
 		}
 		break;
 	case done:
+		Serial.println("DONE");
 		trigger = true;
 		Step = toHeading1;
 		return true;

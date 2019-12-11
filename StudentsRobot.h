@@ -130,6 +130,7 @@ private:
 	bool orienting = false;
 
 	int TestingVar = 0; // added because no way to update map yet!!!!!!!!!!!!!!!!!!!
+	bool returnedToRow = false;
 
 	//Halting state machine Vars
 	SearchingStateMachine previousStatus = driveToRow;
@@ -148,6 +149,7 @@ private:
 	edgeCase1 EC1 = orientto2;
 	edgeCase2 EC2 = turnCCW;
 	goHome gH = toNearest;
+
 public:
 	//volatile interupt for US sensor (add later)
 	boolean trigger = true;
