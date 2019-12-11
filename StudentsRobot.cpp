@@ -9,7 +9,7 @@
 #include "StudentsRobot.h"
 #define wheelTrackMM  225   //pass in wheeltrack and wheel radius into mm
 #define	wheelRadiusMM 25.6
-static double sumUltrasonicReadings = 0;  //used for averaging ultrasonic readings b/c they are inconsistant
+static double sumUltrasonicReadings = 0; //used for averaging ultrasonic readings b/c they are inconsistant
 static int countUltrasonicReadings = 0;
 
 //PIEZO
@@ -28,12 +28,24 @@ int cSh = 554;
 int d = 587;
 int noteCount = 1;
 
+boolean IRdetected = false;
+int interruptCounter = 0;
+
+void setPiezoStatus() {
+	IRdetected = true;
+	interruptCounter++;
+	Serial.println("INTERRUPT TRIGGED");
+
+}
+
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
-		PIDMotor * motor3, Servo * servoTurret, Servo * servoLadder, IRCamSimplePacketComsServer * IRCam,
-		GetIMU * imu) : ace(motor1,motor2,wheelTrackMM,wheelRadiusMM,imu), Ultrasonic1(), fieldMap(), Ultrasonic2()
+		PIDMotor * motor3, Servo * servoTurret, Servo * servoLadder,
+		IRCamSimplePacketComsServer * IRCam, GetIMU * imu) :
+						ace(motor1, motor2, wheelTrackMM, wheelRadiusMM, imu), Ultrasonic1(), fieldMap(), Ultrasonic2()
 
 {
 	Serial.println("StudentsRobot::StudentsRobot constructor called here ");
+	delay(500);
 	this->servoTurret = servoTurret;
 	this->servoLadder = servoLadder;
 	this->motor1 = motor1;
@@ -58,7 +70,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	motor3->myPID.setpid(0.00015, 0, 0);
 
 	motor1->velocityPID.setpid(0.004, 0.00001, 0);
-	motor2->velocityPID.setpid(0.004, 0.00001, 0);
+	motor2->velocityPID.setpid(0.004, 0.0007, 0);
 	motor3->velocityPID.setpid(0.1, 0, 0);
 	// compute ratios and bounding
 	double motorToWheel = 3;
@@ -116,7 +128,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 
 	//SENSOR
 	Ultrasonic1.attach(TrigPIN, EchoPIN);
-	Ultrasonic2.attach(TrigPIN2,EchoPIN2);
+	Ultrasonic2.attach(TrigPIN2, EchoPIN2);
 
 	//SERVO
 	pinMode(SERVO_TURRET_PIN, OUTPUT);
@@ -126,54 +138,76 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	ledcSetup(CHANNEL, FREQ, RESOLUTION);
 	ledcAttachPin(PIEZO_PIN, CHANNEL);
 
+	//IR INTERRUPT
+	pinMode(36, INPUT);
+	//attachInterrupt(36, &setPiezoStatus, LOW);
+
+
+
+
 }
 /**
  * Seperate from running the motor control,
  * update the state machine for running the final project code here
  */
 
-
 //SERVO HELPERS
-void turretCenter(Servo x){
+void turretCenter(Servo x) {
 	x.write(1640);
 }
-void turretLeft(Servo x){
+void turretLeft(Servo x) {
 	x.write(2490);
 }
-void turretRight(Servo x){
+void turretRight(Servo x) {
 	x.write(790);
 }
-void ladderDeploy(Servo x){
+void ladderDeploy(Servo x) {
 	x.write(2350);
 }
-void ladderHolster(Servo x){
+void ladderHolster(Servo x) {
 	x.write(740);
 }
 
-
 //PIEZO HELPERS
-int checkNoteDuration(){
-	if(longNote == true){return longNoteDuration;}
-	else if(extraLongNote == true){return extraLongNoteDuration;}
-	else return noteDuration;
+int checkNoteDuration() {
+	if (longNote == true) {
+		return longNoteDuration;
+	} else if (extraLongNote == true) {
+		return extraLongNoteDuration;
+	} else
+		return noteDuration;
 	longNote = false;
 }
 
-int checkPauseDuration(){
-	if(longPause == true){return longPauseDuration;}
-	else return pauseDuration;
+int checkPauseDuration() {
+	if (longPause == true) {
+		return longPauseDuration;
+	} else
+		return pauseDuration;
 }
+
 
 
 
 void StudentsRobot::updateStateMachine() {
 	digitalWrite(WII_CONTROLLER_DETECT, 1);
 	long now = millis();
-	ace.loop();
+	if (status != StartupRobot){
+		ace.loop();
+	/*	if(IRdetected && interruptCounter <= 1) { //if interrupt is triggered and beacon is detected
+			status = piezzoBuzzer;
+		} */
+	}
+
+
+
 	//polling for pose every 20ms, see DrivingChassis.cpp
 	switch (status) {
 	case StartupRobot:
 		//Do this once at startup
+
+
+
 		status = StartRunning;
 		Serial.println("StudentsRobot::updateStateMachine StartupRobot here ");
 		break;
@@ -208,21 +242,21 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			status = piezzoBuzzer;
-			//scanningStatus = Driving;
+			status = Scanning;
+			scanningStatus = Driving;
+			searchingStatus = driveToRow;
 			SearchingRun = true;
 		}
 		break;
 
 	case Testing:
-		if(ace.turnTo(180)){
-			status = Testting2;
-		}
-
+				if (ace.turnTo(180)) {
+					status = Testting2;
+				}
 		break;
 
 	case Testting2:
-		if(ace.turnTo(0)){
+		if (ace.turnTo(0)) {
 			status = Testing;
 		}
 		break;
@@ -232,7 +266,6 @@ void StudentsRobot::updateStateMachine() {
 		Serial.println(String(ultrasonicPing2));
 		status = UltrasonicTest;
 		break;
-
 
 	case WAIT_FOR_TIME:
 		// Check to see if enough time has elapsed
@@ -258,46 +291,47 @@ void StudentsRobot::updateStateMachine() {
 		status = Halt;
 		break;
 
-
 	case Scanning:
-		switch(scanningStatus){
+		switch (scanningStatus) {
 		case Driving:
 			turretRight(*servoTurret);
 			ladderHolster(*servoLadder);
-			if(blocksTravelledX == 0 && !previousFoundBuilding) {  //edge case when we start the program, check for any buildings in row 0
+			if (blocksTravelledX == 0 && !previousFoundBuilding) { //edge case when we start the program, check for any buildings in row 0
 				scanningStatus = UltrasonicCalc;
 				nextTime = millis() + 3500; //wait 3.5 seconds in the ScanninG Building state where ultrasonic will ping continously
 			}
-			if (!travelledXDistance) {//have we completed driving 5 blocks for the x distance?
-				if(blocksTravelledX < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment each time
+			if (!travelledXDistance) { //have we completed driving 5 blocks for the x distance?
+				if (blocksTravelledX < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment each time
 					//Serial.println(blocksTravelledX);
-					if(ace.driveOneBlock()) {
+					if (ace.driveOneBlock()) {
 						blocksTravelledX++;
 						previousFoundBuilding = false;
-						if(blocksTravelledX % 2 == 0 && !previousFoundBuilding) { //if we have travelled an even number of blocks, check if there is a building in that row for 2 seconds
+						if (blocksTravelledX % 2 == 0
+								&& !previousFoundBuilding) { //if we have travelled an even number of blocks, check if there is a building in that row for 2 seconds
 							scanningStatus = UltrasonicCalc;
 							nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
 						}
 					}
-				}
-				else if (blocksTravelledX == 5) {  //if we have travelled 5 blocks in the x direction, set x to true and y to false so we no longer travel in the x direction but prepare to travel in y
+				} else if (blocksTravelledX == 5) { //if we have travelled 5 blocks in the x direction, set x to true and y to false so we no longer travel in the x direction but prepare to travel in y
 					travelledXDistance = true;
 					travelledYDistance = false;
 				}
 			}
-			if(travelledXDistance == true && travelledYDistance == false && completedTurn == false ) {  //turn approximately 90 degrees only once
-				if(ace.turnTo(90)) { //turnDrive has to be handled in its own separate "loop" or if statement
+			if (travelledXDistance == true && travelledYDistance == false
+					&& completedTurn == false) { //turn approximately 90 degrees only once
+				if (ace.turnTo(90)) { //turnDrive has to be handled in its own separate "loop" or if statement
 					//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 					completedTurn = true;
 				}
 			}
-			if (!travelledYDistance && completedTurn == true) {  //Repeat using Y direction
-				if(blocksTravelledY < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment each time
+			if (!travelledYDistance && completedTurn == true) { //Repeat using Y direction
+				if (blocksTravelledY < 5) { //while we havent driven 5 blocks, drive one block at a time, and increment each time
 					//Serial.println(blocksTravelledX);
-					if(ace.driveOneBlock()) {
+					if (ace.driveOneBlock()) {
 						blocksTravelledY++;
 						previousFoundBuilding = false;
-						if(!(blocksTravelledY % 2 == 0) && !previousFoundBuilding) { //if we have travelled an even number of blocks, check if there is a building in that row for 2 seconds
+						if (!(blocksTravelledY % 2 == 0)
+								&& !previousFoundBuilding) { //if we have travelled an even number of blocks, check if there is a building in that row for 2 seconds
 							scanningStatus = UltrasonicCalc;
 							nextTime = millis() + 2000; //wait 2 seconds in the ScanninG Building state where ultrasonic will ping continously
 						}
@@ -314,13 +348,13 @@ void StudentsRobot::updateStateMachine() {
 			if (ultrasonicPing > maxUltrasonicReading) {
 				maxUltrasonicReading = ultrasonicPing;
 			}
-			if (millis() <= nextTime && ultrasonicPing != -1.0) {  //while we still have time to ping, and the result of our ping is a reasonable number, add it to our sum and increment a counter
+			if (millis() <= nextTime && ultrasonicPing != -1.0) { //while we still have time to ping, and the result of our ping is a reasonable number, add it to our sum and increment a counter
 				sumUltrasonicReadings += ultrasonicPing;
 				countUltrasonicReadings++;
 				scanningStatus = UltrasonicCalc; //repeat status until millis has surpassed nextTime
-			}
-			else if (millis() >= nextTime) { //if we have surpassed nextTime
-				averageUltrasonicReadings = sumUltrasonicReadings / countUltrasonicReadings; //calculate the average
+			} else if (millis() >= nextTime) { //if we have surpassed nextTime
+				averageUltrasonicReadings = sumUltrasonicReadings
+						/ countUltrasonicReadings; //calculate the average
 				sumUltrasonicReadings = 0; //reset static variables back to 0 to avoid rollover
 				countUltrasonicReadings = 0;
 				Serial.println("AVERAGE: " + String(averageUltrasonicReadings));
@@ -329,27 +363,28 @@ void StudentsRobot::updateStateMachine() {
 			break;
 
 		case ScanningBuilding:
-			if(averageUltrasonicReadings > 150 && averageUltrasonicReadings < 400) {//conditionals to check for the distance
-				if(blocksTravelledX < 5) {
+			if (averageUltrasonicReadings > 150
+					&& averageUltrasonicReadings < 400) { //conditionals to check for the distance
+				if (blocksTravelledX < 5) {
 					buildingDistanceFromRobot = 1; //building is at Y=1
 					scanningStatus = foundBuilding; //handle placement of building in a map
 					maxUltrasonicReading = 0;
-				}
-				else if (blocksTravelledY <=5) { //we want to check the building when we have reached Y = 5 due to the construction of the field
+				} else if (blocksTravelledY <= 5) { //we want to check the building when we have reached Y = 5 due to the construction of the field
 					buildingDistanceFromRobot = 4; //distances change when we travel in the Y coordinate, X = 4
 					scanningStatus = foundBuilding;
 					maxUltrasonicReading = 0;
 				}
 				break;
 			}
-			if(averageUltrasonicReadings > 950 && averageUltrasonicReadings < 1200.0 && maxUltrasonicReading < 1350) {
-				if(blocksTravelledX < 5) {
+			if (averageUltrasonicReadings > 950
+					&& averageUltrasonicReadings < 1200.0
+					&& maxUltrasonicReading < 1350) {
+				if (blocksTravelledX < 5) {
 					buildingDistanceFromRobot = 3;
 					scanningStatus = foundBuilding;
 					maxUltrasonicReading = 0;
 
-				}
-				else if (blocksTravelledY <=5) {
+				} else if (blocksTravelledY <= 5) {
 					buildingDistanceFromRobot = 2; //distances change when we travel in the Y coordinate
 					scanningStatus = foundBuilding;
 					maxUltrasonicReading = 0;
@@ -357,7 +392,14 @@ void StudentsRobot::updateStateMachine() {
 				}
 				break;
 			}
-			if((averageUltrasonicReadings < 150 || averageUltrasonicReadings > 1200 ) || (averageUltrasonicReadings > 400 && averageUltrasonicReadings < 950 && maxUltrasonicReading > 1000) || (averageUltrasonicReadings > 950 && averageUltrasonicReadings < 1200.0 && maxUltrasonicReading > 1350)) { //no building in a row
+			if ((averageUltrasonicReadings < 150
+					|| averageUltrasonicReadings > 1200)
+					|| (averageUltrasonicReadings > 400
+							&& averageUltrasonicReadings < 950
+							&& maxUltrasonicReading > 1000)
+							|| (averageUltrasonicReadings > 950
+									&& averageUltrasonicReadings < 1200.0
+									&& maxUltrasonicReading > 1350)) { //no building in a row
 				Serial.println("NO BUILDING IN A ROW"); //if building is out of range/ ultrasonic reads average in between 950 & 1200 but max is greater to avoid placing an inaccurate building, or to avoid mistaking no building for a roadblock
 				buildingDistanceFromRobot = 0;
 				scanningStatus = foundBuilding;
@@ -365,15 +407,16 @@ void StudentsRobot::updateStateMachine() {
 				maxUltrasonicReading = 0;
 				break;
 			}
-			if(averageUltrasonicReadings > 400 && averageUltrasonicReadings < 900 && maxUltrasonicReading < 1200) { //roadblock - large side facing towards you reads between 400 and 900 with a maximum under 1200
-				if(blocksTravelledX < 5) {
+			if (averageUltrasonicReadings > 400
+					&& averageUltrasonicReadings < 900
+					&& maxUltrasonicReading < 1200) { //roadblock - large side facing towards you reads between 400 and 900 with a maximum under 1200
+				if (blocksTravelledX < 5) {
 					Serial.println("ROADBLOCK FOUND! IN X");
 					buildingDistanceFromRobot = 7;
 					scanningStatus = foundBuilding;
 					maxUltrasonicReading = 0;
 
-				}
-				else if (blocksTravelledY <=5) {
+				} else if (blocksTravelledY <= 5) {
 					Serial.println("ROADBLOCK FOUND! IN Y");
 					buildingDistanceFromRobot = 9; //distances change when we travel in the Y coordinate
 					scanningStatus = foundBuilding;
@@ -395,90 +438,129 @@ void StudentsRobot::updateStateMachine() {
 			break;
 
 		case foundBuilding:
-			if(!previousFoundBuilding) { //event checking making sure building only gets checked one time
-				Serial.println("BUILDING DISTANCE FROM ROBOT: ///////////////////////////////////" + String(buildingDistanceFromRobot));
-				if(blocksTravelledX < 5) {
-					if(buildingDistanceFromRobot == 1) { // if the building is at Y = 1 given ultrasonic data
+			if (!previousFoundBuilding) { //event checking making sure building only gets checked one time
+				Serial.println(
+						"BUILDING DISTANCE FROM ROBOT: ///////////////////////////////////"
+						+ String(buildingDistanceFromRobot));
+				if (blocksTravelledX < 5) {
+					if (buildingDistanceFromRobot == 1) { // if the building is at Y = 1 given ultrasonic data
 						//	Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
 						//Plot& is a reference to the actual plot in the map array, and allows us to directly modify values of those plots
-						Plot& buildingPlot = fieldMap.getPlot(buildingDistanceFromRobot,5-blocksTravelledX ); //5-X,1  //sets up all plots in the row of x = 4 (0,0 being in the top left hand corner of the field)
-						Plot& ambiguousPlot1 = fieldMap.getPlot(buildingDistanceFromRobot+2,5-blocksTravelledX); //5-X,3
-						Plot& ambiguousPlot2 = fieldMap.getPlot(buildingDistanceFromRobot+4,5-blocksTravelledX);  //5-X,5
+						Plot& buildingPlot = fieldMap.getPlot(
+								buildingDistanceFromRobot,
+								5 - blocksTravelledX); //5-X,1  //sets up all plots in the row of x = 4 (0,0 being in the top left hand corner of the field)
+						Plot& ambiguousPlot1 = fieldMap.getPlot(
+								buildingDistanceFromRobot + 2,
+								5 - blocksTravelledX); //5-X,3
+						Plot& ambiguousPlot2 = fieldMap.getPlot(
+								buildingDistanceFromRobot + 4,
+								5 - blocksTravelledX);  //5-X,5
 						buildingPlot.filledPlot = true; //if we see a building right in front of us, the buildings behind it may also be buildings
 						ambiguousPlot1.filledPlot = true;
 						ambiguousPlot2.filledPlot = true;
-					}
-					else if(buildingDistanceFromRobot == 3) {
+					} else if (buildingDistanceFromRobot == 3) {
 						//Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-						Plot& buildingPlot = fieldMap.getPlot( buildingDistanceFromRobot,5-blocksTravelledX); // 5-X,3
-						Plot& ambiguousPlot1 = fieldMap.getPlot(buildingDistanceFromRobot+2, 5-blocksTravelledX); // 5-X,5
-						Plot& ambiguousPlot2 = fieldMap.getPlot(buildingDistanceFromRobot-2, 5-blocksTravelledX);  // 5-X,1
+						Plot& buildingPlot = fieldMap.getPlot(
+								buildingDistanceFromRobot,
+								5 - blocksTravelledX); // 5-X,3
+						Plot& ambiguousPlot1 = fieldMap.getPlot(
+								buildingDistanceFromRobot + 2,
+								5 - blocksTravelledX); // 5-X,5
+						Plot& ambiguousPlot2 = fieldMap.getPlot(
+								buildingDistanceFromRobot - 2,
+								5 - blocksTravelledX);  // 5-X,1
 						buildingPlot.filledPlot = true; //if we see a building in the 3rd column of the field, then the building in front is not a building, but the one behind may be a building
 						ambiguousPlot1.filledPlot = true;
 						ambiguousPlot2.filledPlot = false;
-					}
-					else if (buildingDistanceFromRobot == 0){
+					} else if (buildingDistanceFromRobot == 0) {
 						//Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-						ace.buildingArray[blocksTravelledX][buildingDistanceFromRobot] = 1;  //add building coordinate to our map
-						Plot& ambiguousPlot1 = fieldMap.getPlot(5, 5-blocksTravelledX); //5-X,5
+						ace.buildingArray[blocksTravelledX][buildingDistanceFromRobot] =
+								1;  //add building coordinate to our map
+						Plot& ambiguousPlot1 = fieldMap.getPlot(5,
+								5 - blocksTravelledX); //5-X,5
 						ambiguousPlot1.filledPlot = true; //if we cannot sense the back row of the buildings, set the one in the back to a plausible building
 
-					}
-					else if (buildingDistanceFromRobot == 7) {
+					} else if (buildingDistanceFromRobot == 7) {
 						//	Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-						Plot& roadBlockPlot = fieldMap.getPlot(2, 5-blocksTravelledX); // 5-X,2
-						Plot& ambiguousPlot1 = fieldMap.getPlot(3, 5-blocksTravelledX); // 5-X,3
-						Plot& ambiguousPlot2 = fieldMap.getPlot(5, 5-blocksTravelledX);  // 5-X,5
+						Plot& roadBlockPlot = fieldMap.getPlot(2,
+								5 - blocksTravelledX); // 5-X,2
+						Plot& ambiguousPlot1 = fieldMap.getPlot(3,
+								5 - blocksTravelledX); // 5-X,3
+						Plot& ambiguousPlot2 = fieldMap.getPlot(5,
+								5 - blocksTravelledX);  // 5-X,5
 						roadBlockPlot.filledPlot = true; //if we find a road block in 2nd column of the field, then set the buildings behind it to be possible buildings
 						ambiguousPlot1.filledPlot = true;
 						ambiguousPlot2.filledPlot = true;
 					}
-				}
-				else if (blocksTravelledY <= 5) {
-					if(buildingDistanceFromRobot == 4) {
-						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-						Plot& buildingPlot = fieldMap.getPlot(blocksTravelledY,5 - buildingDistanceFromRobot ); //1,Y
-						Plot& ambiguousPlot1 = fieldMap.getPlot(blocksTravelledY, 5 - buildingDistanceFromRobot + 2); //3,Y
-						Plot& ambiguousPlot2 = fieldMap.getPlot(blocksTravelledY, 5 - buildingDistanceFromRobot + 4); //5,Y
+				} else if (blocksTravelledY <= 5) {
+					if (buildingDistanceFromRobot == 4) {
+						Serial.println(
+								"X Coordinate: " + String(blocksTravelledX)
+								+ " Y Coordinate: "
+								+ String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(blocksTravelledY,
+								5 - buildingDistanceFromRobot); //1,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot(
+								blocksTravelledY,
+								5 - buildingDistanceFromRobot + 2); //3,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot(
+								blocksTravelledY,
+								5 - buildingDistanceFromRobot + 4); //5,Y
 						buildingPlot.filledPlot = true; //ensure that we do not overwrite previous data, and in the y we only handle the spaces in front of the buildings we measure
-					}
-					else if(buildingDistanceFromRobot == 2) { //if building is in ROW 2
-						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-						Plot& buildingPlot = fieldMap.getPlot( blocksTravelledY,5 - buildingDistanceFromRobot );  //3,Y
-						Plot& ambiguousPlot1 = fieldMap.getPlot(blocksTravelledY, 5 - buildingDistanceFromRobot + 2  ); //5,Y
-						Plot& ambiguousPlot2 = fieldMap.getPlot( blocksTravelledY, 5 - buildingDistanceFromRobot - 2); //1,Y
+					} else if (buildingDistanceFromRobot == 2) { //if building is in ROW 2
+						Serial.println(
+								"X Coordinate: " + String(blocksTravelledX)
+								+ " Y Coordinate: "
+								+ String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(blocksTravelledY,
+								5 - buildingDistanceFromRobot);  //3,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot(
+								blocksTravelledY,
+								5 - buildingDistanceFromRobot + 2); //5,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot(
+								blocksTravelledY,
+								5 - buildingDistanceFromRobot - 2); //1,Y
 						buildingPlot.filledPlot = true;
 						ambiguousPlot2.filledPlot = false; //set space in front of building to false
-					}
-					else if(buildingDistanceFromRobot == 0) {//if building is in ROW 2
-						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-						Plot& buildingPlot = fieldMap.getPlot(  blocksTravelledY, 5);  //3,Y
-						Plot& ambiguousPlot1 = fieldMap.getPlot( blocksTravelledY, 3 ); //5,Y
-						Plot& ambiguousPlot2 = fieldMap.getPlot( blocksTravelledY, 1 ); //1,Y
-						if(buildingPlot.filledPlot == false) {
+					} else if (buildingDistanceFromRobot == 0) { //if building is in ROW 2
+						Serial.println(
+								"X Coordinate: " + String(blocksTravelledX)
+								+ " Y Coordinate: "
+								+ String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(blocksTravelledY,
+								5);  //3,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot(
+								blocksTravelledY, 3); //5,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot(
+								blocksTravelledY, 1); //1,Y
+						if (buildingPlot.filledPlot == false) {
 							buildingPlot.filledPlot = false;
 							ambiguousPlot1.filledPlot = false;
 							ambiguousPlot2.filledPlot = false;
-						}
-						else {
+						} else {
 							buildingPlot.filledPlot = true;
 							ambiguousPlot1.filledPlot = false;
 							ambiguousPlot2.filledPlot = false;
 						}
-					}
-					else if(buildingDistanceFromRobot == 9) { //if building is in ROW 2
-						Serial.println("X Coordinate: " + String(blocksTravelledX) + " Y Coordinate: " + String(buildingDistanceFromRobot));
-						Plot& buildingPlot = fieldMap.getPlot( blocksTravelledY, 2 );  //2,Y
-						Plot& ambiguousPlot1 = fieldMap.getPlot( blocksTravelledY, 3); //3,Y
-						Plot& ambiguousPlot2 = fieldMap.getPlot( blocksTravelledY, 5); //5,Y
-						Plot& finalizedOpen = fieldMap.getPlot( blocksTravelledY, 1);
+					} else if (buildingDistanceFromRobot == 9) { //if building is in ROW 2
+						Serial.println(
+								"X Coordinate: " + String(blocksTravelledX)
+								+ " Y Coordinate: "
+								+ String(buildingDistanceFromRobot));
+						Plot& buildingPlot = fieldMap.getPlot(blocksTravelledY,
+								2);  //2,Y
+						Plot& ambiguousPlot1 = fieldMap.getPlot(
+								blocksTravelledY, 3); //3,Y
+						Plot& ambiguousPlot2 = fieldMap.getPlot(
+								blocksTravelledY, 5); //5,Y
+						Plot& finalizedOpen = fieldMap.getPlot(blocksTravelledY,
+								1);
 						buildingPlot.filledPlot = true;
 						finalizedOpen.filledPlot = false;
 					}
 				}
 				previousFoundBuilding = true; //sets back to true to ensure this if statement only happens once per foundBuilding loop
-			}
-			else if (blocksTravelledY == 5) {
+			} else if (blocksTravelledY == 5) {
 				status = Searching;
 				searchingStatus = driveToRow;
 				ace.printTemporaryBuildingArray();
@@ -486,23 +568,18 @@ void StudentsRobot::updateStateMachine() {
 				fieldMap.printMap();
 				turretLeft(*servoTurret);
 
-			}
-			else {
+			} else {
 				scanningStatus = Driving;
 			}
 			break;
 		}
 		break;
 
-
-
-
-
 		//end of scanning SM//
 		//begining of searching SM//
 		case Searching: //buildings marked are 11 33 55
-			switch(searchingStatus) {
-			if(!SearchingRun){
+			switch (searchingStatus) {
+			if (!SearchingRun) {
 				ace.robotPose.setRobotPosition(5, 0);
 				//fieldMap.oneone.filledPlot = true;
 				SearchingRun = true;
@@ -510,39 +587,38 @@ void StudentsRobot::updateStateMachine() {
 				DeltaX = abs(ace.robotPose.posX) - abs(DeltaX);
 				DeltaY = abs(ace.robotPose.posY) - abs(DeltaY);
 			}
-			if((DeltaX != 0 || DeltaY != 0) && false){ //false is replaced by RB scan
+			if ((DeltaX != 0 || DeltaY != 0) && false) { //false is replaced by RB scan
 				//trigger RoadBlock Scan every time robot moves a coordinate
 				RoadBlockDetected = true;
 			}
 
-
+			beaconDetected = scanBeacon();
 
 			case driveToRow:
 				Serial.println("Drive to row");
 				//if RB go to handleRB
 				//next row reached go to search row (done)
-				if(firstRun){
+				if (firstRun) {
 					//ace.robotPose.setRobotPosition(5, 0);
 					TestingVar = 0;
 					row += 2;
 					firstRun = false;
 				}
 
-				if(row > 5){
+				if (row > 5) {
 					status = Halting; // return to home if no beacon detected
 				}
 
-
-				if(fieldMap.inRow(row)){
-					if(ace.driveTo(2, row - 1)){
+				if (fieldMap.inRow(row)) {
+					if (ace.driveTo(2, row - 1)) {
 						firstRun = true;
 						searchingStatus = searchRow;
 					}
-				}else {
-					row+=2;
+				} else {
+					row += 2;
 				}
 				//check RB
-				if(RoadBlockDetected){
+				if (RoadBlockDetected) {
 					previousStatus = driveToRow;
 					firstRun = true;
 					searchingStatus = HandleRoadBlock;
@@ -553,10 +629,11 @@ void StudentsRobot::updateStateMachine() {
 				break;
 
 			case searchRow:
-				Serial.print("searchRow================================================");
+				Serial.print(
+						"searchRow================================================");
 				//if RB go to handleRB
 				//building to search reached go to orient
-				if(firstRun){
+				if (firstRun) {
 					previousStatus = searchRow;
 					firstRun = false;
 					buildingsPerRow = fieldMap.buildingsPer(row);
@@ -572,19 +649,19 @@ void StudentsRobot::updateStateMachine() {
 				//				}
 				//
 				//				if(buildingsSearched < buildingsPerRow){
-				if(buildingToSearch == 0){
+				if (buildingToSearch == 0) {
 					firstRun = true;
 					searchingStatus = driveToRow; // no more buildings in row
-				}else{
+				} else {
 					Serial.println(row);
-					if(ace.driveTo(buildingToSearch, row -1)){ // go to spot above building
+					if (ace.driveTo(buildingToSearch, row - 1)) { // go to spot above building
 						firstRun = true;
 						searchingStatus = orient;
 					}
 				}
 				//}else{firstRun = true;searchingStatus = driveToRow;}
 				//check RB
-				if(RoadBlockDetected){
+				if (RoadBlockDetected) {
 					previousStatus = searchRow;
 					firstRun = true;
 					searchingStatus = HandleRoadBlock;
@@ -596,33 +673,34 @@ void StudentsRobot::updateStateMachine() {
 				break;
 
 			case orient:
-				Serial.println("ORIENTING+++++++++++++++++++++++++++++++++++++++++++++++++++");
+				Serial.println(
+						"ORIENTING+++++++++++++++++++++++++++++++++++++++++++++++++++");
 				//oriented, go to look for robin
-				if(firstRun){
+				if (firstRun) {
 					firstRun = false;
 					orienting = false;
 					orientation = ace.getOrientation(buildingToSearch, row); // int representing how to orient the robot will go wrong if robot is not directly NSE or W of the building
 				}
 				Serial.println(row);
 				Serial.println(buildingToSearch);
-				if(orientation == 1 && !orienting){
+				if (orientation == 1 && !orienting) {
 					orienting = true;
 					orientHeading = 0;
 				}
-				if(orientation == 2 && !orienting){
+				if (orientation == 2 && !orienting) {
 					orienting = true;
 					orientHeading = 90;
 				}
-				if(orientation == 3 && !orienting){
+				if (orientation == 3 && !orienting) {
 					orienting = true;
 					orientHeading = 180;
 				}
-				if(orientation == 4 && !orienting){
+				if (orientation == 4 && !orienting) {
 					orienting = true;
 					orientHeading = 270;
 				}
 
-				if(orienting && ace.turnTo(orientHeading)){
+				if (orienting && ace.turnTo(orientHeading)) {
 					firstRun = true;
 					//status = Halting;
 					searchingStatus = lookForRobin;
@@ -634,26 +712,25 @@ void StudentsRobot::updateStateMachine() {
 				Serial.println("looking for Robin");
 				//window empty go to turn corner
 				//all windows checked go to driveToRow
-				if(firstRun){
+				if (firstRun) {
 					firstRun = false;
 					windowsToSearch = fieldMap.windowsToSearch(buildingToSearch, row);
 				}
 				Serial.println(windowsToSearch);
 
-				if(false){ // ping window
+				if (false) { // ping window
 					///////////////////////////////TOGGLE TURRET, PING IR, IF NO BUILDING SET WINDOWS TO SEARCH TO 0
 					// Announcing state
-				} else{
-					if(windowsToSearch != 0){
-						if(scanBeacon()){
-							status = piezzoBuzzer;
-						}
-						else {
+				} else {
+					if (windowsToSearch != 0) {
+						if (beaconDetected) {
+							//status = piezzoBuzzer;
+							status = Halting;
+						} else {
 							windowsToSearch--;
 							searchingStatus = turnCorner;
 						}
-
-					}else{
+					} else {
 						//TestingVar++;
 						firstRun = true;
 						searchingStatus = searchRow;
@@ -662,12 +739,20 @@ void StudentsRobot::updateStateMachine() {
 				break;
 
 			case turnCorner:
-				Serial.println("turnTHECOrnerrrrrrrrrrrrrrrrrrrr");
+				//Serial.println("turnTHECOrnerrrrrrrrrrrrrrrrrrrr");
 				//if RB go to handleRB
-				if(ace.turnTheCorner(true)){
+				if (ace.turnTheCorner(true)) {
 					searchingStatus = lookForRobin;
 				}
-				if(RoadBlockDetected){
+
+				if(beaconDetected) {
+					//status = piezzoBuzzer;
+					status = Halting;
+					break;
+				}
+
+
+				if (RoadBlockDetected) {
 					previousStatus = turnCorner;
 					firstRun = true;
 					searchingStatus = HandleRoadBlock;
@@ -677,8 +762,8 @@ void StudentsRobot::updateStateMachine() {
 				break;
 
 			case HandleRoadBlock:
-				if(previousStatus == turnCorner){
-					if(firstRun){
+				if (previousStatus == turnCorner) {
+					if (firstRun) {
 						firstRun = false;
 						currentXpos = ace.robotPose.posX;
 						currentYpos = ace.robotPose.posY;
@@ -699,15 +784,15 @@ void StudentsRobot::updateStateMachine() {
 					//drive up 2 plots.
 				}
 
-				if(/* roadblock X Y match targetPos X Y*/ false){
-					if(previousStatus == driveToRow){
+				if (/* roadblock X Y match targetPos X Y*/false) {
+					if (previousStatus == driveToRow) {
 						//just drive around to another row pos position
 						//back up to prev row
 						//face 4
 						//drive to x = 0 or next block
 						//turn corner 2 X
 						//end
-					}else if(previousStatus == searchRow){
+					} else if (previousStatus == searchRow) {
 						//drive to next building side
 						//either on 0 X side of RB -> CCW search
 						//on 5 X side of RB -> CW search
@@ -725,25 +810,31 @@ void StudentsRobot::updateStateMachine() {
 
 			case Communication:
 				/////////////////////////////////////////////////////////////////////////////Ryans code deploying ladder, buzzer, printing to field controller, call return home
-				if(fractionDistanceTrigger){  //trigger keeps a one time set of our target distance each time we need to travel a block
+			if(communicationCounter < 2) { //run two instances of driving straight
+				if (fractionDistanceTrigger) { //trigger keeps a one time set of our target distance each time we need to travel a block
 					target2 = hardCodeDistance;
 					target2 = ace.mmTOdeg(target2) + (motor1->getAngleDegrees()); //adds on the degrees that we need to travel to our current position instead of resetting encoders
 					fractionDistanceTrigger = false;
 				}
-				distanceError =  abs(this->motor1->getAngleDegrees()) - target2; //calculate distance error between our current position and final position
+				distanceError = abs(this->motor1->getAngleDegrees()) - target2; //calculate distance error between our current position and final position
 				effort = 0.25 * distanceError;
 				ace.driveStraight(-effort, 0, 200);
-				/*if(motor1->getAngleDegrees() >= target2){ //if we have surpassed the target, allow for another set of target distance, increment block
+				if (motor1->getAngleDegrees() >= target2) { //if we have surpassed the target, allow for another set of target distance, increment block
 					ladderDeploy(*servoLadder);
 					//servoLadder->write(2350);
 					//ladderHolster(*servoLadder);
-					status = Halting;
-				}*/
+					fractionDistanceTrigger = true;
+					communicationCounter++;
+				}
+			}
+			else{
+				status = Halting;
+			}
 
 				break;
 
 			case piezzoBuzzer:
-				if(noteCount < 20){
+				if (noteCount < 20) {
 
 					unsigned long currentMillis = millis();
 
@@ -754,48 +845,63 @@ void StudentsRobot::updateStateMachine() {
 							ledcDetachPin(PIEZO_PIN);
 							outputTone = false;
 						}
-					}
-					else {
+					} else {
 						if (currentMillis - previousMillis >= checkPauseDuration()) {
 							previousMillis = currentMillis;
 							ledcAttachPin(PIEZO_PIN, CHANNEL);
 
-							if(noteCount == 1){ledcWriteTone(CHANNEL, d);}
-							else if(noteCount == 2){ledcWriteTone(CHANNEL, d);}
-							else if(noteCount == 3){ledcWriteTone(CHANNEL, cSh);}
-							else if(noteCount == 4){ledcWriteTone(CHANNEL, cSh);}
-							else if(noteCount == 5){ledcWriteTone(CHANNEL, c);}
-							else if(noteCount == 6){ledcWriteTone(CHANNEL, c);}
-							else if(noteCount == 7){ledcWriteTone(CHANNEL, cSh);}
-							else if(noteCount == 8){ledcWriteTone(CHANNEL, cSh);}
-							else if(noteCount == 9){ledcWriteTone(CHANNEL, d);}
-							else if(noteCount == 10){ledcWriteTone(CHANNEL, d);}
-							else if(noteCount == 11){ledcWriteTone(CHANNEL, cSh);}
-							else if(noteCount == 12){ledcWriteTone(CHANNEL, cSh);}
-							else if(noteCount == 13){ledcWriteTone(CHANNEL, c);}
-							else if(noteCount == 14){ledcWriteTone(CHANNEL, c);}
-							else if(noteCount == 15){ledcWriteTone(CHANNEL, cSh);}
-							else if(noteCount == 16){ledcWriteTone(CHANNEL, cSh);}
-							else if(noteCount == 17){ledcWriteTone(CHANNEL, d);
-							longNote = true;
-							longPause = true;
-							}
-							else if(noteCount == 18){ledcWriteTone(CHANNEL, d);
-							longNote = false;
-							longPause = false;
-							extraLongNote = true;
-							}
-							else if(noteCount>=19){
+							if (noteCount == 1) {
+								ledcWriteTone(CHANNEL, d);
+							} else if (noteCount == 2) {
+								ledcWriteTone(CHANNEL, d);
+							} else if (noteCount == 3) {
+								ledcWriteTone(CHANNEL, cSh);
+							} else if (noteCount == 4) {
+								ledcWriteTone(CHANNEL, cSh);
+							} else if (noteCount == 5) {
+								ledcWriteTone(CHANNEL, c);
+							} else if (noteCount == 6) {
+								ledcWriteTone(CHANNEL, c);
+							} else if (noteCount == 7) {
+								ledcWriteTone(CHANNEL, cSh);
+							} else if (noteCount == 8) {
+								ledcWriteTone(CHANNEL, cSh);
+							} else if (noteCount == 9) {
+								ledcWriteTone(CHANNEL, d);
+							} else if (noteCount == 10) {
+								ledcWriteTone(CHANNEL, d);
+							} else if (noteCount == 11) {
+								ledcWriteTone(CHANNEL, cSh);
+							} else if (noteCount == 12) {
+								ledcWriteTone(CHANNEL, cSh);
+							} else if (noteCount == 13) {
+								ledcWriteTone(CHANNEL, c);
+							} else if (noteCount == 14) {
+								ledcWriteTone(CHANNEL, c);
+							} else if (noteCount == 15) {
+								ledcWriteTone(CHANNEL, cSh);
+							} else if (noteCount == 16) {
+								ledcWriteTone(CHANNEL, cSh);
+							} else if (noteCount == 17) {
+								ledcWriteTone(CHANNEL, d);
+								longNote = true;
+								longPause = true;
+							} else if (noteCount == 18) {
+								ledcWriteTone(CHANNEL, d);
+								longNote = false;
+								longPause = false;
+								extraLongNote = true;
+							} else if (noteCount >= 19) {
 								extraLongNote = false;
 								ledcDetachPin(PIEZO_PIN);
 							}
 
-							noteCount = noteCount+1;
+							noteCount = noteCount + 1;
 							outputTone = true;
 						}
 					}
-				}
-				else {
+				} else {
+					IRdetected = 0;
 					status = Communication;
 				}
 				break;
@@ -820,13 +926,21 @@ void StudentsRobot::pidLoop() {
 	motor3->loop();
 }
 
+//void IRAM_ATTR StudentsRobot::setStatusPiezo(){
+//	portENTER_CRITICAL_ISR();
+//	Serial.println("WE FOUND THE BEACON");
+//	portEXIT_CRITICAL_ISR();
+//}
+
+
+
 bool StudentsRobot::scanBeacon() {
 	//read ADC, find amplitude
 	float adc_val = analogRead(36);
 	Serial.println(adc_val);
 
 	//Inverting Schmitt trigger, detecting when drops low (150mV). High 1.75V when not detecting
-	if(adc_val <= 1500) { //1.2V, since thresholds are far above and below there is no mistaking when it drops below
+	if (adc_val <= 1500) { //1.2V, since thresholds are far above and below there is no mistaking when it drops below
 		Serial.println("Beacon detected!");
 		return true;
 	}
@@ -836,55 +950,55 @@ bool StudentsRobot::scanBeacon() {
 	}
 }
 
-void StudentsRobot::publishAddress(float x_pos, float y_pos, int robot_x, int robot_y, int building_x, int building_y) {
+void StudentsRobot::publishAddress(float x_pos, float y_pos, int robot_x,
+		int robot_y, int building_x, int building_y) {
 	IMU->setXPosition(x_pos);
 	IMU->setYPosition(y_pos);
 
-	float msg; float msg1 = 100;
-	float msg2 = 90; float msg3 = 9; //initially set to impossible values so we know if they are changed or not
+	float msg;
+	float msg1 = 100;
+	float msg2 = 90;
+	float msg3 = 9; //initially set to impossible values so we know if they are changed or not
 
 	//Column 0
-	if(robot_x == 0){
+	if (robot_x == 0) {
 		msg3 = 3;
 
-		if(robot_y == 1) //600 1st Street: 103
+		if (robot_y == 1) //600 1st Street: 103
 			msg2 = 0;
-		else if(robot_y == 3) //400 1st Street: 133
+		else if (robot_y == 3) //400 1st Street: 133
 			msg2 = 30;
-		else if(robot_y == 5) //200 1st Street: 163
+		else if (robot_y == 5) //200 1st Street: 163
 			msg2 = 60;
 	}
 
 	//Row 0
-	else if(robot_y == 0){
+	else if (robot_y == 0) {
 		msg3 = 1;
 
-		if(robot_x == 1) //200 Oak Street: 100
+		if (robot_x == 1) //200 Oak Street: 100
 			msg2 = 0;
-		else if(robot_x == 3) //400 Oak Street: 110
+		else if (robot_x == 3) //400 Oak Street: 110
 			msg2 = 10;
-		else if(robot_x == 5) //600 Oak Street: 120
+		else if (robot_x == 5) //600 Oak Street: 120
 			msg2 = 10;
 	}
 
 	//Row 1
-	else if(robot_y == 1) {
-		if(robot_x == 2) {
-			if(building_x == 1) { //500 2nd Street: 101
+	else if (robot_y == 1) {
+		if (robot_x == 2) {
+			if (building_x == 1) { //500 2nd Street: 101
 				msg2 = 0;
 				msg3 = 1;
-			}
-			else if(building_x == 3) { //600 2nd Street: 113
+			} else if (building_x == 3) { //600 2nd Street: 113
 				msg2 = 10;
 				msg3 = 3;
 			}
-		}
-		else if(robot_x == 4) {
-			if(building_x == 3) { //500 3nd Street: 111
+		} else if (robot_x == 4) {
+			if (building_x == 3) { //500 3nd Street: 111
 				msg2 = 10;
 				msg3 = 1;
-			}
-			else if(building_x == 5) { //600 3nd Street: 123
+			} else if (building_x == 5) { //600 3nd Street: 123
 				msg2 = 10;
 				msg3 = 3;
 			}
@@ -892,33 +1006,28 @@ void StudentsRobot::publishAddress(float x_pos, float y_pos, int robot_x, int ro
 	}
 
 	//Row 2
-	else if(robot_y == 2) {
-		if(robot_x == 1) {
-			if(building_y == 1) { //100 Beech Street: 102
+	else if (robot_y == 2) {
+		if (robot_x == 1) {
+			if (building_y == 1) { //100 Beech Street: 102
 				msg2 = 0;
 				msg3 = 2;
-			}
-			else if(building_y == 3) { //200 Beech Street: 130
+			} else if (building_y == 3) { //200 Beech Street: 130
 				msg2 = 30;
 				msg3 = 0;
 			}
-		}
-		else if(robot_x == 3) {
-			if(building_y == 1) { //300 Beech Street: 112
+		} else if (robot_x == 3) {
+			if (building_y == 1) { //300 Beech Street: 112
 				msg2 = 10;
 				msg3 = 2;
-			}
-			else if(building_y == 3) { //400 Beech Street: 140
+			} else if (building_y == 3) { //400 Beech Street: 140
 				msg2 = 40;
 				msg3 = 0;
 			}
-		}
-		else if(robot_x == 5) {
-			if(building_y == 1) { //500 Beech Street: 122
+		} else if (robot_x == 5) {
+			if (building_y == 1) { //500 Beech Street: 122
 				msg2 = 20;
 				msg3 = 2;
-			}
-			else if(building_y == 3) { //600 Beech Street: 150
+			} else if (building_y == 3) { //600 Beech Street: 150
 				msg2 = 50;
 				msg3 = 0;
 			}
@@ -926,23 +1035,20 @@ void StudentsRobot::publishAddress(float x_pos, float y_pos, int robot_x, int ro
 	}
 
 	//Row 3
-	else if(robot_y == 3) {
-		if(robot_x == 2) {
-			if(building_x == 1) { //300 2nd Street: 131
+	else if (robot_y == 3) {
+		if (robot_x == 2) {
+			if (building_x == 1) { //300 2nd Street: 131
 				msg2 = 30;
 				msg3 = 1;
-			}
-			else if(building_x == 3) { //400 2nd Street: 143
+			} else if (building_x == 3) { //400 2nd Street: 143
 				msg2 = 40;
 				msg3 = 3;
 			}
-		}
-		else if(robot_x == 4) {
-			if(building_x == 3) { //300 3nd Street: 141
+		} else if (robot_x == 4) {
+			if (building_x == 3) { //300 3nd Street: 141
 				msg2 = 40;
 				msg3 = 1;
-			}
-			else if(building_x == 5) { //400 3nd Street: 153
+			} else if (building_x == 5) { //400 3nd Street: 153
 				msg2 = 50;
 				msg3 = 3;
 			}
@@ -950,33 +1056,28 @@ void StudentsRobot::publishAddress(float x_pos, float y_pos, int robot_x, int ro
 	}
 
 	//Row 4
-	else if(robot_y == 4) {
-		if(robot_x == 1) {
-			if(building_y == 1) { //100 Maple Street: 132
+	else if (robot_y == 4) {
+		if (robot_x == 1) {
+			if (building_y == 1) { //100 Maple Street: 132
 				msg2 = 30;
 				msg3 = 2;
-			}
-			else if(building_y == 3) { //200 Maple Street: 160
+			} else if (building_y == 3) { //200 Maple Street: 160
 				msg2 = 60;
 				msg3 = 0;
 			}
-		}
-		else if(robot_x == 3) {
-			if(building_y == 1) { //300 Maple Street: 142
+		} else if (robot_x == 3) {
+			if (building_y == 1) { //300 Maple Street: 142
 				msg2 = 40;
 				msg3 = 2;
-			}
-			else if(building_y == 3) { //400 Maple Street: 170
+			} else if (building_y == 3) { //400 Maple Street: 170
 				msg2 = 70;
 				msg3 = 0;
 			}
-		}
-		else if(robot_x == 5) {
-			if(building_y == 1) { //500 Maple Street: 152
+		} else if (robot_x == 5) {
+			if (building_y == 1) { //500 Maple Street: 152
 				msg2 = 50;
 				msg3 = 2;
-			}
-			else if(building_y == 3) { //600 Maple Street: 180
+			} else if (building_y == 3) { //600 Maple Street: 180
 				msg2 = 80;
 				msg3 = 0;
 			}
@@ -984,23 +1085,20 @@ void StudentsRobot::publishAddress(float x_pos, float y_pos, int robot_x, int ro
 	}
 
 	//Row 5
-	else if(robot_y == 5) {
-		if(robot_x == 2) {
-			if(building_x == 1) { //100 2nd Street: 161
+	else if (robot_y == 5) {
+		if (robot_x == 2) {
+			if (building_x == 1) { //100 2nd Street: 161
 				msg2 = 60;
 				msg3 = 1;
-			}
-			else if(building_x == 3) { //200 2nd Street: 173
+			} else if (building_x == 3) { //200 2nd Street: 173
 				msg2 = 70;
 				msg3 = 3;
 			}
-		}
-		else if(robot_x == 4) {
-			if(building_x == 3) { //100 3nd Street: 171
+		} else if (robot_x == 4) {
+			if (building_x == 3) { //100 3nd Street: 171
 				msg2 = 70;
 				msg3 = 1;
-			}
-			else if(building_x == 5) { //200 3nd Street: 183
+			} else if (building_x == 5) { //200 3nd Street: 183
 				msg2 = 80;
 				msg3 = 3;
 			}
@@ -1011,5 +1109,4 @@ void StudentsRobot::publishAddress(float x_pos, float y_pos, int robot_x, int ro
 	Serial.println(msg);
 	IMU->setZPosition(msg);
 }
-
 

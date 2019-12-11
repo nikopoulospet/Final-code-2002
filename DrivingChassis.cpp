@@ -183,7 +183,7 @@ bool DrivingChassis::turnTo(double deg){
 		return true;
 	}
 	Serial.println(effort);
-	this->myleft->setVelocityDegreesPerSecond(- effort * 1.05);
+	this->myleft->setVelocityDegreesPerSecond(- effort * 1.20);
 	this->myright->setVelocityDegreesPerSecond(- effort);
 	return false;
 }

@@ -135,6 +135,7 @@ private:
 	bool run = true;
 public:
 	//volatile interupt for US sensor (add later)
+
 	boolean trigger = true;
 	double target = 0;
 	double distanceError = 0;
@@ -156,6 +157,8 @@ public:
 	boolean fractionDistanceTrigger = true;
 	double hardCodeDistance = 135;
 	double target2 = 0;
+	boolean beaconDetected = false;
+	int communicationCounter = 0;
 
 
 	/**
@@ -187,6 +190,7 @@ public:
 	testing testStep = test0;
 
 
+
 	/**
 	 * pidLoop This functoion is called to let the StudentsRobot controll the running of the PID loop functions
 	 *
@@ -203,6 +207,7 @@ public:
 	bool scanBeacon();
 
 	void publishAddress(float x_pos, float y_pos, int robot_x, int robot_y, int building_x, int building_y);
+
 
 };
 
