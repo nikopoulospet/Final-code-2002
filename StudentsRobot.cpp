@@ -608,7 +608,7 @@ void StudentsRobot::updateStateMachine() {
 				}
 
 				if (fieldMap.inRow(row)) {
-					if (ace.driveTo(2, row - 1)) {
+					if (ace.driveTo(4, row - 1)) {
 						firstRun = true;
 						searchingStatus = searchRow;
 
@@ -851,7 +851,7 @@ void StudentsRobot::updateStateMachine() {
 
 			case Communication:
 
-				if(((ace.robotPose.posX == 5) && (ace.getOrientation(buildingToSearch, row) == 3)) || ((ace.robotPose.posY == 5)  && (ace.getOrientation(buildingToSearch, row) == 4 || (ace.getOrientation(buildingToSearch, row))))){
+				if(((ace.robotPose.posX == 5) && (ace.getOrientation(buildingToSearch, row) == 3)) || ((ace.robotPose.posY == 5)  && ((ace.getOrientation(buildingToSearch, row) == 4) || (ace.getOrientation(buildingToSearch, row) == 2)))){
 					Serial.println("DALJDAKJDSLKDSAKJDSLKDSALKJDSALKJDSALKJDSLKJDSADSALKJDSA");
 					ladderDeployEdgeCase(*servoLadder);
 					if(millis() >= communicationTime) {
