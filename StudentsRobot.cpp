@@ -41,7 +41,7 @@ void setPiezoStatus() {
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 		PIDMotor * motor3, Servo * servoTurret, Servo * servoLadder,
 		IRCamSimplePacketComsServer * IRCam, GetIMU * imu) :
-										ace(motor1, motor2, wheelTrackMM, wheelRadiusMM, imu), Ultrasonic1(), fieldMap(), Ultrasonic2()
+																				ace(motor1, motor2, wheelTrackMM, wheelRadiusMM, imu), Ultrasonic1(), fieldMap(), Ultrasonic2()
 
 {
 	Serial.println("StudentsRobot::StudentsRobot constructor called here ");
@@ -142,8 +142,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	pinMode(36, INPUT);
 	//attachInterrupt(36, &setPiezoStatus, LOW);
 
-
-
+//	publishAddress(0, 1, 1, 1);
 
 }
 /**
@@ -163,6 +162,9 @@ void turretRight(Servo x) {
 }
 void ladderDeploy(Servo x) {
 	x.write(2350);
+}
+void ladderDeployEdgeCase(Servo x) {
+	x.write(1700);
 }
 void ladderHolster(Servo x) {
 	x.write(740);
@@ -242,7 +244,7 @@ void StudentsRobot::updateStateMachine() {
 			IRCamera->print();
 #endif
 
-			status = piezzoBuzzer;
+			status = Scanning;
 			scanningStatus = Driving;
 			searchingStatus = driveToRow;
 			SearchingRun = true;
@@ -727,7 +729,7 @@ void StudentsRobot::updateStateMachine() {
 							Serial.println("BEACON DETECTED IN LOOKFORROBIN++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 							Serial.println("BEACON DETECTED IN LOOKFORROBIN++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 							//status = piezzoBuzzer;
-							status = Halting;
+							status = piezzoBuzzer;
 							break;
 						} else {
 							windowsToSearch--;
@@ -752,7 +754,7 @@ void StudentsRobot::updateStateMachine() {
 					//status = piezzoBuzzer;
 					Serial.println("BEACON DETECTED IN TURN CORNER++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 
-					status = Halting;
+					status = piezzoBuzzer;
 					break;
 				}
 
@@ -814,52 +816,32 @@ void StudentsRobot::updateStateMachine() {
 			//end of searching SM//
 
 			case Communication:
-				if(commTrigger) {
-					IMUHeadingCommunication = IMU->getEULER_azimuth();
-					commTrigger = false;
-				}
-				/*if(((ace.robotPose.posY = 5) && (abs(IMU->getEULER_azimuth()) > 160 && abs(IMU->getEULER_azimuth() < 200))) || ((ace.robotPose.posX = 5)  && (IMU->getEULER_azimuth() > 70 && IMU->getEULER_azimuth() < 110))){
-					ladderDeploy(*servoLadder);
+
+				if(((ace.robotPose.posY == 5) && (ace.robotPose.IMUheadingModulo > 160 && ace.robotPose.IMUheadingModulo < 200)) || ((ace.robotPose.posX == 5)  && (ace.robotPose.IMUheadingModulo > 70 && ace.robotPose.IMUheadingModulo < 110))){
+					Serial.println("DALJDAKJDSLKDSAKJDSLKDSALKJDSALKJDSALKJDSLKJDSADSALKJDSA");
+					ladderDeployEdgeCase(*servoLadder);
 					if(millis() >= communicationTime) {
 						ladderHolster(*servoLadder);
 					}
-				} */
-			/*	if (communicationCounter < 2) { //run two instances of driving straight
-					Serial.println("COMMUNICATION COUNTER: " + String(communicationCounter));
-					if (fractionDistanceTrigger) { //trigger keeps a one time set of our target distance each time we need to travel a block
-						target2 = hardCodeDistance;
-						target2 = ace.mmTOdeg(target2) + (motor1->getAngleDegrees()); //adds on the degrees that we need to travel to our current position instead of resetting encoders
-						fractionDistanceTrigger = false;
-						Serial.println("WE ARE IN THIS SHIT");
-					}
-					distanceError = abs(this->motor1->getAngleDegrees()) - target2; //calculate distance error between our current position and final position
-					effort = 0.25 * distanceError;
-					Serial.println("EFFORT" + String(effort));
-					ace.driveStraight(-effort, IMUHeadingCommunication, 200);
-					if (motor1->getAngleDegrees() >= target2) { //if we have surpassed the target, allow for another set of target distance, increment block
-						ladderDeploy(*servoLadder);
-						Serial.println("AYYY LMAOOOOOOOOOOO");
-						//servoLadder->write(2350);
-						//ladderHolster(*servoLadder);
-						fractionDistanceTrigger = true;
-						communicationCounter++;
-					}
-
-				} */
-				if(communicationCounter < 2) {
-
-					if(ace.distanceDrive(200)) {
-						ladderDeploy(*servoLadder);
-						communicationCounter++;
-
-					}
 				}
 				else{
-					status = Halting;
+					Serial.println("SOMETHING ACTUALLY THAT YOU CAN READ");
+					if(ace.driveOneBlock()) {
+						Serial.println("WOOOOOOOOOO");
+						status = Halting;
+					}
+					if(millis() >= ladderTime) {
+						ladderDeploy(*servoLadder);
+					}
+
+
+					break;
 				}
 				break;
 
 			case piezzoBuzzer:
+				motor1->setVelocityDegreesPerSecond(0);
+				motor2->setVelocityDegreesPerSecond(0);
 				if (noteCount < 20) {
 
 					unsigned long currentMillis = millis();
@@ -926,12 +908,13 @@ void StudentsRobot::updateStateMachine() {
 							outputTone = true;
 						}
 					}
-					Serial.println("ASUDLKJSAJMDJ:OIMSAJM><MD><DKJMSAD><MSOI><DMDSAOI><SADKJMSADLK><SADJMOISA><DJSAMD");
 				} else {
 					//IRdetected = 0;
 					Serial.println("HELOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+					publishAddress(ace.robotPose.posX, ace.robotPose.posY, buildingToSearch, row);
 					status = Communication;
-					communicationTime = millis() + 2000;
+					communicationTime = millis() + 30000;
+					ladderTime = millis() + 1500;
 				}
 				break;
 			case Halt:
@@ -979,10 +962,10 @@ bool StudentsRobot::scanBeacon() {
 	}
 }
 
-void StudentsRobot::publishAddress(float x_pos, float y_pos, int robot_x,
+void StudentsRobot::publishAddress(int robot_x,
 		int robot_y, int building_x, int building_y) {
-	IMU->setXPosition(x_pos);
-	IMU->setYPosition(y_pos);
+//	IMU->setXPosition(x_pos);
+//	IMU->setYPosition(y_pos);
 
 	float msg;
 	float msg1 = 100;
@@ -1010,7 +993,7 @@ void StudentsRobot::publishAddress(float x_pos, float y_pos, int robot_x,
 		else if (robot_x == 3) //400 Oak Street: 110
 			msg2 = 10;
 		else if (robot_x == 5) //600 Oak Street: 120
-			msg2 = 10;
+			msg2 = 20;
 	}
 
 	//Row 1
@@ -1138,4 +1121,8 @@ void StudentsRobot::publishAddress(float x_pos, float y_pos, int robot_x,
 	Serial.println(msg);
 	IMU->setZPosition(msg);
 }
+
+//void StudentsRobot::getBuildingLocation(int robot_x, int robot_y, int heading) {
+//
+//}
 
