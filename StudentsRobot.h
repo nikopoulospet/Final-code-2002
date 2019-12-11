@@ -30,7 +30,7 @@
 enum RobotStateMachine {
 
 	StartupRobot = 0, StartRunning = 1, Running = 2, Halting = 3, Halt = 4, WAIT_FOR_MOTORS_TO_FINNISH=5,WAIT_FOR_TIME=6, Searching = 14, Scanning = 15, Communication = 16, UltrasonicTest = 12, Testing = 13, Testting2 = 17,
-	piezzoBuzzer = 19,
+	piezzoBuzzer = 19, driveHome = 20,
 	//,WAIT_FOR_DISTANCE=7,Pos1_2 = 8,Pos2_3 = 9,Pos3_4 = 10, oneEighty = 11,UltrasonicTest = 12,
 
 };
@@ -40,7 +40,7 @@ enum ScanningStateMachine {
 };
 
 enum SearchingStateMachine {
-	driveToRow = 0, searchRow = 1, orient = 2, lookForRobin = 3, turnCorner = 4, HandleRoadBlock = 5,
+	driveToRow = 0, searchRow = 1, orient = 2, lookForRobin = 3, turnCorner = 4, HandleRoadBlock = 5, returnToRow = 6,
 };
 
 enum turningCorner {
@@ -49,6 +49,17 @@ enum turningCorner {
 
 enum testing{
 	test0 = 0, test1 = 1, test2 = 2,
+};
+
+enum edgeCase1{
+	orientto2 = 0, turn = 1,
+};
+
+enum edgeCase2{
+	turnCCW = 0, orientto1 = 1, turnCW1 = 2, turnCW2 = 3,
+};
+enum goHome{
+	toNearest = 0,  toStart =1,
 };
 /**
  * @enum ComStackStatusState
@@ -119,6 +130,7 @@ private:
 	bool orienting = false;
 
 	int TestingVar = 0; // added because no way to update map yet!!!!!!!!!!!!!!!!!!!
+	bool returnedToRow = false;
 
 	//Halting state machine Vars
 	SearchingStateMachine previousStatus = driveToRow;
@@ -133,6 +145,11 @@ private:
 	double Testheading = 0;
 
 	bool run = true;
+
+	edgeCase1 EC1 = orientto2;
+	edgeCase2 EC2 = turnCCW;
+	goHome gH = toNearest;
+
 public:
 	//volatile interupt for US sensor (add later)
 

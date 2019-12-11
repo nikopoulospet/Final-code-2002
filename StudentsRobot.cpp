@@ -252,9 +252,7 @@ void StudentsRobot::updateStateMachine() {
 		break;
 
 	case Testing:
-		if (ace.turnTo(180)) {
-			status = Testting2;
-		}
+
 		break;
 
 	case Testting2:
@@ -606,12 +604,14 @@ void StudentsRobot::updateStateMachine() {
 
 				if (row > 5) {
 					status = Halting; // return to home if no beacon detected
+
 				}
 
 				if (fieldMap.inRow(row)) {
 					if (ace.driveTo(2, row - 1)) {
 						firstRun = true;
 						searchingStatus = searchRow;
+
 					}
 				} else {
 					row += 2;
@@ -640,6 +640,7 @@ void StudentsRobot::updateStateMachine() {
 					buildingToSearch = fieldMap.buildingToSearch(row);
 					//buildingsSearched = TestingVar;
 				}
+
 				//	Serial.println(buildingToSearch);
 				//	Serial.println(buildingsPerRow);
 				//Serial.println(buildingsSearched);
@@ -657,6 +658,7 @@ void StudentsRobot::updateStateMachine() {
 					if (ace.driveTo(buildingToSearch, row - 1)) { // go to spot above building
 						firstRun = true;
 						searchingStatus = orient;
+
 					}
 				}
 				//}else{firstRun = true;searchingStatus = driveToRow;}
@@ -709,7 +711,7 @@ void StudentsRobot::updateStateMachine() {
 				break;
 
 			case lookForRobin:
-				Serial.println("looking for Robin");
+				//Serial.println("looking for Robin");
 				//window empty go to turn corner
 				//all windows checked go to driveToRow
 				if (firstRun) {
@@ -721,6 +723,7 @@ void StudentsRobot::updateStateMachine() {
 				if (false) { // ping window
 					///////////////////////////////TOGGLE TURRET, PING IR, IF NO BUILDING SET WINDOWS TO SEARCH TO 0
 					// Announcing state
+
 				} else {
 					if (windowsToSearch != 0) {
 						if (scanBeacon()) {
@@ -737,9 +740,11 @@ void StudentsRobot::updateStateMachine() {
 							searchingStatus = turnCorner;
 						}
 					} else {
-						//TestingVar++;
-						firstRun = true;
-						searchingStatus = searchRow;
+						if(ace.robotPose.posY == row){
+							searchingStatus = returnToRow;
+						} else{
+							firstRun = true;
+							searchingStatus = searchRow;
 					}
 				}
 				break;
@@ -747,8 +752,58 @@ void StudentsRobot::updateStateMachine() {
 			case turnCorner:
 				//Serial.println("turnTHECOrnerrrrrrrrrrrrrrrrrrrr");
 				//if RB go to handleRB
-				if (ace.turnTheCorner(true)) {
-					searchingStatus = lookForRobin;
+				if(fieldMap.edgeCase(buildingToSearch, row) == 1){ // edge case 1 is (1,5) corner building search CW , only one window
+					switch (EC1) {
+						case orientto2:
+							if(ace.turnTo(90)){
+								EC1 = turn;
+							}
+							break;
+						case turn:
+							if(ace.turnTheCorner(false)){
+								//EC1 = orientto2;
+								searchingStatus = lookForRobin;
+							}
+							break;
+					}
+
+				}else if(fieldMap.edgeCase(buildingToSearch, row) == 2){
+					switch (EC2){ // broken========================================================================================
+					case turnCCW:
+						if(ace.turnTheCorner(true)){
+							Serial.println("turn the corner CCW for EC 2 +++++++++++++++++++++++++++++++++++");
+							EC2 = orientto1;
+							searchingStatus = lookForRobin;
+						}
+						break;
+					case orientto1:
+						Serial.println("turn to 0 for EC 2 +++++++++++++++++++++++++++++++++++");
+						if(ace.turnTo(0)){
+							EC2 = turnCW1;
+							//searchingStatus = lookForRobin;
+						}
+						break;
+					case turnCW1:
+						Serial.println("turn the corner CW for EC 2 round 1+++++++++++++++++++++++++++++++++++");
+						if(ace.turnTheCorner(false)){
+							EC2 = turnCW2;
+							searchingStatus = lookForRobin;
+						}
+						break;
+					case turnCW2:
+						Serial.println("turn the corner CW for EC 2  round 2+++++++++++++++++++++++++++++++++++");
+						if(ace.turnTheCorner(false)){
+							//EC2 = turnCCW;
+							searchingStatus = lookForRobin;
+						}
+						break;
+					}
+
+				}else{
+					if(ace.turnTheCorner(true)){
+						searchingStatus = lookForRobin;
+					}
+
 				}
 
 				if(scanBeacon()) {
@@ -769,47 +824,13 @@ void StudentsRobot::updateStateMachine() {
 
 				break;
 
-			case HandleRoadBlock:
-				if (previousStatus == turnCorner) {
-					if (firstRun) {
-						firstRun = false;
-						currentXpos = ace.robotPose.posX;
-						currentYpos = ace.robotPose.posY;
-						//Calculate roadblock X and Y
 
-						//if robot is driving in Y pos
-						//turn to 270
-						//Else
-						//turn to 0
+			case returnToRow:
+				Serial.println("returning to row ==========++++++++++++++============++++++++++++=========");
+				if(ace.driveTo(ace.robotPose.posX, row - 1)){
+					searchingStatus = searchRow;
 
-						//widows to scan--;
-					}
-
-					// or add switch and set status to inPath
-
-					//drive up 2 plots
-					//2X CCW turn
-					//drive up 2 plots.
-				}
-
-				if (/* roadblock X Y match targetPos X Y*/false) {
-					if (previousStatus == driveToRow) {
-						//just drive around to another row pos position
-						//back up to prev row
-						//face 4
-						//drive to x = 0 or next block
-						//turn corner 2 X
-						//end
-					} else if (previousStatus == searchRow) {
-						//drive to next building side
-						//either on 0 X side of RB -> CCW search
-						//on 5 X side of RB -> CW search
-						//mark window as read
-					}
-				}
-
-				//handle RB when done return to previous state
-
+			case HandleRoadBlock: // this is only 2.5 points. nuked for now
 				break;
 
 			}
@@ -918,6 +939,38 @@ void StudentsRobot::updateStateMachine() {
 					status = Communication;
 					communicationTime = millis() + 30000;
 					ladderTime = millis() + 1500;
+				}
+				break;
+
+			case driveHome:
+//				if(ace.driveTo(0,5)){
+//					firstRun = true;
+//					status = Halting;
+//				}
+				if(firstRun){
+					currentXpos = ace.robotPose.posX;
+					currentYpos = ace.robotPose.posY;
+					firstRun = false;
+					if((ace.robotPose.posY == 0)||(ace.robotPose.posY == 2)||(ace.robotPose.posY == 4)){
+						gH = toStart;
+					}
+				}
+				//Serial.println("driving Home");
+				switch(gH){
+				case toNearest:
+					//gH = toStart;
+					Serial.println("toNearest");
+					if(ace.driveTo(currentXpos, currentYpos - 1)){
+						gH = toStart;
+					}
+					break;
+				case toStart:
+					Serial.println("toStart");
+					if(ace.driveTo(0,5)){
+						firstRun = true;
+						status = Halting;
+					}
+					break;
 				}
 				break;
 			case Halt:
