@@ -150,6 +150,8 @@ private:
 	edgeCase2 EC2 = turnCCW;
 	goHome gH = toNearest;
 
+	bool beaconSeen = false;
+
 public:
 	//volatile interupt for US sensor (add later)
 

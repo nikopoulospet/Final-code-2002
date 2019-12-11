@@ -201,7 +201,7 @@ void DrivingChassis::driveStraight(double speed, double targetHeading, int Kp){ 
 	//WITH COMPLEMENTARY FILTER
 	double headingError = (((this->robotPose.IMUheadingModulo) * (PI/180)) * 0.98 + this->robotPose.theta * 0.02) - targetHeading; // IMU MOD+++++++++++++++++++++++++++++++++++++++++
 	double effort = Kp * headingError;
-	this->myleft->setVelocityDegreesPerSecond(speed - effort);
+	this->myleft->setVelocityDegreesPerSecond((speed - effort) * 1.1);
 	this->myright->setVelocityDegreesPerSecond(-speed - effort);
 }
 
