@@ -111,11 +111,11 @@ private:
 
 	//Searching Vars
 	bool SearchingRun = false;
-	int row = -1;
+	int row = -1;               //y
 	bool firstRun = true;
 	int buildingsSearched = 0;
 	int buildingsPerRow = 0;
-	int buildingToSearch = 0;
+	int buildingToSearch = 0;   //x
 	int orientation = 0;
 	bool oriented = false;
 	int windowsToSearch = 0;
@@ -152,6 +152,7 @@ private:
 
 public:
 	//volatile interupt for US sensor (add later)
+
 	boolean trigger = true;
 	double target = 0;
 	double distanceError = 0;
@@ -171,8 +172,14 @@ public:
 	boolean checkedForRoadBlock = false;
 	double ultrasonicPing2 = 0;
 	boolean fractionDistanceTrigger = true;
-	double hardCodeDistance = 135;
+	double hardCodeDistance = 300;
 	double target2 = 0;
+	boolean beaconDetected = false;
+	int communicationCounter = 0;
+	long communicationTime = 0;
+	double IMUHeadingCommunication = 0;
+	boolean commTrigger = true;
+	long ladderTime = 0;
 
 
 	/**
@@ -204,6 +211,7 @@ public:
 	testing testStep = test0;
 
 
+
 	/**
 	 * pidLoop This functoion is called to let the StudentsRobot controll the running of the PID loop functions
 	 *
@@ -219,7 +227,10 @@ public:
 
 	bool scanBeacon();
 
-	void publishAddress(float x_pos, float y_pos, int robot_x, int robot_y, int building_x, int building_y);
+	void publishAddress(int robot_x, int robot_y, int building_x, int building_y);
+
+//	void getBuildingLocation(int robot_x, int robot_y, int heading);
+
 
 };
 
