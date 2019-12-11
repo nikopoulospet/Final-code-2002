@@ -912,6 +912,8 @@ void StudentsRobot::updateStateMachine() {
 					//IRdetected = 0;
 					Serial.println("HELOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
 					publishAddress(ace.robotPose.posX, ace.robotPose.posY, buildingToSearch, row);
+					Serial.println('//////////////////////////////////////////////////////////////');
+					Serial.println(ace.robotPose.posX + ace.robotPose.posY + buildingToSearch + row);
 					status = Communication;
 					communicationTime = millis() + 30000;
 					ladderTime = millis() + 1500;
