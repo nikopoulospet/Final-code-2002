@@ -851,7 +851,7 @@ void StudentsRobot::updateStateMachine() {
 
 			case Communication:
 
-				if(((ace.robotPose.posY == 5) && (ace.robotPose.IMUheadingModulo > 160 && ace.robotPose.IMUheadingModulo < 200)) || ((ace.robotPose.posX == 5)  && (ace.robotPose.IMUheadingModulo > 70 && ace.robotPose.IMUheadingModulo < 110))){
+				if(((ace.robotPose.posX == 5) && (ace.getOrientation(buildingToSearch, row) == 3)) || ((ace.robotPose.posY == 5)  && (ace.getOrientation(buildingToSearch, row) == 4 || (ace.getOrientation(buildingToSearch, row))))){
 					Serial.println("DALJDAKJDSLKDSAKJDSLKDSALKJDSALKJDSALKJDSLKJDSADSALKJDSA");
 					ladderDeployEdgeCase(*servoLadder);
 					if(millis() >= communicationTime) {
