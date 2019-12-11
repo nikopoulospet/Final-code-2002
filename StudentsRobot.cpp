@@ -851,17 +851,22 @@ void StudentsRobot::updateStateMachine() {
 
 			case Communication:
 
-				if(((ace.robotPose.posX == 5) && (ace.getOrientation(buildingToSearch, row) == 3)) || ((ace.robotPose.posY == 5)  && (ace.getOrientation(buildingToSearch, row) == 4 || (ace.getOrientation(buildingToSearch, row))))){
-					Serial.println("DALJDAKJDSLKDSAKJDSLKDSALKJDSALKJDSALKJDSLKJDSADSALKJDSA");
+
+				if(((ace.robotPose.posX == 5) && (ace.getOrientation(buildingToSearch, row) == 3)) || ((ace.robotPose.posY == 5)  && ((ace.getOrientation(buildingToSearch, row) == 4) || (ace.getOrientation(buildingToSearch, row) == 2)))){
+					Serial.println("OIUSADJDSADJSALKJDSALKJDSALKJLKJADLKJDSLKJAJKJLDSDSALKJ/////////////////////////////////////////////////////////////DS");
 					ladderDeployEdgeCase(*servoLadder);
 					if(millis() >= communicationTime) {
 						ladderHolster(*servoLadder);
+						ace.turnTo(ace.robotPose.returnRobotHeading(IMU->getEULER_azimuth() + 180));
+						status = driveHome;
 					}
+
 				}
 				else{
-					Serial.println("SOMETHING ACTUALLY THAT YOU CAN READ");
+					//Serial.println("SOMETHING ACTUALLY THAT YOU CAN READ");
 					if(ace.driveOneBlock()) {
-						Serial.println("WOOOOOOOOOO");
+						Serial.println("DSAALKAJDSLKAJD///////////////////////////////////////////////////////////OISALKDJSAD");
+						//Serial.println("WOOOOOOOOOO");
 						status = driveHome;
 					}
 					if(millis() >= ladderTime) {
@@ -889,7 +894,7 @@ void StudentsRobot::updateStateMachine() {
 						if (currentMillis - previousMillis >= checkPauseDuration()) {
 							previousMillis = currentMillis;
 							ledcAttachPin(PIEZO_PIN, CHANNEL);
-
+//
 							if (noteCount == 1) {
 								ledcWriteTone(CHANNEL, d);
 							} else if (noteCount == 2) {
@@ -945,12 +950,17 @@ void StudentsRobot::updateStateMachine() {
 					//Serial.println("HELOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
 					publishAddress(ace.robotPose.posX, ace.robotPose.posY, buildingToSearch, row);
 					//Serial.println("//////////////////////////////////////////////////////////////");
-					//Serial.println('Robot X:' + ace.robotPose.posX + 'Robot Y: '+ ace.robotPose.posY + 'Building X: ' + buildingToSearch + 'Building Y: '+ row);
+					Serial.println('Robot X:' + ace.robotPose.posX);
+					Serial.println('Robot Y: '+ ace.robotPose.posY);
+					Serial.println('Building X: ' + buildingToSearch);
+					Serial.println('Building Y: '+ row);
 					status = Communication;
 					communicationTime = millis() + 30000;
-					ladderTime = millis() + 1500;
+					ladderTime = millis() + 1700;
 				}
 				break;
+
+
 
 			case driveHome:
 
