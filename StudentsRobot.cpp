@@ -40,8 +40,7 @@ void setPiezoStatus() {
 
 StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 		PIDMotor * motor3, Servo * servoTurret, Servo * servoLadder,
-		IRCamSimplePacketComsServer * IRCam, GetIMU * imu) :
-																				ace(motor1, motor2, wheelTrackMM, wheelRadiusMM, imu), Ultrasonic1(), fieldMap(), Ultrasonic2()
+		IRCamSimplePacketComsServer * IRCam, GetIMU * imu) :ace(motor1, motor2, wheelTrackMM, wheelRadiusMM, imu), Ultrasonic1(), fieldMap(), Ultrasonic2()
 
 {
 	Serial.println("StudentsRobot::StudentsRobot constructor called here ");
@@ -142,7 +141,7 @@ StudentsRobot::StudentsRobot(PIDMotor * motor1, PIDMotor * motor2,
 	pinMode(36, INPUT);
 	//attachInterrupt(36, &setPiezoStatus, LOW);
 
-//	publishAddress(0, 1, 1, 1);
+	//	publishAddress(0, 1, 1, 1);
 
 }
 /**
@@ -200,9 +199,6 @@ void StudentsRobot::updateStateMachine() {
 			status = piezzoBuzzer;
 		} */
 	}
-
-
-
 	//polling for pose every 20ms, see DrivingChassis.cpp
 	switch (status) {
 	case StartupRobot:
@@ -603,7 +599,7 @@ void StudentsRobot::updateStateMachine() {
 				}
 
 				if (row > 5) {
-					status = Halting; // return to home if no beacon detected
+					status = driveHome; // return to home if no beacon detected
 
 				}
 
@@ -745,26 +741,27 @@ void StudentsRobot::updateStateMachine() {
 						} else{
 							firstRun = true;
 							searchingStatus = searchRow;
+						}
 					}
 				}
-				break;
+					break;
 
 			case turnCorner:
 				//Serial.println("turnTHECOrnerrrrrrrrrrrrrrrrrrrr");
 				//if RB go to handleRB
 				if(fieldMap.edgeCase(buildingToSearch, row) == 1){ // edge case 1 is (1,5) corner building search CW , only one window
 					switch (EC1) {
-						case orientto2:
-							if(ace.turnTo(90)){
-								EC1 = turn;
-							}
-							break;
-						case turn:
-							if(ace.turnTheCorner(false)){
-								//EC1 = orientto2;
-								searchingStatus = lookForRobin;
-							}
-							break;
+					case orientto2:
+						if(ace.turnTo(90)){
+							EC1 = turn;
+						}
+						break;
+					case turn:
+						if(ace.turnTheCorner(false)){
+							//EC1 = orientto2;
+							searchingStatus = lookForRobin;
+						}
+						break;
 					}
 
 				}else if(fieldMap.edgeCase(buildingToSearch, row) == 2){
@@ -829,13 +826,14 @@ void StudentsRobot::updateStateMachine() {
 				Serial.println("returning to row ==========++++++++++++++============++++++++++++=========");
 				if(ace.driveTo(ace.robotPose.posX, row - 1)){
 					searchingStatus = searchRow;
+				}
+				break;
 
 			case HandleRoadBlock: // this is only 2.5 points. nuked for now
 				break;
-
 			}
-			break;
-			//end of searching SM//
+
+				//end of searching SM//
 
 			case Communication:
 
@@ -850,13 +848,11 @@ void StudentsRobot::updateStateMachine() {
 					Serial.println("SOMETHING ACTUALLY THAT YOU CAN READ");
 					if(ace.driveOneBlock()) {
 						Serial.println("WOOOOOOOOOO");
-						status = Halting;
+						status = driveHome;
 					}
 					if(millis() >= ladderTime) {
 						ladderDeploy(*servoLadder);
 					}
-
-
 					break;
 				}
 				break;
@@ -932,10 +928,10 @@ void StudentsRobot::updateStateMachine() {
 					}
 				} else {
 					//IRdetected = 0;
-					Serial.println("HELOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+					//Serial.println("HELOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
 					publishAddress(ace.robotPose.posX, ace.robotPose.posY, buildingToSearch, row);
-					Serial.println('//////////////////////////////////////////////////////////////');
-					Serial.println(ace.robotPose.posX + ace.robotPose.posY + buildingToSearch + row);
+					//Serial.println("//////////////////////////////////////////////////////////////");
+					//Serial.println('Robot X:' + ace.robotPose.posX + 'Robot Y: '+ ace.robotPose.posY + 'Building X: ' + buildingToSearch + 'Building Y: '+ row);
 					status = Communication;
 					communicationTime = millis() + 30000;
 					ladderTime = millis() + 1500;
@@ -943,10 +939,10 @@ void StudentsRobot::updateStateMachine() {
 				break;
 
 			case driveHome:
-//				if(ace.driveTo(0,5)){
-//					firstRun = true;
-//					status = Halting;
-//				}
+				//				if(ace.driveTo(0,5)){
+				//					firstRun = true;
+				//					status = Halting;
+				//				}
 				if(firstRun){
 					currentXpos = ace.robotPose.posX;
 					currentYpos = ace.robotPose.posY;
@@ -973,212 +969,214 @@ void StudentsRobot::updateStateMachine() {
 					break;
 				}
 				break;
-			case Halt:
+				case Halt:
 
-				// in safe mode
-				break;
+					// in safe mode
+					break;
 
-	}
-	digitalWrite(WII_CONTROLLER_DETECT, 0);
-}
-
-/**
- * This is run fast and should return fast
- *
- * You call the PIDMotor's loop function. This will update the whole motor control system
- * This will read from the concoder and write to the motors and handle the hardware interface.
- */
-void StudentsRobot::pidLoop() {
-	motor1->loop();
-	motor2->loop();
-	motor3->loop();
-}
-
-//void IRAM_ATTR StudentsRobot::setStatusPiezo(){
-//	portENTER_CRITICAL_ISR();
-//	Serial.println("WE FOUND THE BEACON");
-//	portEXIT_CRITICAL_ISR();
-//}
-
-
-
-bool StudentsRobot::scanBeacon() {
-	//read ADC, find amplitude
-	float adc_val = analogRead(36);
-	Serial.println(adc_val);
-
-	//Inverting Schmitt trigger, detecting when drops low (150mV). High 1.75V when not detecting
-	if (adc_val <= 1500) { //1.2V, since thresholds are far above and below there is no mistaking when it drops below
-		Serial.println("Beacon detected!");
-		return true;
-	}
-
-	else {
-		return false;
-	}
-}
-
-void StudentsRobot::publishAddress(int robot_x,
-		int robot_y, int building_x, int building_y) {
-//	IMU->setXPosition(x_pos);
-//	IMU->setYPosition(y_pos);
-
-	float msg;
-	float msg1 = 100;
-	float msg2 = 90;
-	float msg3 = 9; //initially set to impossible values so we know if they are changed or not
-
-	//Column 0
-	if (robot_x == 0) {
-		msg3 = 3;
-
-		if (robot_y == 1) //600 1st Street: 103
-			msg2 = 0;
-		else if (robot_y == 3) //400 1st Street: 133
-			msg2 = 30;
-		else if (robot_y == 5) //200 1st Street: 163
-			msg2 = 60;
-	}
-
-	//Row 0
-	else if (robot_y == 0) {
-		msg3 = 1;
-
-		if (robot_x == 1) //200 Oak Street: 100
-			msg2 = 0;
-		else if (robot_x == 3) //400 Oak Street: 110
-			msg2 = 10;
-		else if (robot_x == 5) //600 Oak Street: 120
-			msg2 = 20;
-	}
-
-	//Row 1
-	else if (robot_y == 1) {
-		if (robot_x == 2) {
-			if (building_x == 1) { //500 2nd Street: 101
-				msg2 = 0;
-				msg3 = 1;
-			} else if (building_x == 3) { //600 2nd Street: 113
-				msg2 = 10;
-				msg3 = 3;
+				}
+				digitalWrite(WII_CONTROLLER_DETECT, 0);
 			}
-		} else if (robot_x == 4) {
-			if (building_x == 3) { //500 3nd Street: 111
-				msg2 = 10;
-				msg3 = 1;
-			} else if (building_x == 5) { //600 3nd Street: 123
-				msg2 = 10;
-				msg3 = 3;
-			}
+
+
+	/**
+	 * This is run fast and should return fast
+	 *
+	 * You call the PIDMotor's loop function. This will update the whole motor control system
+	 * This will read from the concoder and write to the motors and handle the hardware interface.
+	 */
+	void StudentsRobot::pidLoop() {
+		motor1->loop();
+		motor2->loop();
+		motor3->loop();
+	}
+
+	//void IRAM_ATTR StudentsRobot::setStatusPiezo(){
+	//	portENTER_CRITICAL_ISR();
+	//	Serial.println("WE FOUND THE BEACON");
+	//	portEXIT_CRITICAL_ISR();
+	//}
+
+
+
+	bool StudentsRobot::scanBeacon() {
+		//read ADC, find amplitude
+		float adc_val = analogRead(36);
+		Serial.println(adc_val);
+
+		//Inverting Schmitt trigger, detecting when drops low (150mV). High 1.75V when not detecting
+		if (adc_val <= 1500) { //1.2V, since thresholds are far above and below there is no mistaking when it drops below
+			Serial.println("Beacon detected!");
+			return true;
+		}
+
+		else {
+			return false;
 		}
 	}
 
-	//Row 2
-	else if (robot_y == 2) {
-		if (robot_x == 1) {
-			if (building_y == 1) { //100 Beech Street: 102
+	void StudentsRobot::publishAddress(int robot_x,
+			int robot_y, int building_x, int building_y) {
+		//	IMU->setXPosition(x_pos);
+		//	IMU->setYPosition(y_pos);
+
+		float msg;
+		float msg1 = 100;
+		float msg2 = 90;
+		float msg3 = 9; //initially set to impossible values so we know if they are changed or not
+
+		//Column 0
+		if (robot_x == 0) {
+			msg3 = 3;
+
+			if (robot_y == 1) //600 1st Street: 103
 				msg2 = 0;
-				msg3 = 2;
-			} else if (building_y == 3) { //200 Beech Street: 130
+			else if (robot_y == 3) //400 1st Street: 133
 				msg2 = 30;
-				msg3 = 0;
-			}
-		} else if (robot_x == 3) {
-			if (building_y == 1) { //300 Beech Street: 112
+			else if (robot_y == 5) //200 1st Street: 163
+				msg2 = 60;
+		}
+
+		//Row 0
+		else if (robot_y == 0) {
+			msg3 = 1;
+
+			if (robot_x == 1) //200 Oak Street: 100
+				msg2 = 0;
+			else if (robot_x == 3) //400 Oak Street: 110
 				msg2 = 10;
-				msg3 = 2;
-			} else if (building_y == 3) { //400 Beech Street: 140
-				msg2 = 40;
-				msg3 = 0;
-			}
-		} else if (robot_x == 5) {
-			if (building_y == 1) { //500 Beech Street: 122
+			else if (robot_x == 5) //600 Oak Street: 120
 				msg2 = 20;
-				msg3 = 2;
-			} else if (building_y == 3) { //600 Beech Street: 150
-				msg2 = 50;
-				msg3 = 0;
+		}
+
+		//Row 1
+		else if (robot_y == 1) {
+			if (robot_x == 2) {
+				if (building_x == 1) { //500 2nd Street: 101
+					msg2 = 0;
+					msg3 = 1;
+				} else if (building_x == 3) { //600 2nd Street: 113
+					msg2 = 10;
+					msg3 = 3;
+				}
+			} else if (robot_x == 4) {
+				if (building_x == 3) { //500 3nd Street: 111
+					msg2 = 10;
+					msg3 = 1;
+				} else if (building_x == 5) { //600 3nd Street: 123
+					msg2 = 10;
+					msg3 = 3;
+				}
 			}
 		}
-	}
 
-	//Row 3
-	else if (robot_y == 3) {
-		if (robot_x == 2) {
-			if (building_x == 1) { //300 2nd Street: 131
-				msg2 = 30;
-				msg3 = 1;
-			} else if (building_x == 3) { //400 2nd Street: 143
-				msg2 = 40;
-				msg3 = 3;
-			}
-		} else if (robot_x == 4) {
-			if (building_x == 3) { //300 3nd Street: 141
-				msg2 = 40;
-				msg3 = 1;
-			} else if (building_x == 5) { //400 3nd Street: 153
-				msg2 = 50;
-				msg3 = 3;
+		//Row 2
+		else if (robot_y == 2) {
+			if (robot_x == 1) {
+				if (building_y == 1) { //100 Beech Street: 102
+					msg2 = 0;
+					msg3 = 2;
+				} else if (building_y == 3) { //200 Beech Street: 130
+					msg2 = 30;
+					msg3 = 0;
+				}
+			} else if (robot_x == 3) {
+				if (building_y == 1) { //300 Beech Street: 112
+					msg2 = 10;
+					msg3 = 2;
+				} else if (building_y == 3) { //400 Beech Street: 140
+					msg2 = 40;
+					msg3 = 0;
+				}
+			} else if (robot_x == 5) {
+				if (building_y == 1) { //500 Beech Street: 122
+					msg2 = 20;
+					msg3 = 2;
+				} else if (building_y == 3) { //600 Beech Street: 150
+					msg2 = 50;
+					msg3 = 0;
+				}
 			}
 		}
-	}
 
-	//Row 4
-	else if (robot_y == 4) {
-		if (robot_x == 1) {
-			if (building_y == 1) { //100 Maple Street: 132
-				msg2 = 30;
-				msg3 = 2;
-			} else if (building_y == 3) { //200 Maple Street: 160
-				msg2 = 60;
-				msg3 = 0;
-			}
-		} else if (robot_x == 3) {
-			if (building_y == 1) { //300 Maple Street: 142
-				msg2 = 40;
-				msg3 = 2;
-			} else if (building_y == 3) { //400 Maple Street: 170
-				msg2 = 70;
-				msg3 = 0;
-			}
-		} else if (robot_x == 5) {
-			if (building_y == 1) { //500 Maple Street: 152
-				msg2 = 50;
-				msg3 = 2;
-			} else if (building_y == 3) { //600 Maple Street: 180
-				msg2 = 80;
-				msg3 = 0;
+		//Row 3
+		else if (robot_y == 3) {
+			if (robot_x == 2) {
+				if (building_x == 1) { //300 2nd Street: 131
+					msg2 = 30;
+					msg3 = 1;
+				} else if (building_x == 3) { //400 2nd Street: 143
+					msg2 = 40;
+					msg3 = 3;
+				}
+			} else if (robot_x == 4) {
+				if (building_x == 3) { //300 3nd Street: 141
+					msg2 = 40;
+					msg3 = 1;
+				} else if (building_x == 5) { //400 3nd Street: 153
+					msg2 = 50;
+					msg3 = 3;
+				}
 			}
 		}
-	}
 
-	//Row 5
-	else if (robot_y == 5) {
-		if (robot_x == 2) {
-			if (building_x == 1) { //100 2nd Street: 161
-				msg2 = 60;
-				msg3 = 1;
-			} else if (building_x == 3) { //200 2nd Street: 173
-				msg2 = 70;
-				msg3 = 3;
-			}
-		} else if (robot_x == 4) {
-			if (building_x == 3) { //100 3nd Street: 171
-				msg2 = 70;
-				msg3 = 1;
-			} else if (building_x == 5) { //200 3nd Street: 183
-				msg2 = 80;
-				msg3 = 3;
+		//Row 4
+		else if (robot_y == 4) {
+			if (robot_x == 1) {
+				if (building_y == 1) { //100 Maple Street: 132
+					msg2 = 30;
+					msg3 = 2;
+				} else if (building_y == 3) { //200 Maple Street: 160
+					msg2 = 60;
+					msg3 = 0;
+				}
+			} else if (robot_x == 3) {
+				if (building_y == 1) { //300 Maple Street: 142
+					msg2 = 40;
+					msg3 = 2;
+				} else if (building_y == 3) { //400 Maple Street: 170
+					msg2 = 70;
+					msg3 = 0;
+				}
+			} else if (robot_x == 5) {
+				if (building_y == 1) { //500 Maple Street: 152
+					msg2 = 50;
+					msg3 = 2;
+				} else if (building_y == 3) { //600 Maple Street: 180
+					msg2 = 80;
+					msg3 = 0;
+				}
 			}
 		}
+
+		//Row 5
+		else if (robot_y == 5) {
+			if (robot_x == 2) {
+				if (building_x == 1) { //100 2nd Street: 161
+					msg2 = 60;
+					msg3 = 1;
+				} else if (building_x == 3) { //200 2nd Street: 173
+					msg2 = 70;
+					msg3 = 3;
+				}
+			} else if (robot_x == 4) {
+				if (building_x == 3) { //100 3nd Street: 171
+					msg2 = 70;
+					msg3 = 1;
+				} else if (building_x == 5) { //200 3nd Street: 183
+					msg2 = 80;
+					msg3 = 3;
+				}
+			}
+		}
+
+		msg = msg1 + msg2 + msg3;
+		Serial.println(msg);
+		IMU->setZPosition(msg);
 	}
 
-	msg = msg1 + msg2 + msg3;
-	Serial.println(msg);
-	IMU->setZPosition(msg);
-}
 
-//void StudentsRobot::getBuildingLocation(int robot_x, int robot_y, int heading) {
-//
-//}
+	//void StudentsRobot::getBuildingLocation(int robot_x, int robot_y, int heading) {
+	//
+	//}
 
