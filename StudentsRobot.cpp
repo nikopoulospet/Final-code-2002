@@ -247,7 +247,7 @@ void StudentsRobot::updateStateMachine() {
 		break;
 
 	case Testing:
-		scanBeacon();
+		ace.driveStraight(200, 0, 1000);
 		break;
 
 	case Testting2:
@@ -584,6 +584,11 @@ void StudentsRobot::updateStateMachine() {
 				RoadBlockDetected = true;
 			}
 
+			if(!beaconSeen){
+				beaconSeen = scanBeacon();
+			}
+
+
 			// = scanBeacon();
 
 			case driveToRow:
@@ -715,7 +720,9 @@ void StudentsRobot::updateStateMachine() {
 				}
 				//Serial.println(windowsToSearch);
 
-				if (false) { // ping window
+				if (scanBeacon()) {
+					status = piezzoBuzzer;
+					// ping window
 					///////////////////////////////TOGGLE TURRET, PING IR, IF NO BUILDING SET WINDOWS TO SEARCH TO 0
 					// Announcing state
 
@@ -750,12 +757,14 @@ void StudentsRobot::updateStateMachine() {
 				//if RB go to handleRB
 				if(fieldMap.edgeCase(buildingToSearch, row) == 1){ // edge case 1 is (1,5) corner building search CW , only one window
 					switch (EC1) {
+					turretRight(*servoTurret);
 					case orientto2:
 						if(ace.turnTo(90)){
 							EC1 = turn;
 						}
 						break;
 					case turn:
+						turretRight(*servoTurret);
 						if(ace.turnTheCorner(false)){
 							//EC1 = orientto2;
 							searchingStatus = lookForRobin;
@@ -767,6 +776,7 @@ void StudentsRobot::updateStateMachine() {
 					switch (EC2){ // broken========================================================================================
 					case turnCCW:
 						if(ace.turnTheCorner(true)){
+							turretLeft(*servoTurret);
 							Serial.println("turn the corner CCW for EC 2 +++++++++++++++++++++++++++++++++++");
 							EC2 = orientto1;
 							searchingStatus = lookForRobin;
@@ -782,6 +792,7 @@ void StudentsRobot::updateStateMachine() {
 					case turnCW1:
 						Serial.println("turn the corner CW for EC 2 round 1+++++++++++++++++++++++++++++++++++");
 						if(ace.turnTheCorner(false)){
+							turretRight(*servoTurret);
 							EC2 = turnCW2;
 							searchingStatus = lookForRobin;
 						}
@@ -789,6 +800,7 @@ void StudentsRobot::updateStateMachine() {
 					case turnCW2:
 						Serial.println("turn the corner CW for EC 2  round 2+++++++++++++++++++++++++++++++++++");
 						if(ace.turnTheCorner(false)){
+							turretRight(*servoTurret);
 							//EC2 = turnCCW;
 							searchingStatus = lookForRobin;
 						}
@@ -796,6 +808,7 @@ void StudentsRobot::updateStateMachine() {
 					}
 
 				}else{
+					turretLeft(*servoTurret);
 					if(ace.turnTheCorner(true)){
 						searchingStatus = lookForRobin;
 					}
@@ -824,6 +837,7 @@ void StudentsRobot::updateStateMachine() {
 			case returnToRow:
 				Serial.println("returning to row ==========++++++++++++++============++++++++++++=========");
 				if(ace.driveTo(ace.robotPose.posX, row - 1)){
+					firstRun = true;
 					searchingStatus = searchRow;
 				}
 				break;
@@ -939,10 +953,7 @@ void StudentsRobot::updateStateMachine() {
 				break;
 
 			case driveHome:
-				//				if(ace.driveTo(0,5)){
-				//					firstRun = true;
-				//					status = Halting;
-				//				}
+
 				if(firstRun){
 					currentXpos = ace.robotPose.posX;
 					currentYpos = ace.robotPose.posY;
@@ -1123,26 +1134,26 @@ void StudentsRobot::updateStateMachine() {
 		//Row 4
 		else if (robot_y == 4) {
 			if (robot_x == 1) {
-				if (building_y == 1) { //100 Maple Street: 132
+				if (building_y == 3) { //100 Maple Street: 132
 					msg2 = 30;
 					msg3 = 2;
-				} else if (building_y == 3) { //200 Maple Street: 160
+				} else if (building_y == 5) { //200 Maple Street: 160
 					msg2 = 60;
 					msg3 = 0;
 				}
 			} else if (robot_x == 3) {
-				if (building_y == 1) { //300 Maple Street: 142
+				if (building_y == 3) { //300 Maple Street: 142
 					msg2 = 40;
 					msg3 = 2;
-				} else if (building_y == 3) { //400 Maple Street: 170
+				} else if (building_y == 5) { //400 Maple Street: 170
 					msg2 = 70;
 					msg3 = 0;
 				}
 			} else if (robot_x == 5) {
-				if (building_y == 1) { //500 Maple Street: 152
+				if (building_y == 3) { //500 Maple Street: 152
 					msg2 = 50;
 					msg3 = 2;
-				} else if (building_y == 3) { //600 Maple Street: 180
+				} else if (building_y == 5) { //600 Maple Street: 180
 					msg2 = 80;
 					msg3 = 0;
 				}
