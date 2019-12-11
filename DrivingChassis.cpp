@@ -244,8 +244,6 @@ bool DrivingChassis::driveTo(int Xcord, int Ycord){
 		//Generating a path
 		Xdist = Xcord - this->robotPose.posX;
 		if(Xdist != 0){
-
-
 			if(Xcord < this->robotPose.posX){
 				heading1 = -90;
 			}

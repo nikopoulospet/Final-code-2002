@@ -195,6 +195,7 @@ void StudentsRobot::updateStateMachine() {
 	long now = millis();
 	if (status != StartupRobot){
 		ace.loop();
+		scanBeacon();
 		/*	if(IRdetected && interruptCounter <= 1) { //if interrupt is triggered and beacon is detected
 			status = piezzoBuzzer;
 		} */
@@ -203,8 +204,6 @@ void StudentsRobot::updateStateMachine() {
 	switch (status) {
 	case StartupRobot:
 		//Do this once at startup
-
-
 
 		status = StartRunning;
 		Serial.println("StudentsRobot::updateStateMachine StartupRobot here ");
@@ -248,7 +247,7 @@ void StudentsRobot::updateStateMachine() {
 		break;
 
 	case Testing:
-
+		scanBeacon();
 		break;
 
 	case Testting2:
@@ -832,6 +831,7 @@ void StudentsRobot::updateStateMachine() {
 			case HandleRoadBlock: // this is only 2.5 points. nuked for now
 				break;
 			}
+			break;
 
 				//end of searching SM//
 
