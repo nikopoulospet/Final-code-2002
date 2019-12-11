@@ -824,7 +824,7 @@ void StudentsRobot::updateStateMachine() {
 						ladderHolster(*servoLadder);
 					}
 				} */
-				if (communicationCounter < 2) { //run two instances of driving straight
+			/*	if (communicationCounter < 2) { //run two instances of driving straight
 					Serial.println("COMMUNICATION COUNTER: " + String(communicationCounter));
 					if (fractionDistanceTrigger) { //trigger keeps a one time set of our target distance each time we need to travel a block
 						target2 = hardCodeDistance;
@@ -845,6 +845,14 @@ void StudentsRobot::updateStateMachine() {
 						communicationCounter++;
 					}
 
+				} */
+				if(communicationCounter < 2) {
+
+					if(ace.distanceDrive(200)) {
+						ladderDeploy(*servoLadder);
+						communicationCounter++;
+
+					}
 				}
 				else{
 					status = Halting;
