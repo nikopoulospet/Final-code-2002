@@ -196,6 +196,12 @@ void StudentsRobot::updateStateMachine() {
 	if (status != StartupRobot){
 		ace.loop();
 		scanBeacon();
+		int rx = ace.robotPose.posX * 100;
+		int ry = ace.robotPose.posY;
+		int bx = buildingToSearch*100;
+		int by = row;
+		IMU->setXPosition(rx + ry);
+		IMU->setYPosition(bx + by);
 		/*	if(IRdetected && interruptCounter <= 1) { //if interrupt is triggered and beacon is detected
 			status = piezzoBuzzer;
 		} */
@@ -608,7 +614,7 @@ void StudentsRobot::updateStateMachine() {
 				}
 
 				if (fieldMap.inRow(row)) {
-					if (ace.driveTo(4, row - 1)) {
+					if (ace.driveTo(2, row - 1)) {
 						firstRun = true;
 						searchingStatus = searchRow;
 
@@ -858,6 +864,7 @@ void StudentsRobot::updateStateMachine() {
 					if(millis() >= communicationTime) {
 						ladderHolster(*servoLadder);
 						ace.turnTo(ace.robotPose.returnRobotHeading(IMU->getEULER_azimuth() + 180));
+						firstRun = true;
 						status = driveHome;
 					}
 
@@ -948,12 +955,16 @@ void StudentsRobot::updateStateMachine() {
 				} else {
 					//IRdetected = 0;
 					//Serial.println("HELOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
-					publishAddress(ace.robotPose.posX, ace.robotPose.posY, buildingToSearch, row);
-					//Serial.println("//////////////////////////////////////////////////////////////");
-					Serial.println('Robot X:' + ace.robotPose.posX);
-					Serial.println('Robot Y: '+ ace.robotPose.posY);
-					Serial.println('Building X: ' + buildingToSearch);
-					Serial.println('Building Y: '+ row);
+					int pos_x = ace.robotPose.posX;
+					int pos_y = ace.robotPose.posY;
+					int building_x = buildingToSearch;
+					int building_y = row;
+					publishAddress(pos_x, pos_y, building_x, building_y);
+					Serial.println("//////////////////////////////////////////////////////////////");
+					Serial.println("Robot X: " + String(pos_x));
+					Serial.println("Robot Y: " + String(pos_y));
+					Serial.println("Building X: " + String(building_x));
+					Serial.println("Building Y: "+ String(building_y));
 					status = Communication;
 					communicationTime = millis() + 30000;
 					ladderTime = millis() + 1700;
@@ -970,14 +981,20 @@ void StudentsRobot::updateStateMachine() {
 					firstRun = false;
 					if((ace.robotPose.posY == 0)||(ace.robotPose.posY == 2)||(ace.robotPose.posY == 4)){
 						gH = toStart;
+					} else {
+						gH = toHeading;
 					}
 				}
 				//Serial.println("driving Home");
 				switch(gH){
+				case toHeading:
+					if(ace.turnTo(0)){
+						gH = toStart;
+					}
+					break;
 				case toNearest:
 					//gH = toStart;
-					Serial.println("toNearest");
-					if(ace.driveTo(currentXpos, currentYpos - 1)){
+					if(ace.driveOneBlock()){
 						gH = toStart;
 					}
 					break;
@@ -1023,7 +1040,7 @@ void StudentsRobot::updateStateMachine() {
 	bool StudentsRobot::scanBeacon() {
 		//read ADC, find amplitude
 		float adc_val = analogRead(36);
-		Serial.println(adc_val);
+		//Serial.println(adc_val);
 
 		//Inverting Schmitt trigger, detecting when drops low (150mV). High 1.75V when not detecting
 		if (adc_val <= 1500) { //1.2V, since thresholds are far above and below there is no mistaking when it drops below
@@ -1038,8 +1055,8 @@ void StudentsRobot::updateStateMachine() {
 
 	void StudentsRobot::publishAddress(int robot_x,
 			int robot_y, int building_x, int building_y) {
-		//	IMU->setXPosition(x_pos);
-		//	IMU->setYPosition(y_pos);
+//			IMU->setXPosition(x_pos);
+//			IMU->setYPosition(y_pos);
 
 		float msg;
 		float msg1 = 100;

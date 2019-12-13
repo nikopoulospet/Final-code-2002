@@ -59,7 +59,7 @@ enum edgeCase2{
 	turnCCW = 0, orientto1 = 1, turnCW1 = 2, turnCW2 = 3,
 };
 enum goHome{
-	toNearest = 0,  toStart =1,
+	toNearest = 0,  toStart =1, toHeading = 2,
 };
 /**
  * @enum ComStackStatusState
@@ -148,7 +148,7 @@ private:
 
 	edgeCase1 EC1 = orientto2;
 	edgeCase2 EC2 = turnCCW;
-	goHome gH = toNearest;
+	goHome gH = toHeading;
 
 	bool beaconSeen = false;
 
