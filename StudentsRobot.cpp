@@ -1213,6 +1213,21 @@ void StudentsRobot::updateStateMachine() {
 		IMU->setZPosition(msg);
 	}
 
+bool StudentsRobot::scanBeacon() {
+	//read ADC, find amplitude
+	float adc_val = analogRead(36);
+	Serial.println(adc_val);
+
+	//Inverting Schmitt trigger, detecting when drops low (150mV). High 1.75V when not detecting
+	if(adc_val <= 1500) { //1.2V, since thresholds are far above and below there is no mistaking when it drops below
+		Serial.println("Beacon detected!");
+		return true;
+	}
+
+	else {
+		return false;
+	}
+}
 
 	//void StudentsRobot::getBuildingLocation(int robot_x, int robot_y, int heading) {
 	//

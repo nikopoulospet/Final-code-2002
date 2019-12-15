@@ -229,6 +229,7 @@ public:
 
 	bool scanBeacon();
 
+
 	void publishAddress(int robot_x, int robot_y, int building_x, int building_y);
 
 //	void getBuildingLocation(int robot_x, int robot_y, int heading);
