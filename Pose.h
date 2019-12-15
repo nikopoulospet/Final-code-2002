@@ -17,10 +17,9 @@ private:
 	//GetIMU * IMU;
 	 */
 	bool loopFlag = false;
+
+
 	double now = 0;
-
-
-
 
 
 public:
@@ -35,8 +34,22 @@ public:
 	double x = 0;
 	double y = 0;
 	double theta = 0;
+	int posX = 0;
+	int posY = 5; // Starting position for robot
+	double avgTraveled = 0.0;
+	double blockLeninDeg = 760; //* 3:1 ??? (914 * 6)/5 -> 1098 + 1200 /2 = */
+	int IMUheadingModulo = 0;
+	int prevIMUheading = 0;
+	double deltaEncoder0 = 0;
+	double deltaEncoder1 = 0;
+	int generalIMUheading = 0;
+
 
 	void updateEncoderPositions(double timestamp, double encoder0, double encoder1, double IMUheading);
+
+	void setRobotPosition(int posX, int posY);
+	void updateRobotCoordinates(double encoder0, double encoder1, double IMUheading);
+	int returnRobotHeading(double IMUheading);
 };
 
 

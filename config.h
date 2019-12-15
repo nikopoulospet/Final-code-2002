@@ -15,11 +15,12 @@
 #define USE_IMU
 
 #define WHEEL_TRACK 175.0
-#define WHEEL_RADIUS (2.0*25.4/2.0)
+#define WHEEL_RADIUS 25.4
 /**
  * Gripper pin for Servo
  */
-#define SERVO_PIN 23
+#define SERVO_TURRET_PIN 26
+#define SERVO_LADDER_PIN 25
 /**
  * Enable for all h-bridges
  */
@@ -67,8 +68,8 @@
 // Sensor Pins
 #define ANALOG_SENSE_ONE		36
 #define ANALOG_SENSE_TWO		39
-#define ANALOG_SENSE_THREE		34
-#define ANALOG_SENSE_FOUR		35
+//#define ANALOG_SENSE_THREE	34
+//#define ANALOG_SENSE_FOUR		35
 
 // Pins used by a perpheral, may be re-used
 #define BOOT_FLAG_PIN 			0
@@ -81,6 +82,13 @@
 //Ultrasonic Pins
 #define TrigPIN					33
 #define EchoPIN					32
+#define TrigPIN2				23
+#define EchoPIN2				34
 
+//Piezo
+#define CHANNEL 14
+#define FREQ 2000
+#define RESOLUTION 8
+#define PIEZO_PIN 14
 
 #endif /* SRC_CONFIG_H_ */
